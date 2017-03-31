@@ -7,6 +7,7 @@
 
 class Camera;
 class ClientSideGameManager;
+struct MapVec3;
 
 class Client : public aie::Application {
 public:
@@ -35,6 +36,7 @@ protected:
 	void handleNetworkConnection();
 	void initialiseClientConnection();
 	void handleNetworkMessages();
+	void sendCharacterMove(short characterID, MapVec3 destination);
 
 	/* Networking varibles */
 	RakNet::RakPeerInterface* m_pPeerInterface;

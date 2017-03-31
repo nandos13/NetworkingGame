@@ -259,3 +259,4 @@ paket-files/
 !/dependencies/libsndfile/bin/*
 !/bin/
 !/bin/*
+!/bin/**/*

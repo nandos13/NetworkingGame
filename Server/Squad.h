@@ -1,13 +1,13 @@
 #pragma once
 #include "Character.h"
 
-#include <vector>
+#include <unordered_map>
 
 class Squad
 {
 private:
 
-	std::vector<Character*> m_squaddies;
+	std::unordered_map<short, Character*> m_squaddies;
 
 public:
 	Squad();

@@ -4,6 +4,7 @@
 #include "GameMessages.h"
 #include "Camera.h"
 #include "ClientSideGameManager.h"
+#include "TileMap.h"
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -149,5 +150,16 @@ void Client::handleNetworkMessages()
 			break;
 		}
 	}
+}
+
+void Client::sendCharacterMove(short characterID, MapVec3 destination)
+{
+	RakNet::BitStream bs;
+	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_MOVE);
+	bs.Write(characterID);
+	bs.Write((char*)&destination, sizeof(MapVec3));
+
+	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, 
+		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
 }
 

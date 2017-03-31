@@ -6,12 +6,13 @@
 #include "GameMessages.h"
 #include <thread>
 #include "Game.h"
+#include "MovementAction.h"
 
 
 void Server::Setup()
 {
 	// Initialize the game instnace
-	Game* game = new Game();
+	m_game = new Game();
 }
 
 void Server::sendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
@@ -22,6 +23,31 @@ void Server::sendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::
 	nextClientID++;
 
 	pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
+}
+
+void Server::handleClientMove(RakNet::Packet* packet)
+{
+	// Get move command data
+	RakNet::BitStream bsIn(packet->data, packet->length, false);
+	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+	short characterID;
+	bsIn.Read(characterID);
+	MapVec3 destination;
+	bsIn.Read(destination);
+
+	// Process move command on the server-side game
+	MovementAction* action;
+#ifdef NETWORK_SERVER
+	action = m_game->MoveCharacter(characterID, destination);
+#endif
+
+	// Send action back to all clients
+	if (action == nullptr) { return; };
+
+	RakNet::BitStream bs;
+	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_MOVE);
+	bs.Write((char*)action, sizeof(MovementAction));
+	// TODO: Implement Write function within MovementAction to avoid pointers, etc.
 }
 
 Server::Server()
@@ -78,6 +104,12 @@ void Server::HandleConnections(RakNet::RakPeerInterface* pPeerInterface, RakNet:
 				break;
 			case ID_CONNECTION_LOST:
 				std::cout << "A client lost connection.\n";
+				break;
+			case ID_CLIENT_SHOOT:
+				//TODO
+				break;
+			case ID_CLIENT_MOVE:
+				handleClientMove(packet);
 				break;
 
 			default:

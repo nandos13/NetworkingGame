@@ -1,4 +1,5 @@
 #include "Game.h"
+#include "TileMap.h"
 
 
 /** 
@@ -8,6 +9,18 @@
 void Game::Setup()
 {
 	// TODO: create a squad for each player. One squad humans, one aliens
+}
+
+MovementAction * Game::CreateMoveAction(short charactedID, std::vector<MapVec3> path)
+{
+	// TODO
+	// STEPS:
+	// Simulate on the server
+	// Check for any overwatch triggers, etc
+	// Create action & return
+	// USE TAKENACTION CLASS WITH VEC OF GAMEACTIONS
+
+	return nullptr;
 }
 
 Game::Game()
@@ -20,10 +33,6 @@ Game::~Game()
 {
 }
 
-void Game::Update(float deltaTime)
-{
-}
-
 #ifndef NETWORK_SERVER
 /**
  * Add an action to the queue. Actions will be executed one by one
@@ -31,13 +40,52 @@ void Game::Update(float deltaTime)
  */
 void Game::QueueAction(short uniqueID, GameAction* action)
 {
+	if (action == nullptr) { return; };
 	m_actionQueue.insert(std::map<int, GameAction*>::value_type(uniqueID, action));
 }
 
+#endif
 
+#ifdef NETWORK_SERVER
+/**
+ * Handle character movement to a specified map coordinate. 
+ * Returns null if the character or map coordinate could not be found, or if the
+ * move is not valid.
+ */
+MovementAction * Game::MoveCharacter(short characterID, MapVec3 coords)
+{
+	// Find the referenced character
+	Character* c = &(m_characters[characterID]);
+	if (c != nullptr)
+	{
+		// Find the tile the character is standing on
+		MapVec3 characterPos = c->GetMapTileCoords();
+		if (c->RemainingActionPoints() == 0)
+		{
+			printf("Warning: Tried to move character (id: %d) with no action points.\n", characterID);
+			return nullptr;
+		}
 
+		// Find a path
+		std::vector<MapVec3> path = m_map->FindPath(characterPos, coords);
+		if (path.size() == 0) 
+		{ 
+			printf("Error: Found no path between tile (%d, %d, %d) and tile (%d, %d, %d).\n", 
+				characterPos.m_x, characterPos.m_y, characterPos.m_z, coords.m_x, coords.m_y, coords.m_z);
+			return nullptr;
+		}
 
+		// Check if the character can legally move this far
+		if (c->PointsToMove(path.size()) == 0)
+			printf("Error: Character (id: %d) cannot legally move %d tiles.\n", characterID, path.size());
 
+		// Create a movement action
+		return CreateMoveAction(characterID, path);
+	}
+	else
+		printf("Error: MoveCharacter function could not find character with id %d.\n", characterID);
 
+	return nullptr;
+}
 
 #endif

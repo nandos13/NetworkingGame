@@ -3,6 +3,14 @@
 
 enum COVER_VALUE { COVER_NONE = 0, COVER_LOW, COVER_HIGH };
 
+struct MapVec3
+{
+	short m_x, m_y, m_z;
+	MapVec3() { m_x = 0; m_y = 0; m_z = 0; };
+	MapVec3(short i) { m_x = i; m_y = i; m_z = i; };
+	MapVec3(short x, short y, short z) { m_x = x; m_y = y; m_z = z; };
+};
+
 class TileMap
 {
 private:
@@ -84,8 +92,12 @@ private:
 	unsigned int m_width, m_height;
 	const unsigned int m_minWidth = 10, m_minHeight = 10;
 
+	TileMap::Tile* FindTile(MapVec3 pos);
+
 public:
 	TileMap(unsigned int width, unsigned int height);
 	~TileMap();
+
+	std::vector<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to);
 };
 
