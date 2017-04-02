@@ -1,7 +1,13 @@
 #pragma once
+
 #include <vector>
+#include <list>
+#include <unordered_map>
 
 enum COVER_VALUE { COVER_NONE = 0, COVER_LOW, COVER_HIGH };
+enum MAP_CONNECTION_DIR { LEFT = 0, RIGHT, FRONT, BACK, 
+							FRONTLEFT, FRONTRIGHT, BACKRIGHT, BACKLEFT };
+enum MAP_CONNECTION_LEVEL { LEVEL = 0, UP, DOWN };
 
 struct MapVec3
 {
@@ -9,13 +15,22 @@ struct MapVec3
 	MapVec3() { m_x = 0; m_y = 0; m_z = 0; };
 	MapVec3(short i) { m_x = i; m_y = i; m_z = i; };
 	MapVec3(short x, short y, short z) { m_x = x; m_y = y; m_z = z; };
+	const bool operator== (MapVec3& rhs) { return (m_x == rhs.m_x && m_y == rhs.m_y && m_z == rhs.m_z); };
+	const bool operator!= (MapVec3& rhs) { return (m_x != rhs.m_x || m_y != rhs.m_y || m_z != rhs.m_z); };
+	MapVec3& operator+ (MapVec3& rhs) 
+	{
+		m_x += rhs.m_x;
+		m_y += rhs.m_y;
+		m_z += rhs.m_z;
+		return *this;
+	}
 };
 
 class TileMap
 {
 private:
 	// Struct storing info about each individual tile
-	struct Tile
+	struct MapTile
 	{
 	private:
 		/**
@@ -69,34 +84,68 @@ private:
 			}
 		}
 
+		std::list<MapTile*> m_connectedTiles;
+
+		MapVec3 m_tilePosition;
+
 	public:
+		// CONSTRUCTORS
+		MapTile() {};
+		MapTile(MapVec3 pos) { m_tilePosition = pos; };
+
 		// COVER INFO
 		COVER_VALUE GetCoverLeft() { return GetCover(0); };
 		COVER_VALUE GetCoverRight() { return GetCover(2); };
 		COVER_VALUE GetCoverFront() { return GetCover(4); };
 		COVER_VALUE GetCoverBack() { return GetCover(6); };
-		// Set functions
+
 		void SetCoverLeft(const COVER_VALUE val) { SetCover(val, 0); };
 		void SetCoverRight(const COVER_VALUE val) { SetCover(val, 2); };
 		void SetCoverFront(const COVER_VALUE val) { SetCover(val, 4); };
 		void SetCoverBack(const COVER_VALUE val) { SetCover(val, 6); };
 
 		// PATHFINDING INFO
+		void AddConnection(MapTile* connection) { m_connectedTiles.push_back(connection); };
+		void RemoveConnection(MapTile* connected) { m_connectedTiles.remove(connected); };
+		MapTile* GetConnection(MAP_CONNECTION_DIR dir, MAP_CONNECTION_LEVEL level = LEVEL)
+		{
+			// enum MAP_CONNECTION_DIR values translate to these offsets
+			static MapVec3 m_offsetVecs[] = { MapVec3(-1,0,0),  MapVec3(1,0,0),
+				MapVec3(0,0,1), MapVec3(0,0,-1), MapVec3(-1,0,1), MapVec3(1,0,1),
+				MapVec3(1,0,-1), MapVec3(-1,0,-1) };
+			static MapVec3 m_heightOffsetVecs[] = { MapVec3(0,0,0), MapVec3(0,1,0), MapVec3(0,-1,0) };
+
+			for (auto& connection : m_connectedTiles)
+			{
+				// Check if connected tile's position is at current's plus offset
+				MapVec3 offsetPosition = this->m_tilePosition + 
+					m_offsetVecs[(unsigned int)dir] + m_heightOffsetVecs[(unsigned int) level];
+				if (connection->m_tilePosition == offsetPosition)
+					return connection;
+			}
+			return nullptr;
+		}
+
+		// GENERAL
+		MapVec3 GetTilePos() { return m_tilePosition; };
 
 	};
 
-	// TODO: This should probably be some kind of struct, which has pointers to tiles.
-	// This way, multiple heights can exist in a level. 
-	// This however does mean the pointers will have to be dealt with when sending over network.
-	std::vector<Tile> m_tiles;
-	unsigned int m_width, m_height;
-	const unsigned int m_minWidth = 10, m_minHeight = 10;
+	struct MapPlane
+	{
+		std::unordered_map<std::pair<short, short>, MapTile*> m_tiles;
+	};
 
-	TileMap::Tile* FindTile(MapVec3 pos);
+	std::unordered_map<short, MapPlane> m_planes;
+
+	TileMap::MapTile* FindTile(MapVec3 pos);
 
 public:
-	TileMap(unsigned int width, unsigned int height);
+	TileMap();
 	~TileMap();
+
+	void AddTile(MapVec3 pos, bool autoConnect = true);
+	void AddTile(short x, short y, short z, bool autoConnect = true);
 
 	std::vector<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to);
 };
