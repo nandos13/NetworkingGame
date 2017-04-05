@@ -5,8 +5,9 @@
 #include <RakPeerInterface.h>
 #include <glm/mat4x4.hpp>
 
-class Camera;
-class ClientSideGameManager;
+#include "Camera.h"
+#include "ClientSideGameManager.h"
+
 struct MapVec3;
 
 class Client : public aie::Application {

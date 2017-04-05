@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <map>
 #include <BitStream.h>
 
 enum COVER_VALUE { COVER_NONE = 0, COVER_LOW, COVER_HIGH };
@@ -34,7 +35,7 @@ struct MapVec3
 		return *this;
 	}
 };
-#define NETWORK_SERVER	// !!! TODO: REMOVE THIS WHEN DONE WRITING FUNCTIONALITY FOR SERVER !!!
+//#define NETWORK_SERVER	// !!! TODO: REMOVE THIS WHEN DONE WRITING FUNCTIONALITY FOR SERVER !!!
 class TileMap
 {
 private:
@@ -105,7 +106,6 @@ private:
 	public:
 		// CONSTRUCTORS
 
-		// TODO: Needs to take in char for cover data
 		MapTile(MapVec3 pos, MapPlane* parentPlane, unsigned char coverData) 
 		{ 
 			m_parentPlane = parentPlane;
@@ -134,7 +134,8 @@ private:
 		void AddConnection(MapTileConnection* connection) 
 		{
 			MAP_CONNECTION_DIR dir = connection->GetDirection(this);
-			m_connectedTiles.insert(dir, connection);	// TODO: Fix this shit. needs hash?
+			m_connectedTiles[dir] = connection;
+			//m_connectedTiles.insert(dir, connection);
 		}
 		void RemoveConnection(MapTileConnection* connected)
 		{
@@ -143,6 +144,16 @@ private:
 				MAP_CONNECTION_DIR dir = connected->GetDirection(this);
 				m_connectedTiles.erase(dir);
 			}
+		}
+		bool IsConnected(MapTile* tile)
+		{
+			std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*>::iterator iter;
+			for (iter = m_connectedTiles.begin(); iter != m_connectedTiles.end(); iter++)
+			{
+				if (iter->second->GetConnected(this) == tile)
+					return true;
+			}
+			return false;
 		}
 #ifdef NETWORK_SERVER
 		std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*> GetAllConnections() { return m_connectedTiles; };
@@ -158,7 +169,7 @@ private:
 			MapVec3 offsetPos;
 			if (dir <= MAP_CONNECTION_DIR::BACKLEFT)
 				offsetPos = this->m_tilePosition + m_offsetVecs[(unsigned int)dir];
-			else return;	// Prevent LEVEL enum (which extends DIR) from being passed in
+			else return nullptr;	// Prevent LEVEL enum (which extends DIR) from being passed in
 			MapVec3 connectionPos;
 			for (auto& connection : m_connectedTiles)
 			{
@@ -211,6 +222,7 @@ private:
 
 	};
 
+	// TODO: Implement a way to have mono-direction connections (eg for jumping off a ledge).
 	struct MapTileConnection
 	{
 	private:
@@ -281,6 +293,8 @@ private:
 			return (MAP_CONNECTION_DIR)MAP_CONNECTION_LEVEL::LEVEL;
 		}
 
+		float GetWeight() { return weight; };
+		
 		void SafeDelete()
 		{
 			if (nodeA != nullptr)
@@ -302,7 +316,7 @@ private:
 		void SafeDelete()
 		{
 			// Delete all nodes in this plane
-			std::unordered_map<std::pair<short, short>, MapTile*>::iterator iter;
+			std::map<std::pair<short, short>, MapTile*>::iterator iter;
 			for (iter = m_tiles.begin(); iter != m_tiles.end(); iter++)
 				delete iter->second;
 				//iter->second->SafeDelete();
@@ -310,7 +324,7 @@ private:
 			delete this;
 		}
 
-		std::unordered_map<std::pair<short, short>, MapTile*> m_tiles;
+		std::map<std::pair<short, short>, MapTile*> m_tiles;
 	};
 
 	std::unordered_map<short, MapPlane> m_planes;

@@ -1,6 +1,8 @@
 #include "TileMap.h"
 #include "GameMessages.h"
 
+#include <list>
+
 
 
 /* Deletes all nodes & planes from memory. */
@@ -42,7 +44,7 @@ void TileMap::AddTile(MapVec3 pos, unsigned char coverData, bool autoConnect)
 	// Insert a tile at (x, z) in the plane
 	MapTile* newTile = new MapTile(pos, &m_planes[pos.m_y], coverData);
 
-	typedef std::unordered_map<std::pair<short, short>, MapTile*> xyTile;
+	typedef std::map<std::pair<short, short>, MapTile*> xyTile;
 	std::pair<xyTile::iterator, bool> tileCreated;
 
 	tileCreated = m_planes[pos.m_y].m_tiles.insert
@@ -127,7 +129,7 @@ void TileMap::WriteTilemapNew(RakNet::RakPeerInterface * pPeerInterface, RakNet:
 		bs.Write(tilesQuantity);
 
 		// Iterate through tiles
-		std::unordered_map<std::pair<short, short>, MapTile*>::iterator tileIter;
+		std::map<std::pair<short, short>, MapTile*>::iterator tileIter;
 		for (tileIter = (&planeIter->second)->m_tiles.begin(); tileIter != (&planeIter->second)->m_tiles.end(); tileIter++)
 		{
 			// Write current tile key (x, z)
@@ -149,6 +151,9 @@ void TileMap::WriteTilemapNew(RakNet::RakPeerInterface * pPeerInterface, RakNet:
 				MapTile* connectedTile = connectionIter->second->GetConnected(tileIter->second);
 				MapVec3 connectedPos = connectedTile->GetTilePos();
 				bs.Write((char*)&connectedPos, sizeof(MapVec3));
+				
+				// Write current connection's weight
+				bs.Write(connectionIter->second->GetWeight());
 			}
 		}
 	}
@@ -172,8 +177,110 @@ void TileMap::ReadTilemapNew(RakNet::Packet * packet)
 	ClearAllData();
 
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
+	// Ignore the system message
 	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-	// TODO
+
+	// Declare a map to store connection keys temporarily. See further down where this info is read for more info
+	std::unordered_map<const MapVec3, std::list<std::pair<MapVec3, float> > > m_connectionKeys;
+	
+	// Read number of planes
+	unsigned int planesQuantity = 0;
+	bsIn.Read(planesQuantity);
+
+	// Iterate through planes
+	for (int i = 0; i < planesQuantity; i++)
+	{
+		// Read current plane's key & create a new plane
+		short planeKey;
+		bsIn.Read(planeKey);
+		m_planes[planeKey] = MapPlane();
+		MapPlane* currPlane = &(m_planes[planeKey]);
+
+		// Read number of tiles in this plane
+		unsigned int tilesQuantity = 0;
+		bsIn.Read(tilesQuantity);
+
+		// Iterate through tiles in current plane
+		for (int j = 0; j < tilesQuantity; j++)
+		{
+			// Read current tile's key (x, z)
+			std::pair<short, short> tileKey = std::make_pair(0, 0);
+			bsIn.Read(tileKey.first);
+			bsIn.Read(tileKey.second);
+
+			// Read tile's cover data & create a new tile
+			unsigned char tileCoverData = 0;
+			bsIn.Read(tileCoverData);
+			MapTile* currTile = new MapTile(MapVec3(tileKey.first, planeKey, tileKey.second), currPlane, tileCoverData);
+			MapVec3 currPos = currTile->GetTilePos();
+
+			// Add tile to current plane
+			currPlane->m_tiles[tileKey] = currTile;
+
+			// Read number of connected tiles
+			unsigned int connectionsQuantity = 0;
+			bsIn.Read(connectionsQuantity);
+
+			// Read current tile's connection keys
+			/* NOTE: The MapTile pointers for some of these tiles won't exist yet. 
+			 * For now we will store these keys separately and then iterate through and
+			 * add connections properly at the end.
+			 * m_connectionKeys map uses the current tile's position as the key &
+			 * the value is a list of all connected tile positions.
+			 */
+			for (int k = 0; k < connectionsQuantity; k++)
+			{
+				// Read connection's position
+				MapVec3 connectionPos;
+				bsIn.Read(connectionPos);
+
+				float connectionWeight;
+				bsIn.Read(connectionWeight);
+
+				// Add this to the temp connection map
+				std::pair<const MapVec3, float> connectionInfo = std::make_pair(connectionPos, connectionWeight);
+				std::list< std::pair < MapVec3, float > >* ptrList;
+				const MapVec3 mv(0);
+				(m_connectionKeys[mv]);
+				//ptrList->push_back(connectionInfo);
+
+				//(m_connectionKeys[currPos]).push_back(connectionInfo);
+			}
+		}
+	}
+
+	// Now all planes & tiles have been created. We need to iterate through all 
+	// temp connections and actually connect the tiles they correspond to
+
+	// Iterate through each tile
+	//std::map<MapVec3, std::list<std::pair<MapVec3, float> > >::iterator tileKeyIter;
+	//for (tileKeyIter = m_connectionKeys.begin(); tileKeyIter != m_connectionKeys.end(); tileKeyIter++)
+	//{
+	//	MapVec3 currentTilePos = tileKeyIter->first;
+	//	MapTile* currentTile = FindTile(currentTilePos);
+	//	std::list<std::pair<MapVec3, float> > currentConnList = tileKeyIter->second;
+	//	if (currentTile != nullptr)
+	//	{
+	//		// Iterate through all connections
+	//		std::list<std::pair<MapVec3, float> >::iterator connKeyIter;
+	//		for (connKeyIter = currentConnList.begin(); connKeyIter != currentConnList.end(); connKeyIter++)
+	//		{
+	//			MapTile* connectionTile = FindTile(connKeyIter->first);
+	//			float cost = connKeyIter->second;
+	//			if (connectionTile != nullptr)
+	//			{
+	//				// Check if the connection already exists
+	//				bool alreadyConnected = currentTile->IsConnected(connectionTile);
+	//				if (!alreadyConnected)
+	//					MapTileConnection* connection = new MapTileConnection(currentTile, connectionTile, cost);
+	//			}
+	//			else
+	//				printf("Something went wrong. Unable to find a connected tile which should have been created.");
+	//		}
+	//	}
+	//	else
+	//		printf("Something went wrong. Unable to find a tile which should have been created.");
+	//}
 }
 
 /** 
