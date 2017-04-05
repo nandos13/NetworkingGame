@@ -113,6 +113,10 @@ void TileMap::WriteTilemapNew(RakNet::RakPeerInterface * pPeerInterface, RakNet:
 	RakNet::BitStream bs;
 	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_TILEMAP);
 
+	// List of sent connections. Keeps track of which connections have been sent
+	// to avoid sending twice
+	std::list<ConnectionData> m_sentConnections;
+
 	// Write number of planes
 	unsigned int planesQuantity = m_planes.size();
 	bs.Write(planesQuantity);
@@ -134,26 +138,44 @@ void TileMap::WriteTilemapNew(RakNet::RakPeerInterface * pPeerInterface, RakNet:
 		{
 			// Write current tile key (x, z)
 			std::pair<short, short> key = tileIter->first;
+			MapVec3 currTilePos = tileIter->second->GetTilePos();
 			bs.Write(key.first);
 			bs.Write(key.second);
 
 			// Write tile's cover data
 			bs.Write( tileIter->second->GetCoverDataRaw() );
 
-			// Write number of connections
 			auto& connections = tileIter->second->GetAllConnections();
-			unsigned int connectionsQuantity = connections.size();
 
+			// Convert all connections to temp structs
 			std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*>::iterator connectionIter;
 			for (connectionIter = connections.begin(); connectionIter != connections.end(); connectionIter++)
 			{
-				// Write current connection's key (x, y, z)
-				MapTile* connectedTile = connectionIter->second->GetConnected(tileIter->second);
+				// Get connection info
+				MapTileConnection* connection = connectionIter->second;
+				MapTile* connectedTile = connection->GetConnected(tileIter->second);
 				MapVec3 connectedPos = connectedTile->GetTilePos();
-				bs.Write((char*)&connectedPos, sizeof(MapVec3));
-				
-				// Write current connection's weight
-				bs.Write(connectionIter->second->GetWeight());
+				float cost = connectionIter->second->GetWeight();
+				bool biDir = connection->IsBiDirectional();
+
+				// Create a ConnectionData struct instance & add to list of sent connections
+				ConnectionData c = ConnectionData(currTilePos, connectedPos, cost, biDir);
+
+				// Find if the list already contains this connection
+				bool alreadySent = std::find(m_sentConnections.begin(), m_sentConnections.end(), c) != m_sentConnections.end();
+				if (!alreadySent)
+					m_sentConnections.push_back(c);
+			}
+
+			// Write number of connections
+			unsigned int connectionsQuantity = m_sentConnections.size();
+			bs.Write(connectionsQuantity);
+
+			// Send all connections data
+			std::list<ConnectionData>::iterator sendIter;
+			for (sendIter = m_sentConnections.begin(); sendIter != m_sentConnections.end(); sendIter++)
+			{
+				bs.Write((char*)&sendIter, sizeof(ConnectionData));
 			}
 		}
 	}
@@ -181,7 +203,7 @@ void TileMap::ReadTilemapNew(RakNet::Packet * packet)
 	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
 	// Declare a map to store connection keys temporarily. See further down where this info is read for more info
-	std::unordered_map<const MapVec3, std::list<std::pair<MapVec3, float> > > m_connectionKeys;
+	std::list<ConnectionData*> m_connectKeys;
 	
 	// Read number of planes
 	unsigned int planesQuantity = 0;
@@ -225,26 +247,15 @@ void TileMap::ReadTilemapNew(RakNet::Packet * packet)
 			/* NOTE: The MapTile pointers for some of these tiles won't exist yet. 
 			 * For now we will store these keys separately and then iterate through and
 			 * add connections properly at the end.
-			 * m_connectionKeys map uses the current tile's position as the key &
-			 * the value is a list of all connected tile positions.
 			 */
 			for (int k = 0; k < connectionsQuantity; k++)
 			{
-				// Read connection's position
-				MapVec3 connectionPos;
-				bsIn.Read(connectionPos);
+				// Read connection data
+				ConnectionData* c;
+				bsIn.Read(c);
 
-				float connectionWeight;
-				bsIn.Read(connectionWeight);
-
-				// Add this to the temp connection map
-				std::pair<const MapVec3, float> connectionInfo = std::make_pair(connectionPos, connectionWeight);
-				std::list< std::pair < MapVec3, float > >* ptrList;
-				const MapVec3 mv(0);
-				(m_connectionKeys[mv]);
-				//ptrList->push_back(connectionInfo);
-
-				//(m_connectionKeys[currPos]).push_back(connectionInfo);
+				// Add this to the temp list of connections
+				m_connectKeys.push_back(c);
 			}
 		}
 	}
@@ -252,35 +263,26 @@ void TileMap::ReadTilemapNew(RakNet::Packet * packet)
 	// Now all planes & tiles have been created. We need to iterate through all 
 	// temp connections and actually connect the tiles they correspond to
 
-	// Iterate through each tile
-	//std::map<MapVec3, std::list<std::pair<MapVec3, float> > >::iterator tileKeyIter;
-	//for (tileKeyIter = m_connectionKeys.begin(); tileKeyIter != m_connectionKeys.end(); tileKeyIter++)
-	//{
-	//	MapVec3 currentTilePos = tileKeyIter->first;
-	//	MapTile* currentTile = FindTile(currentTilePos);
-	//	std::list<std::pair<MapVec3, float> > currentConnList = tileKeyIter->second;
-	//	if (currentTile != nullptr)
-	//	{
-	//		// Iterate through all connections
-	//		std::list<std::pair<MapVec3, float> >::iterator connKeyIter;
-	//		for (connKeyIter = currentConnList.begin(); connKeyIter != currentConnList.end(); connKeyIter++)
-	//		{
-	//			MapTile* connectionTile = FindTile(connKeyIter->first);
-	//			float cost = connKeyIter->second;
-	//			if (connectionTile != nullptr)
-	//			{
-	//				// Check if the connection already exists
-	//				bool alreadyConnected = currentTile->IsConnected(connectionTile);
-	//				if (!alreadyConnected)
-	//					MapTileConnection* connection = new MapTileConnection(currentTile, connectionTile, cost);
-	//			}
-	//			else
-	//				printf("Something went wrong. Unable to find a connected tile which should have been created.");
-	//		}
-	//	}
-	//	else
-	//		printf("Something went wrong. Unable to find a tile which should have been created.");
-	//}
+	// Iterate through each connection
+	std::list<ConnectionData*>::iterator tileKeyIter;
+	for (tileKeyIter = m_connectKeys.begin(); tileKeyIter != m_connectKeys.end(); tileKeyIter++)
+	{
+		// Get data
+		ConnectionData* c = *tileKeyIter;
+		MapVec3 from = c->GetPos1();
+		MapTile* fromTile = FindTile(from);
+		MapVec3 to = c->GetPos2();
+		MapTile* toTile = FindTile(to);
+		float weight = c->GetWeight();
+		bool biDir = c->IsBiDirectional();
+
+		// Create a connection
+		MapTileConnection* con = new MapTileConnection(fromTile, toTile, weight, biDir);
+	}
+
+	// All connections have been created. Clean up temp data
+	for each (ConnectionData* c in m_connectKeys)
+		delete c;
 }
 
 /** 

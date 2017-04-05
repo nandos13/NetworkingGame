@@ -222,26 +222,27 @@ private:
 
 	};
 
-	// TODO: Implement a way to have mono-direction connections (eg for jumping off a ledge).
+	// Struct storing info about connections between tiles. Can be mono or bi-directional
 	struct MapTileConnection
 	{
 	private:
-		MapTile* nodeA;
-		MapTile* nodeB;
+		MapTile* m_nodeA;
+		MapTile* m_nodeB;
 
-		float weight;
+		float m_weight;
 
 	public:
 
-		MapTileConnection(MapTile* a, MapTile* b, float cost)
+		MapTileConnection(MapTile* a, MapTile* b, float cost, bool biDirectional = true)
 		{
-			if (nodeA && nodeB)
+			if (m_nodeA && m_nodeB)
 			{
-				nodeA = a;
-				nodeB = b;
+				m_nodeA = a;
+				m_nodeB = b;
 				a->AddConnection(this);
-				b->AddConnection(this);
-				weight = cost;
+				if (biDirectional)
+					b->AddConnection(this);
+				m_weight = cost;
 			}
 			else
 				delete this;
@@ -250,22 +251,22 @@ private:
 		/* Returns the node connected to 'me' */
 		MapTile* GetConnected(MapTile* me)
 		{
-			return ( (nodeA == me) ? nodeB : nodeA );
+			return ( (m_nodeA == me) ? m_nodeB : m_nodeA );
 		}
 
 		/* Returns the direction of connection for tile 'me' */
 		MAP_CONNECTION_DIR GetDirection(MapTile* me)
 		{
 			MapVec3 from, to;
-			if (nodeA == me)
+			if (m_nodeA == me)
 			{
-				from = nodeA->GetTilePos();
-				to = nodeB->GetTilePos();
+				from = m_nodeA->GetTilePos();
+				to = m_nodeB->GetTilePos();
 			}
 			else
 			{
-				from = nodeB->GetTilePos();
-				to = nodeA->GetTilePos();
+				from = m_nodeB->GetTilePos();
+				to = m_nodeA->GetTilePos();
 			}
 
 			// Check up-down case
@@ -293,17 +294,57 @@ private:
 			return (MAP_CONNECTION_DIR)MAP_CONNECTION_LEVEL::LEVEL;
 		}
 
-		float GetWeight() { return weight; };
+		float GetWeight() { return m_weight; };
+
+		bool IsBiDirectional()
+		{
+			if (m_nodeA->IsConnected(m_nodeB) && m_nodeB->IsConnected(m_nodeA))
+				return true;
+			return false;
+		}
 		
 		void SafeDelete()
 		{
-			if (nodeA != nullptr)
-				nodeA->RemoveConnection(this);
-			if (nodeB != nullptr)
-				nodeB->RemoveConnection(this);
+			if (m_nodeA != nullptr)
+				m_nodeA->RemoveConnection(this);
+			if (m_nodeB != nullptr)
+				m_nodeB->RemoveConnection(this);
 
 			delete this;
 		}
+	};
+
+	// Struct for sending tile-connection info over the network
+	struct ConnectionData
+	{
+	private:
+		MapVec3 m_pos1, m_pos2;
+		float m_weight;
+		bool m_biDirectional;
+	public:
+		ConnectionData(MapVec3 pos1, MapVec3 pos2, float weight, bool biDir = true)
+		{
+			m_pos1 = pos1;
+			m_pos2 = pos2;
+			m_weight = weight;
+			m_biDirectional = biDir;
+		}
+
+		const bool operator==(const ConnectionData& rhs)
+		{
+			bool matchingPositions = 
+				(m_pos1 == rhs.m_pos1 && m_pos2 == rhs.m_pos2) 
+				|| (m_pos1 == rhs.m_pos2 && m_pos2 == rhs.m_pos1);
+			return 
+				(matchingPositions
+				&& m_weight == rhs.m_weight 
+				&& m_biDirectional == rhs.m_biDirectional);
+		}
+
+		MapVec3 GetPos1() { return m_pos1; };
+		MapVec3 GetPos2() { return m_pos2; };
+		float GetWeight() { return m_weight; };
+		bool IsBiDirectional() { return m_biDirectional; };
 	};
 
 	struct MapPlane
