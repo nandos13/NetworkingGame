@@ -11,7 +11,7 @@ void Game::Setup()
 	// TODO: create a squad for each player. One squad humans, one aliens
 }
 
-MovementAction * Game::CreateMoveAction(short charactedID, std::list<MapVec3> path)
+MovementAction * Game::CreateMoveAction(short characterID, std::list<MapVec3> path)
 {
 	// TODO
 	// STEPS:
@@ -25,12 +25,25 @@ MovementAction * Game::CreateMoveAction(short charactedID, std::list<MapVec3> pa
 
 Game::Game()
 {
+	m_currentAction = m_actionQueue.begin();
+
 	Setup();
 }
 
 
 Game::~Game()
 {
+}
+
+void Game::Update(float dTime)
+{
+	if (m_currentAction != m_actionQueue.end())
+	{
+		if ((*m_currentAction)->IsCompleted())
+			m_currentAction++;	// Current action is complete. Advance iterator
+		else
+			(*m_currentAction)->Execute(dTime);	// Play current action
+	}
 }
 
 #ifndef NETWORK_SERVER

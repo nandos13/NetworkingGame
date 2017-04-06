@@ -20,16 +20,19 @@ private:
 
 	Squad m_squads[2];
 	std::unordered_map<short, Character>	m_characters;
-	std::map<short, GameAction*>			m_actionQueue;	// Should this be unordered?
+	std::list<GameAction*>					m_actionQueue;
+	std::list<GameAction*>::iterator		m_currentAction;
 
 	/* Private methods */
 	void Setup();
 
-	MovementAction* CreateMoveAction(short charactedID, std::list<MapVec3> path);
+	MovementAction* CreateMoveAction(short characterID, std::list<MapVec3> path);
 
 public:
 	Game();
 	~Game();
+
+	void Update(float dTime);
 
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER

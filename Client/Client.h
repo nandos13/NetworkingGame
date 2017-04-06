@@ -28,6 +28,7 @@ protected:
 	
 	Camera cam;
 	ClientSideGameManager gm;
+	Game* m_game;
 
 	/* Member functions */
 

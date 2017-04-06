@@ -43,7 +43,7 @@ struct MapVec3
 		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 	}
 };
-#define NETWORK_SERVER	// !!! TODO: REMOVE THIS WHEN DONE WRITING FUNCTIONALITY FOR SERVER !!!
+//#define NETWORK_SERVER	// !!! TODO: REMOVE THIS WHEN DONE WRITING FUNCTIONALITY FOR SERVER !!!
 class TileMap
 {
 private:

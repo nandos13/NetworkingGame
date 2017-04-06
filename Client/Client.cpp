@@ -2,8 +2,6 @@
 #include "Gizmos.h"
 #include "Input.h"
 #include "GameMessages.h"
-#include "Camera.h"
-#include "ClientSideGameManager.h"
 #include "TileMap.h"
 
 #include <glm/glm.hpp>
@@ -28,6 +26,9 @@ Client::~Client()
 bool Client::startup() 
 {
 	handleNetworkConnection();
+
+	// Initialize game
+	m_game = new Game();
 	
 	setBackgroundColour(0.25f, 0.25f, 0.25f);
 
@@ -51,6 +52,9 @@ void Client::update(float deltaTime)
 	//float time = getTime();
 
 	Gizmos::clear();
+
+	// Update the game
+	m_game->Update(deltaTime);
 
 	// Update camera
 	//cam.Update(deltaTime);

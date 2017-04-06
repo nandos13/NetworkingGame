@@ -57,6 +57,13 @@ void Character::Move(MapVec3 destination, float dTime)
 
 }
 
+#ifdef NETWORK_SERVER
+void Character::MoveTo(MapVec3)
+{
+	// TODO
+}
+#endif
+
 MapVec3 Character::GetPosition()
 {
 	return m_currentPosition;
