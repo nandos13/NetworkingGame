@@ -1,6 +1,7 @@
 #pragma once
 
 #include "TileMap.h"
+#include <glm\glm.hpp>
 
 class Character
 {
@@ -36,5 +37,8 @@ public:
 
 	unsigned int RemainingActionPoints();
 	unsigned int PointsToMove(short moveTiles);
+
+	void Move(MapVec3 destination, float dTime);
+	MapVec3 GetPosition();
 };
 

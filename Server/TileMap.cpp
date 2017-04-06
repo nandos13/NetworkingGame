@@ -26,6 +26,57 @@ TileMap::MapTile * TileMap::FindTile(MapVec3 pos)
 	return nullptr;
 }
 
+std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to)
+{
+	std::list<MapTile*> openList;
+	std::list<MapTile*> closedList;
+
+	from->previousNode = nullptr;
+	openList.push_back(from);
+
+	while (openList.size() > 0)
+	{
+		// Sort openList by fscore
+		openList.sort([](const MapTile*& a, const MapTile*& b) { return a->fScore < b->fScore; });
+
+		MapTile* currentNode = *(openList.begin());
+
+		if (currentNode == to)
+			break;		// Found the end node
+
+		// Remove current node from open, add to close
+		openList.remove(currentNode);
+		closedList.push_back(currentNode);
+
+		// Loop through all connections
+		std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*>::iterator cIter;
+		auto& connections = currentNode->GetAllConnections();;
+		for (cIter = connections.begin(); cIter != connections.end(); cIter++)
+		{
+			MapTile* n = cIter->second->GetConnected(currentNode);
+
+			if (*(std::find(closedList.begin(), closedList.end(), n)) != nullptr)
+				openList.push_back(n);
+
+			n->gScore = currentNode->gScore + cIter->second->GetWeight();
+			n->hScore = MapVec3::Distance(n->GetTilePos(), to->GetTilePos());
+			n->fScore = n->gScore + n->hScore;
+			n->previousNode = currentNode;
+		}
+
+		// Calculate path
+		std::list<MapVec3> path;	// Use a list to make use of push_front
+		currentNode = to;
+		while (currentNode != nullptr)
+		{
+			path.push_front(currentNode->GetTilePos());
+			currentNode = currentNode->previousNode;
+		}
+
+		return path;
+	}
+}
+
 TileMap::TileMap()
 {
 }
@@ -92,7 +143,8 @@ void TileMap::AddTile(short x, short y, short z, bool autoConnect)
 	AddTile(MapVec3(x,y,z), autoConnect);
 }
 
-std::vector<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
+#ifdef NETWORK_SERVER
+std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
 {
 	MapTile* origin = FindTile(from);
 	if (origin)
@@ -100,13 +152,12 @@ std::vector<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
 		MapTile* destination = FindTile(to);
 		if (destination)
 		{
-			// TODO: Code here
+			return AStarSearch(origin, destination);
 		}
 	}
-	return std::vector<MapVec3>();
+	return std::list<MapVec3>();
 }
 
-#ifdef NETWORK_SERVER
 /* Write & send the whole tilemap. */
 void TileMap::WriteTilemapNew(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
 {

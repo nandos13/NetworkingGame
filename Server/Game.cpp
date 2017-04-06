@@ -11,7 +11,7 @@ void Game::Setup()
 	// TODO: create a squad for each player. One squad humans, one aliens
 }
 
-MovementAction * Game::CreateMoveAction(short charactedID, std::vector<MapVec3> path)
+MovementAction * Game::CreateMoveAction(short charactedID, std::list<MapVec3> path)
 {
 	// TODO
 	// STEPS:
@@ -67,7 +67,7 @@ MovementAction * Game::MoveCharacter(short characterID, MapVec3 coords)
 		}
 
 		// Find a path
-		std::vector<MapVec3> path = m_map->FindPath(characterPos, coords);
+		std::list<MapVec3> path = m_map->FindPath(characterPos, coords);
 		if (path.size() == 0) 
 		{ 
 			printf("Error: Found no path between tile (%d, %d, %d) and tile (%d, %d, %d).\n", 

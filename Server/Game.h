@@ -4,7 +4,7 @@
 #include "MovementAction.h"
 #include "Squad.h"
 
-#include <vector>
+#include <list>
 #include <map>
 #include <unordered_map>
 
@@ -25,7 +25,7 @@ private:
 	/* Private methods */
 	void Setup();
 
-	MovementAction* CreateMoveAction(short charactedID, std::vector<MapVec3> path);
+	MovementAction* CreateMoveAction(short charactedID, std::list<MapVec3> path);
 
 public:
 	Game();

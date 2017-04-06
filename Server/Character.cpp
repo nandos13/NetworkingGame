@@ -34,8 +34,7 @@ MapVec3 Character::GetMapTileCoords()
 
 unsigned int Character::RemainingActionPoints()
 {
-	// TODO
-	return 0;
+	return m_remainingPoints;
 }
 
 /**
@@ -51,4 +50,14 @@ unsigned int Character::PointsToMove(short moveTiles)
 	if (moveTiles <= GetDashDistance() && m_remainingPoints > 1) { return 2; };	// Two points to move
 
 	return 0;	// 
+}
+
+void Character::Move(MapVec3 destination, float dTime)
+{
+
+}
+
+MapVec3 Character::GetPosition()
+{
+	return m_currentPosition;
 }

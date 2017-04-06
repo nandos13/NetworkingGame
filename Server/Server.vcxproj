@@ -160,6 +160,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MovementAction.cpp" />
     <ClCompile Include="Server.cpp" />
+    <ClCompile Include="ShootAction.cpp" />
     <ClCompile Include="Squad.cpp" />
     <ClCompile Include="TileMap.cpp" />
   </ItemGroup>
@@ -171,6 +172,7 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="MovementAction.h" />
     <ClInclude Include="Server.h" />
+    <ClInclude Include="ShootAction.h" />
     <ClInclude Include="Squad.h" />
     <ClInclude Include="TileMap.h" />
   </ItemGroup>
