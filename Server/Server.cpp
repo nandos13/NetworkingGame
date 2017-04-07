@@ -25,6 +25,33 @@ void Server::sendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::
 	pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
 }
 
+void Server::handleClientShoot(RakNet::Packet * packet)
+{
+	// Get shoot command data
+	RakNet::BitStream bsIn(packet->data, packet->length, false);
+	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+	short characterID;
+	bsIn.Read(characterID);
+	MapVec3 targetTile;
+	bsIn.Read(targetTile);
+
+	// Create a new shoot action
+	GameAction* action;
+#ifdef NETWORK_SERVER
+	action = m_game->TakeShot(characterID, targetTile);
+#endif
+
+	if (action == nullptr) { return; };
+
+	// Send action to all clients
+	RakNet::BitStream bs;
+	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SHOOT);
+	// TODO
+
+	// Simulate on the server
+	// TODO
+}
+
 void Server::handleClientMove(RakNet::Packet* packet)
 {
 	// Get move command data
@@ -36,7 +63,7 @@ void Server::handleClientMove(RakNet::Packet* packet)
 	bsIn.Read(destination);
 
 	// Process move command on the server-side game
-	MovementAction* action;
+	GameAction* action;
 #ifdef NETWORK_SERVER
 	action = m_game->MoveCharacter(characterID, destination);
 #endif
@@ -106,7 +133,7 @@ void Server::HandleConnections(RakNet::RakPeerInterface* pPeerInterface, RakNet:
 				std::cout << "A client lost connection.\n";
 				break;
 			case ID_CLIENT_SHOOT:
-				//TODO
+				handleClientShoot(packet);
 				break;
 			case ID_CLIENT_MOVE:
 				handleClientMove(packet);

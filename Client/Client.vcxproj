@@ -90,12 +90,24 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\Server\BaseAction.cpp" />
+    <ClCompile Include="..\Server\Character.cpp" />
+    <ClCompile Include="..\Server\Game.cpp" />
+    <ClCompile Include="..\Server\GameAction.cpp" />
+    <ClCompile Include="..\Server\GearPieceBase.cpp" />
+    <ClCompile Include="..\Server\Squad.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="ClientSideGameManager.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\Server\BaseAction.h" />
+    <ClInclude Include="..\Server\Character.h" />
+    <ClInclude Include="..\Server\Game.h" />
+    <ClInclude Include="..\Server\GameAction.h" />
+    <ClInclude Include="..\Server\GearPieceBase.h" />
+    <ClInclude Include="..\Server\Squad.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="ClientSideGameManager.h" />

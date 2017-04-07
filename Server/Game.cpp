@@ -11,20 +11,20 @@ void Game::Setup()
 	// TODO: create a squad for each player. One squad humans, one aliens
 }
 
-MovementAction * Game::CreateMoveAction(short characterID, std::list<MapVec3> path)
+Squad * Game::GetPlayingSquad()
 {
-	// TODO
-	// STEPS:
-	// Simulate on the server
-	// Check for any overwatch triggers, etc
-	// Create action & return
-	// USE TAKENACTION CLASS WITH VEC OF GAMEACTIONS
+	return &m_squads[m_currentTurn];
+}
 
-	return nullptr;
+Squad * Game::GetWaitingSquad()
+{
+	unsigned int currentWaiting = (m_currentTurn == 0) ? 1 : 0;
+	return &m_squads[currentWaiting];
 }
 
 Game::Game()
 {
+	m_currentTurn = 0;
 	m_currentAction = m_actionQueue.begin();
 
 	Setup();
@@ -46,7 +46,6 @@ void Game::Update(float dTime)
 	}
 }
 
-#ifndef NETWORK_SERVER
 /**
  * Add an action to the queue. Actions will be executed one by one
  * by the client, in the order they were sent by the server.
@@ -54,9 +53,15 @@ void Game::Update(float dTime)
 void Game::QueueAction(short uniqueID, GameAction* action)
 {
 	if (action == nullptr) { return; };
-	m_actionQueue.insert(std::map<int, GameAction*>::value_type(uniqueID, action));
+	m_actionQueue.push_back(action);
 }
 
+#ifndef NETWORK_SERVER
+void Game::Draw()
+{
+	m_squads[0].Draw();
+	m_squads[1].Draw();
+}
 #endif
 
 #ifdef NETWORK_SERVER
@@ -65,38 +70,76 @@ void Game::QueueAction(short uniqueID, GameAction* action)
  * Returns null if the character or map coordinate could not be found, or if the
  * move is not valid.
  */
-MovementAction * Game::MoveCharacter(short characterID, MapVec3 coords)
+GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 {
 	// Find the referenced character
-	Character* c = &(m_characters[characterID]);
-	if (c != nullptr)
+	auto& cIter = m_characters.find(characterID);
+	if (cIter != m_characters.end())
 	{
-		// Find the tile the character is standing on
-		MapVec3 characterPos = c->GetMapTileCoords();
-		if (c->RemainingActionPoints() == 0)
+		Character* c = &(cIter->second);
+		if (c != nullptr)
 		{
-			printf("Warning: Tried to move character (id: %d) with no action points.\n", characterID);
-			return nullptr;
+			// Find the tile the character is standing on
+			MapVec3 characterPos = c->GetMapTileCoords();
+			if (c->RemainingActionPoints() == 0)
+			{
+				printf("Warning: Tried to move character (id: %d) with no action points.\n", characterID);
+				return nullptr;
+			}
+
+			// Find a path
+			std::list<MapVec3> path = m_map->FindPath(characterPos, coords);
+			if (path.size() == 0)
+			{
+				printf("Error: Found no path between tile (%d, %d, %d) and tile (%d, %d, %d).\n",
+					characterPos.m_x, characterPos.m_y, characterPos.m_z, coords.m_x, coords.m_y, coords.m_z);
+				return nullptr;
+			}
+
+			// Check if the character can legally move this far
+			if (c->PointsToMove(path.size()) == 0)
+				printf("Error: Character (id: %d) cannot legally move %d tiles.\n", characterID, path.size());
+
+			// Create an action
+			GameAction* g = new GameAction();
+
+			// Get some basic info
+			Squad* waitingSquad = GetWaitingSquad();
+
+			// Iterate through tiles in the path
+			std::list<MapVec3>::iterator pathIter;
+			for (pathIter = path.begin(); pathIter != path.end(); pathIter++)
+			{
+				MapVec3 thisPos = c->GetPosition();
+				MapVec3 nextPos = (*pathIter);
+
+				// Check for overwatch triggers. If any are triggered, actions will be added to the list
+				waitingSquad->QueryOverwatch(g, c);
+
+				// Create movement to next tile in the path
+				MovementAction* mA = new MovementAction(c, nextPos);
+				g->AddToQueue(mA);
+
+				// Simulate on the server
+				// NOTE: Execute takes a float, but this does not do anything when simulated on the server, 
+				// as everything is done instantly
+				while (!g->IsCompleted())
+				{
+					g->Execute(0);
+				}
+			}
+
+			// Reset the game action. 
+			// (Reverses the effects of simulating it on the server, so it is again ready to use on a client)
+			g->Reset();
+
+			return g;
 		}
-
-		// Find a path
-		std::list<MapVec3> path = m_map->FindPath(characterPos, coords);
-		if (path.size() == 0) 
-		{ 
-			printf("Error: Found no path between tile (%d, %d, %d) and tile (%d, %d, %d).\n", 
-				characterPos.m_x, characterPos.m_y, characterPos.m_z, coords.m_x, coords.m_y, coords.m_z);
-			return nullptr;
-		}
-
-		// Check if the character can legally move this far
-		if (c->PointsToMove(path.size()) == 0)
-			printf("Error: Character (id: %d) cannot legally move %d tiles.\n", characterID, path.size());
-
-		// Create a movement action
-		return CreateMoveAction(characterID, path);
+		else
+			printf("Error: MoveCharacter function could not find character with id %d.\n", characterID);
 	}
 	else
-		printf("Error: MoveCharacter function could not find character with id %d.\n", characterID);
+		printf("Error: Could not find character");
 
 	return nullptr;
 }

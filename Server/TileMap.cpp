@@ -37,7 +37,7 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to)
 	while (openList.size() > 0)
 	{
 		// Sort openList by fscore
-		openList.sort([](const MapTile*& a, const MapTile*& b) { return a->fScore < b->fScore; });
+		openList.sort([](const MapTile* a, const MapTile* b) { return a->fScore < b->fScore; });
 
 		MapTile* currentNode = *(openList.begin());
 
@@ -129,7 +129,7 @@ void TileMap::AddTile(MapVec3 pos, unsigned char coverData, bool autoConnect)
 				{
 					// Link the new tile and the adjacent tile
 
-					float weight = (i >= 4) ? 1.4142 : 1;	// weigh diagonal movements as root 2
+					float weight = ((float)i >= 4) ? 1.4142f : (float)1;	// weigh diagonal movements as root 2
 					MapTileConnection* c = new MapTileConnection(temp, newTile, weight);
 
 				}
@@ -143,7 +143,6 @@ void TileMap::AddTile(short x, short y, short z, bool autoConnect)
 	AddTile(MapVec3(x,y,z), autoConnect);
 }
 
-#ifdef NETWORK_SERVER
 std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
 {
 	MapTile* origin = FindTile(from);
@@ -154,10 +153,13 @@ std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
 		{
 			return AStarSearch(origin, destination);
 		}
+		printf("Error: Specified destination could not be found in FindPath method.\n");
 	}
+	printf("Error: Specified origin could not be found in FindPath method.\n");
 	return std::list<MapVec3>();
 }
 
+#ifdef NETWORK_SERVER
 /* Write & send the whole tilemap. */
 void TileMap::WriteTilemapNew(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
 {
@@ -261,7 +263,7 @@ void TileMap::ReadTilemapNew(RakNet::Packet * packet)
 	bsIn.Read(planesQuantity);
 
 	// Iterate through planes
-	for (int i = 0; i < planesQuantity; i++)
+	for (unsigned int i = 0; i < planesQuantity; i++)
 	{
 		// Read current plane's key & create a new plane
 		short planeKey;
@@ -274,7 +276,7 @@ void TileMap::ReadTilemapNew(RakNet::Packet * packet)
 		bsIn.Read(tilesQuantity);
 
 		// Iterate through tiles in current plane
-		for (int j = 0; j < tilesQuantity; j++)
+		for (unsigned int j = 0; j < tilesQuantity; j++)
 		{
 			// Read current tile's key (x, z)
 			std::pair<short, short> tileKey = std::make_pair(0, 0);
@@ -299,7 +301,7 @@ void TileMap::ReadTilemapNew(RakNet::Packet * packet)
 			 * For now we will store these keys separately and then iterate through and
 			 * add connections properly at the end.
 			 */
-			for (int k = 0; k < connectionsQuantity; k++)
+			for (unsigned int k = 0; k < connectionsQuantity; k++)
 			{
 				// Read connection data
 				ConnectionData* c;

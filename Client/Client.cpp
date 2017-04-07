@@ -68,10 +68,13 @@ void Client::update(float deltaTime)
 
 void Client::draw() {
 
-	// wipe the screen to the background colour
+	// Wipe the screen to the background colour
 	clearScreen();
 
-	// do drawing here
+	// Do drawing here
+#ifndef NETWORK_SERVER
+	m_game->Draw();
+#endif
 
 	Gizmos::draw(cam.GetProjectionMatrix(getWindowWidth(), getWindowHeight()) * cam.GetViewMatrix());
 }
@@ -154,6 +157,17 @@ void Client::handleNetworkMessages()
 			break;
 		}
 	}
+}
+
+void Client::sendCharacterShoot(short characterID, MapVec3 target)
+{
+	RakNet::BitStream bs;
+	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_SHOOT);
+	bs.Write(characterID);
+	bs.Write((char*)&target, sizeof(MapVec3));
+
+	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
+		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
 }
 
 void Client::sendCharacterMove(short characterID, MapVec3 destination)

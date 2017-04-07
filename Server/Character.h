@@ -1,7 +1,8 @@
 #pragma once
 
 #include "TileMap.h"
-#include <glm\glm.hpp>
+#include "BaseAction.h"
+#include "GearPieceBase.h"
 
 class Character
 {
@@ -20,6 +21,9 @@ private:
 	const unsigned int m_sightRadius = 27;
 	unsigned int m_remainingPoints = 0;
 
+	// Gear
+	std::unordered_map<short, GearPieceBase> m_gear;
+
 	// Other
 	MapVec3 m_currentPosition = MapVec3(-1);
 	bool m_inOverwatch = false;
@@ -34,17 +38,28 @@ public:
 	unsigned int GetDashDistance();
 	MapVec3 GetMapTileCoords();
 
+#ifdef NETWORK_SERVER
+	void QueryOverwatch(GameAction* action, Character* mover);
+#endif
+
 	unsigned int RemainingActionPoints();
 	unsigned int PointsToMove(short moveTiles);
+	void ResetActionPoints();
 
+	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER
 	// Smoothly lerp character's position
 	void Move(MapVec3 destination, float dTime);
+
+	void Draw();
 #endif
+
+	/* SERVER-ONLY FUNCTIONALITY */
 #ifdef NETWORK_SERVER
 	// Instantly move character's position
 	void MoveTo(MapVec3);
 #endif
+
 	MapVec3 GetPosition();
 
 

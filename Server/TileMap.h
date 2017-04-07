@@ -37,9 +37,9 @@ struct MapVec3
 
 	static float Distance(const MapVec3 a, const MapVec3 b)
 	{
-		float x = b.m_x - a.m_x;
-		float y = b.m_y - a.m_y;
-		float z = b.m_z - a.m_z;
+		float x = (float)b.m_x - (float)a.m_x;
+		float y = (float)b.m_y - (float)a.m_y;
+		float z = (float)b.m_z - (float)a.m_z;
 		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 	}
 };
@@ -163,9 +163,9 @@ private:
 			}
 			return false;
 		}
-#ifdef NETWORK_SERVER
+
 		std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*> GetAllConnections() { return m_connectedTiles; };
-#endif
+
 		MapTile* GetConnectedTile(MAP_CONNECTION_DIR dir, MAP_CONNECTION_LEVEL level = LEVEL)
 		{
 			// Offsets for tiles connected in same plane. These values correspond to MAP_CONNECTION_DIR values
@@ -210,10 +210,8 @@ private:
 		}
 
 		// A* values
-#ifdef NETWORK_SERVER
 		float gScore, hScore, fScore;
 		MapTile* previousNode;
-#endif
 
 		// GENERAL
 
@@ -386,9 +384,7 @@ private:
 
 	TileMap::MapTile* FindTile(MapVec3 pos);
 
-#ifdef NETWORK_SERVER
 	std::list<MapVec3> AStarSearch(MapTile* from, MapTile* to);
-#endif
 
 public:
 	TileMap();
@@ -397,10 +393,9 @@ public:
 	void AddTile(MapVec3 pos, unsigned char coverData = 0, bool autoConnect = true);
 	void AddTile(short x, short y, short z, bool autoConnect = true);
 
-
-#ifdef NETWORK_SERVER
 	std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to);
 
+#ifdef NETWORK_SERVER
 	void WriteTilemapNew(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress & address);
 	void WriteTilemapDiff(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress & address);
 #endif

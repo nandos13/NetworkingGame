@@ -16,17 +16,18 @@ private:
 
 	/* Private member variables */
 
-	TileMap*		m_map;
+	TileMap* m_map;
 
 	Squad m_squads[2];
+	unsigned int m_currentTurn;
 	std::unordered_map<short, Character>	m_characters;
 	std::list<GameAction*>					m_actionQueue;
 	std::list<GameAction*>::iterator		m_currentAction;
 
 	/* Private methods */
 	void Setup();
-
-	MovementAction* CreateMoveAction(short characterID, std::list<MapVec3> path);
+	Squad* GetPlayingSquad();
+	Squad* GetWaitingSquad();
 
 public:
 	Game();
@@ -34,18 +35,19 @@ public:
 
 	void Update(float dTime);
 
+	void QueueAction(short uniqueID, GameAction* action);
+
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER
-
-	void QueueAction(short uniqueID, GameAction* action);	// Should the server have access to this also??
-
+	void Draw();
 #endif
 
 	/* SERVER-ONLY FUNCTIONALITY */
+
 #ifdef NETWORK_SERVER
 
-	GameAction* TakeShot(short shooterID, short victimID);
-	MovementAction* MoveCharacter(short characterID, MapVec3 coords);
+	GameAction* TakeShot(const short shooterID, short victimID);
+	GameAction* CreateMoveAction(const short characterID, MapVec3 coords);
 
 #endif
 };

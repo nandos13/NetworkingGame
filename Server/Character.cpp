@@ -32,6 +32,22 @@ MapVec3 Character::GetMapTileCoords()
 	return m_currentPosition;
 }
 
+#ifdef NETWORK_SERVER
+void Character::QueryOverwatch(GameAction* action, Character * mover)
+{
+	if (mover != nullptr && m_inOverwatch)
+	{
+		MapVec3 moverPos = mover->GetPosition();
+
+		// TODO
+		bool shot = false;
+		int damage = 0;
+		bool crit = false;
+		// TODO: PASS REFERENCES INTO FUNCTION SOMEWHERE.
+	}
+}
+#endif
+
 unsigned int Character::RemainingActionPoints()
 {
 	return m_remainingPoints;
@@ -52,10 +68,22 @@ unsigned int Character::PointsToMove(short moveTiles)
 	return 0;	// 
 }
 
+void Character::ResetActionPoints()
+{
+	m_remainingPoints = 2;
+}
+
+#ifndef NETWORK_SERVER
 void Character::Move(MapVec3 destination, float dTime)
 {
 
 }
+
+void Character::Draw()
+{
+	// TODO
+}
+#endif
 
 #ifdef NETWORK_SERVER
 void Character::MoveTo(MapVec3)

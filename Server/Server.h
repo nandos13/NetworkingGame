@@ -12,6 +12,7 @@ protected:
 	int nextClientID = 1;
 	void sendNewClientID(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress& address);
 
+	void handleClientShoot(RakNet::Packet* packet);
 	void handleClientMove(RakNet::Packet* packet);
 
 	// Game instance

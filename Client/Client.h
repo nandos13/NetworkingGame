@@ -38,6 +38,8 @@ protected:
 	void handleNetworkConnection();
 	void initialiseClientConnection();
 	void handleNetworkMessages();
+
+	void sendCharacterShoot(short characterID, MapVec3 target);
 	void sendCharacterMove(short characterID, MapVec3 destination);
 
 	/* Networking varibles */

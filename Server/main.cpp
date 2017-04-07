@@ -1,4 +1,3 @@
-#define NETWORK_SERVER
 #include "Server.h"
 
 

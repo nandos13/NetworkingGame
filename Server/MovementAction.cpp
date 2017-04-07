@@ -29,7 +29,7 @@ void MovementAction::_Execute(float dTime)
 }
 #endif
 
-MovementAction::MovementAction(Character * owner, MapVec3 destination) : GameAction(owner)
+MovementAction::MovementAction(Character * owner, MapVec3 destination) : BaseAction(owner)
 {
 	m_destination = destination;
 }

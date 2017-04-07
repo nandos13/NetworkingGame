@@ -1,7 +1,9 @@
 #pragma once
 #include "Character.h"
+#include "GameAction.h"
 
 #include <unordered_map>
+#include <list>
 
 class Squad
 {
@@ -13,6 +15,14 @@ public:
 	Squad();
 	~Squad();
 
-	//bool QueryTurnmThinggg();
+	void StartTurn();
+
+#ifdef NETWORK_SERVER
+	void QueryOverwatch(GameAction* action, Character* mover);
+#endif
+
+#ifndef NETWORK_SERVER
+	void Draw();
+#endif
 };
 
