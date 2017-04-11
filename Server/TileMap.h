@@ -19,20 +19,20 @@ struct MapVec3
 	MapVec3(short i) { m_x = i; m_y = i; m_z = i; };
 	MapVec3(short x, short y, short z) { m_x = x; m_y = y; m_z = z; };
 	const bool operator== (const MapVec3& rhs) const { return (m_x == rhs.m_x && m_y == rhs.m_y && m_z == rhs.m_z); };
-	const bool operator!= (const MapVec3& rhs) { return (m_x != rhs.m_x || m_y != rhs.m_y || m_z != rhs.m_z); };
-	MapVec3& operator+ (const MapVec3& rhs) 
+	const bool operator!= (const MapVec3& rhs) const { return (m_x != rhs.m_x || m_y != rhs.m_y || m_z != rhs.m_z); };
+	MapVec3& operator+ (const MapVec3& rhs) const
 	{
-		m_x += rhs.m_x;
-		m_y += rhs.m_y;
-		m_z += rhs.m_z;
-		return *this;
+		short x = m_x + rhs.m_x;
+		short y = m_y + rhs.m_y;
+		short z = m_z + rhs.m_z;
+		return MapVec3(x, y, z);
 	}
-	MapVec3& operator- (const MapVec3& rhs)
+	MapVec3& operator- (const MapVec3& rhs) const
 	{
-		m_x -= rhs.m_x;
-		m_y -= rhs.m_y;
-		m_z -= rhs.m_z;
-		return *this;
+		short x = m_x - rhs.m_x;
+		short y = m_y - rhs.m_y;
+		short z = m_z - rhs.m_z;
+		return MapVec3(x, y, z);
 	}
 
 	static float Distance(const MapVec3 a, const MapVec3 b)
@@ -43,7 +43,7 @@ struct MapVec3
 		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 	}
 };
-//#define NETWORK_SERVER	// !!! TODO: REMOVE THIS WHEN DONE WRITING FUNCTIONALITY FOR SERVER !!!
+
 class TileMap
 {
 private:
@@ -382,9 +382,11 @@ private:
 	std::unordered_map<short, MapPlane> m_planes;
 	void ClearAllData();
 
-	TileMap::MapTile* FindTile(MapVec3 pos);
+	TileMap::MapTile* FindTile(const MapVec3 pos);
 
 	std::list<MapVec3> AStarSearch(MapTile* from, MapTile* to);
+
+	bool SightBetweenTiles(MapVec3 from, MapVec3 to);
 
 public:
 	TileMap();
@@ -393,7 +395,10 @@ public:
 	void AddTile(MapVec3 pos, unsigned char coverData = 0, bool autoConnect = true);
 	void AddTile(short x, short y, short z, bool autoConnect = true);
 
-	std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to);
+	std::list<MapVec3> FindPath(MapVec3 from, MapVec3 to);
+	std::list<MapVec3> GetWalkableTiles(MapVec3 start, int maxTravelDist);	// TODO
+
+	int CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange = -1);
 
 #ifdef NETWORK_SERVER
 	void WriteTilemapNew(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress & address);

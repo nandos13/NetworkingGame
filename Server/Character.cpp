@@ -86,7 +86,7 @@ void Character::Draw()
 #endif
 
 #ifdef NETWORK_SERVER
-void Character::MoveTo(MapVec3)
+void Character::MoveTo(MapVec3 destination)
 {
 	// TODO
 }

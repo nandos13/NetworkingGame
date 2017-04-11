@@ -25,7 +25,7 @@ private:
 	std::unordered_map<short, GearPieceBase> m_gear;
 
 	// Other
-	MapVec3 m_currentPosition = MapVec3(-1);
+	MapVec3 m_currentPosition;
 	bool m_inOverwatch = false;
 
 public:
@@ -57,7 +57,7 @@ public:
 	/* SERVER-ONLY FUNCTIONALITY */
 #ifdef NETWORK_SERVER
 	// Instantly move character's position
-	void MoveTo(MapVec3);
+	void MoveTo(MapVec3 destination);
 #endif
 
 	MapVec3 GetPosition();

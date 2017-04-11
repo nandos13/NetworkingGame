@@ -16,12 +16,22 @@ void TileMap::ClearAllData()
 	m_planes.clear();
 }
 
-TileMap::MapTile * TileMap::FindTile(MapVec3 pos)
+TileMap::MapTile * TileMap::FindTile(const MapVec3 pos)
 {
-	MapPlane* p = &( m_planes[pos.m_y] );
-	if (p != nullptr)
+	// Find plane
+	std::unordered_map<short, MapPlane>::iterator it = m_planes.find(pos.m_y);
+	if (it != m_planes.end())
 	{
-		return ( p->m_tiles[std::make_pair(pos.m_x, pos.m_z)] );
+		// Find tile
+		MapPlane* p = &( it->second );
+		std::map<std::pair<short, short>, MapTile*>::iterator it2;
+		it2 = p->m_tiles.find(std::make_pair(pos.m_x, pos.m_z));
+
+		if (it2 != p->m_tiles.end())
+		{
+			// Return found tile
+			return it2->second;
+		}
 	}
 	return nullptr;
 }
@@ -63,24 +73,158 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to)
 			n->fScore = n->gScore + n->hScore;
 			n->previousNode = currentNode;
 		}
-
-		// Calculate path
-		std::list<MapVec3> path;	// Use a list to make use of push_front
-		currentNode = to;
-		while (currentNode != nullptr)
-		{
-			path.push_front(currentNode->GetTilePos());
-			currentNode = currentNode->previousNode;
-		}
-
-		return path;
 	}
+
+	// Calculate path
+	std::list<MapVec3> path;
+	MapTile* currentNode = to;
+	while (currentNode != nullptr)
+	{
+		path.push_front(currentNode->GetTilePos());
+		currentNode = currentNode->previousNode;
+	}
+
+	return path;
+}
+
+/**
+ * Internal use for checking sight between two tiles.
+ */
+bool TileMap::SightBetweenTiles(const MapVec3 from, const MapVec3 to)
+{
+	if (from == to)
+		return true;	// Error?
+
+	// Check height cases
+
+	if (from.m_y < to.m_y)
+	{
+		// Check if there is a tile at 'to' position
+		if (FindTile(to) != nullptr)	return false;	// Sight line hits the cieling
+	}
+	else if (from.m_y > to.m_y)
+	{
+		// Check if there is a tile at 'from' position
+		if (FindTile(from) != nullptr)	return false;	// Sight line hits the floor
+	}
+
+	// Check same-level directions with some nasty nested if-statements
+
+	MAP_CONNECTION_DIR dir;
+	short xDif = to.m_x - from.m_x;
+	short zDif = to.m_z - from.m_z;
+
+	if (xDif < 0)				// 'to' is left of 'from'
+	{
+		if (zDif < 0)			// 'to' is behind 'from'
+			dir = MAP_CONNECTION_DIR::BACKLEFT;
+		else if (zDif > 0)		// 'to' is in front of 'from'
+			dir = MAP_CONNECTION_DIR::FRONTLEFT;
+		else
+			MAP_CONNECTION_DIR::LEFT;
+	}
+	else if (xDif > 0)			// 'to' is right of 'from'
+	{
+		if (zDif < 0)			// 'to' is behind 'from'
+			dir = MAP_CONNECTION_DIR::BACKRIGHT;
+		else if (zDif > 0)		// 'to' is in front of 'from'
+			dir = MAP_CONNECTION_DIR::FRONTRIGHT;
+		else
+			MAP_CONNECTION_DIR::RIGHT;
+	}
+	else
+	{
+		if (zDif < 0)
+			dir = MAP_CONNECTION_DIR::BACK;
+		else
+			dir = MAP_CONNECTION_DIR::FRONT;
+	}
+
+	bool crossesHighCover = false;
+	MapTile* tFrom = FindTile(from);
+
+	if (tFrom == nullptr)
+	{
+		// Sight-line is currently in a space where no tiles exist.
+		MapTile* tTo = FindTile(to);
+		if (tTo == nullptr)	return true;	// No cover data could block this vision
+
+		// Sight-line is entering a tile. Check the inverse of the 'dir' direction for cover values
+		switch (dir)
+		{
+		case LEFT:
+			crossesHighCover = (tTo->GetCoverRight() == COVER_HIGH);
+			break;
+		case RIGHT:
+			crossesHighCover = (tTo->GetCoverLeft() == COVER_HIGH);
+			break;
+		case FRONT:
+			crossesHighCover = (tTo->GetCoverBack() == COVER_HIGH);
+			break;
+		case BACK:
+			crossesHighCover = (tTo->GetCoverFront() == COVER_HIGH);
+			break;
+		case FRONTLEFT:
+			crossesHighCover = (tTo->GetCoverBack() == COVER_HIGH || tTo->GetCoverRight() == COVER_HIGH);
+			break;
+		case FRONTRIGHT:
+			crossesHighCover = (tTo->GetCoverBack() == COVER_HIGH || tTo->GetCoverLeft() == COVER_HIGH);
+			break;
+		case BACKRIGHT:
+			crossesHighCover = (tTo->GetCoverFront() == COVER_HIGH || tTo->GetCoverLeft() == COVER_HIGH);
+			break;
+		case BACKLEFT:
+			crossesHighCover = (tTo->GetCoverFront() == COVER_HIGH || tTo->GetCoverRight() == COVER_HIGH);
+			break;
+		default:
+			crossesHighCover = false;
+			break;
+		}
+	}
+	else
+	{
+		// Check 'dir' direction for cover values
+		switch (dir)
+		{
+		case LEFT:
+			crossesHighCover = (tFrom->GetCoverLeft() == COVER_HIGH);
+			break;
+		case RIGHT:
+			crossesHighCover = (tFrom->GetCoverRight() == COVER_HIGH);
+			break;
+		case FRONT:
+			crossesHighCover = (tFrom->GetCoverFront() == COVER_HIGH);
+			break;
+		case BACK:
+			crossesHighCover = (tFrom->GetCoverBack() == COVER_HIGH);
+			break;
+		case FRONTLEFT:
+			crossesHighCover = (tFrom->GetCoverFront() == COVER_HIGH || tFrom->GetCoverLeft() == COVER_HIGH);
+			break;
+		case FRONTRIGHT:
+			crossesHighCover = (tFrom->GetCoverFront() == COVER_HIGH || tFrom->GetCoverRight() == COVER_HIGH);
+			break;
+		case BACKRIGHT:
+			crossesHighCover = (tFrom->GetCoverBack() == COVER_HIGH || tFrom->GetCoverRight() == COVER_HIGH);
+			break;
+		case BACKLEFT:
+			crossesHighCover = (tFrom->GetCoverBack() == COVER_HIGH || tFrom->GetCoverLeft() == COVER_HIGH);
+			break;
+		default:
+			crossesHighCover = false;
+			break;
+		}
+	}
+
+	if (crossesHighCover)
+		return false;	// Sight-line hits high cover
+	
+	return true;
 }
 
 TileMap::TileMap()
 {
 }
-
 
 TileMap::~TileMap()
 {
@@ -157,6 +301,30 @@ std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
 	}
 	printf("Error: Specified origin could not be found in FindPath method.\n");
 	return std::list<MapVec3>();
+}
+
+/**
+ * Queries whether or not the specified from tile has sight on the to tile.
+ * Returns 0 if the tile is not in sight.
+ * Returns 1 if the tile is in sight, but the sight line crosses a cover line.
+ * (1 == standard attack sight)
+ * Returns 2 if the tile is in sight & no cover lines are crossed.
+ * (2 == flanked attack sight)
+ */
+int TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange)
+{
+	if (MapVec3::Distance(from, to) <= maxSightRange)
+	{
+		const MapVec3 dir = to - from;
+
+		// TODO:
+		// Some kind of raycast-ish implementation to go from 'from' to 'to'
+		// For each tile in this path, use SightBetweenTiles method
+		// If there is sight, check 'to' cover status
+		// Return based on this cover
+		return 1;	// REMOVE THIS LATER
+	}
+	return 0;	// 'to' tile is out of range
 }
 
 #ifdef NETWORK_SERVER

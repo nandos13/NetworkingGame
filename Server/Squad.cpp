@@ -18,7 +18,7 @@ void Squad::StartTurn()
 	{
 		(*iter).second->ResetActionPoints();
 	}
-	// TODO
+	// TODO: take one turn from current debuffs, etc
 }
 
 #ifdef NETWORK_SERVER

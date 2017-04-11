@@ -30,7 +30,6 @@ Game::Game()
 	Setup();
 }
 
-
 Game::~Game()
 {
 }
