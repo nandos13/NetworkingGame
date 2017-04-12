@@ -64,6 +64,11 @@ void Game::Draw()
 #endif
 
 #ifdef NETWORK_SERVER
+void Game::GetShotVariables(short & damage, bool & crit, Character * shooter, MapVec3 target)
+{
+	// TODO: Use random seed to decide if the shot hits, output this info
+}
+
 /**
  * Handle character movement to a specified map coordinate. 
  * Returns null if the character or map coordinate could not be found, or if the
@@ -113,7 +118,7 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 				MapVec3 nextPos = (*pathIter);
 
 				// Check for overwatch triggers. If any are triggered, actions will be added to the list
-				waitingSquad->QueryOverwatch(g, c);
+				waitingSquad->QueryOverwatch(g, c, *m_map);
 
 				// Create movement to next tile in the path
 				MovementAction* mA = new MovementAction(c, nextPos);
@@ -123,10 +128,15 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 				// NOTE: Execute takes a float, but this does not do anything when simulated on the server, 
 				// as everything is done instantly
 				while (!g->IsCompleted())
-				{
 					g->Execute(0);
-				}
 			}
+
+			// Check overwatch triggers for final tile move
+			waitingSquad->QueryOverwatch(g, c, *m_map);
+
+			// Simulate last overwatch
+			while (!g->IsCompleted())
+				g->Execute(0);
 
 			// Reset the game action. 
 			// (Reverses the effects of simulating it on the server, so it is again ready to use on a client)

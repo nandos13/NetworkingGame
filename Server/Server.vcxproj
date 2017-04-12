@@ -161,6 +161,7 @@
     <ClCompile Include="GearPieceBase.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MovementAction.cpp" />
+    <ClCompile Include="OverwatchShotAction.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="ShootAction.cpp" />
     <ClCompile Include="Squad.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GearPieceBase.h" />
     <ClInclude Include="MovementAction.h" />
+    <ClInclude Include="OverwatchShotAction.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="ShootAction.h" />
     <ClInclude Include="Squad.h" />

@@ -22,14 +22,18 @@ void Squad::StartTurn()
 }
 
 #ifdef NETWORK_SERVER
-void Squad::QueryOverwatch(GameAction* action, Character * mover)
+void Squad::QueryOverwatch(GameAction* action, Character * mover, TileMap& map)
 {
 	if (mover != nullptr)
 	{
+		// Check each character in this squad
 		std::unordered_map<short, Character*>::iterator iter;
 		for (iter = m_squaddies.begin(); iter != m_squaddies.end(); iter++)
 		{
-			(*iter).second->QueryOverwatch(action, mover);
+			(*iter).second->QueryOverwatch(action, mover, map);
+
+			if (!mover->Alive())
+				break;	// Moving unit was killed
 		}
 	}
 }

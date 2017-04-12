@@ -37,3 +37,9 @@ MovementAction::MovementAction(Character * owner, MapVec3 destination) : BaseAct
 MovementAction::~MovementAction()
 {
 }
+
+#ifdef NETWORK_SERVER
+void MovementAction::Write(RakNet::BitStream & bs)
+{
+}
+#endif

@@ -1,4 +1,6 @@
 #include "Character.h"
+#include "OverwatchShotAction.h"
+#include "Game.h"
 
 
 
@@ -33,17 +35,31 @@ MapVec3 Character::GetMapTileCoords()
 }
 
 #ifdef NETWORK_SERVER
-void Character::QueryOverwatch(GameAction* action, Character * mover)
+void Character::QueryOverwatch(GameAction* action, Character * mover, TileMap& map)
 {
 	if (mover != nullptr && m_inOverwatch)
 	{
-		MapVec3 moverPos = mover->GetPosition();
+		// Only attempt to take the shot if the mover is alive.
+		// This will prevent multiple units taking overwatch at the same time and wasting the shot
+		// if the first one connects
+		if (mover->Alive())
+		{
+			MapVec3 moverPos = mover->GetPosition();
 
-		// TODO
-		bool shot = false;
-		int damage = 0;
-		bool crit = false;
-		// TODO: PASS REFERENCES INTO FUNCTION SOMEWHERE.
+			// Check if the character can see the mover's position tile
+			if (map.CheckTileSight(m_currentPosition, moverPos, m_sightRadius))
+			{
+				// Create an overwatch-shot action
+
+				short damage = 0;
+				bool crit = false;
+				Game::GetShotVariables(damage, crit, this, moverPos);
+
+				ShootAction* sa = new ShootAction(this, moverPos, damage, crit);
+				OverwatchShotAction* oa = new OverwatchShotAction(this, sa);
+				action->AddToQueue(oa);
+			}
+		}
 	}
 }
 #endif
@@ -92,7 +108,17 @@ void Character::MoveTo(MapVec3 destination)
 }
 #endif
 
+void Character::EndOverwatch()
+{
+	m_inOverwatch = false;
+}
+
 MapVec3 Character::GetPosition()
 {
 	return m_currentPosition;
+}
+
+bool Character::Alive()
+{
+	return m_remainingHealth > 0;
 }

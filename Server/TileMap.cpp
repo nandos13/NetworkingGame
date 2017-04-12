@@ -87,6 +87,7 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to)
 	return path;
 }
 
+#ifdef NETWORK_SERVER
 /**
  * Internal use for checking sight between two tiles.
  */
@@ -110,35 +111,7 @@ bool TileMap::SightBetweenTiles(const MapVec3 from, const MapVec3 to)
 
 	// Check same-level directions with some nasty nested if-statements
 
-	MAP_CONNECTION_DIR dir;
-	short xDif = to.m_x - from.m_x;
-	short zDif = to.m_z - from.m_z;
-
-	if (xDif < 0)				// 'to' is left of 'from'
-	{
-		if (zDif < 0)			// 'to' is behind 'from'
-			dir = MAP_CONNECTION_DIR::BACKLEFT;
-		else if (zDif > 0)		// 'to' is in front of 'from'
-			dir = MAP_CONNECTION_DIR::FRONTLEFT;
-		else
-			MAP_CONNECTION_DIR::LEFT;
-	}
-	else if (xDif > 0)			// 'to' is right of 'from'
-	{
-		if (zDif < 0)			// 'to' is behind 'from'
-			dir = MAP_CONNECTION_DIR::BACKRIGHT;
-		else if (zDif > 0)		// 'to' is in front of 'from'
-			dir = MAP_CONNECTION_DIR::FRONTRIGHT;
-		else
-			MAP_CONNECTION_DIR::RIGHT;
-	}
-	else
-	{
-		if (zDif < 0)
-			dir = MAP_CONNECTION_DIR::BACK;
-		else
-			dir = MAP_CONNECTION_DIR::FRONT;
-	}
+	MAP_CONNECTION_DIR dir = from.GetDirectionTo(to);
 
 	bool crossesHighCover = false;
 	MapTile* tFrom = FindTile(from);
@@ -221,6 +194,7 @@ bool TileMap::SightBetweenTiles(const MapVec3 from, const MapVec3 to)
 	
 	return true;
 }
+#endif
 
 TileMap::TileMap()
 {
@@ -303,31 +277,64 @@ std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
 	return std::list<MapVec3>();
 }
 
-/**
- * Queries whether or not the specified from tile has sight on the to tile.
- * Returns 0 if the tile is not in sight.
- * Returns 1 if the tile is in sight, but the sight line crosses a cover line.
- * (1 == standard attack sight)
- * Returns 2 if the tile is in sight & no cover lines are crossed.
- * (2 == flanked attack sight)
- */
-int TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange)
+#ifdef NETWORK_SERVER
+/* Checks tiles over a sight-line to check whether or not sight is blocked. */
+bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange)
 {
-	if (MapVec3::Distance(from, to) <= maxSightRange)
+	MapTile* toTile = FindTile(to);
+	if (MapVec3::Distance(from, to) <= maxSightRange && toTile != nullptr)
 	{
-		const MapVec3 dir = to - from;
+		/* Use Bresenham's line algorithm to check which tiles the sight-line passes through. */
 
-		// TODO:
-		// Some kind of raycast-ish implementation to go from 'from' to 'to'
-		// For each tile in this path, use SightBetweenTiles method
-		// If there is sight, check 'to' cover status
-		// Return based on this cover
-		return 1;	// REMOVE THIS LATER
+		const MapVec3 dir = to - from;
+		const short maxStep = max(max(dir.m_x, dir.m_y), dir.m_z);
+
+		MapVec3 prevPos;
+		MapVec3 currentPos = from;
+		MapVec3 nextPos;
+		MapVec3 dDir = MapVec3(0);	// Delta values
+
+		while (currentPos != to)
+		{
+			// Add direction vector
+			dDir = dDir + dir;
+
+			// Check wrap around
+			MapVec3 thisMove = MapVec3(0);
+			if (dDir.m_x >= maxStep)
+			{
+				dDir.m_x = dDir.m_x % maxStep;
+				thisMove.m_x = 1;
+			}
+			if (dDir.m_y >= maxStep)
+			{
+				dDir.m_y = dDir.m_y % maxStep;
+				thisMove.m_y = 1;
+			}
+			if (dDir.m_z >= maxStep)
+			{
+				dDir.m_z = dDir.m_z % maxStep;
+				thisMove.m_z = 1;
+			}
+
+			// Find nextPos from offset
+			nextPos = currentPos + thisMove;
+
+			// Check sight between these two tiles
+			bool sight = SightBetweenTiles(currentPos, nextPos);
+			if (!sight)
+				return false;
+
+			// Advance to the next tile
+			prevPos = currentPos;
+			currentPos = nextPos;
+		}
+
+		return true;
 	}
-	return 0;	// 'to' tile is out of range
+	return false;	// 'to' tile is out of sight range
 }
 
-#ifdef NETWORK_SERVER
 /* Write & send the whole tilemap. */
 void TileMap::WriteTilemapNew(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
 {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <RakPeerInterface.h>
+
 #include <list>
 
 class Character;
@@ -49,5 +51,9 @@ public:
 	bool IsCompleted();
 
 	void Reset();
+
+#ifdef NETWORK_SERVER
+	virtual void Write(RakNet::BitStream& bs) = 0;
+#endif
 };
 

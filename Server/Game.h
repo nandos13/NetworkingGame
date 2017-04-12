@@ -46,7 +46,8 @@ public:
 
 #ifdef NETWORK_SERVER
 
-	GameAction* TakeShot(const short shooterID, short victimID);
+	static void GetShotVariables(short& damage, bool& crit, Character* shooter, MapVec3 target);
+	//GameAction* TakeShot(const short shooterID, short victimID);
 	GameAction* CreateMoveAction(const short characterID, MapVec3 coords);
 
 #endif

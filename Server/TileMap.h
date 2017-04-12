@@ -42,6 +42,37 @@ struct MapVec3
 		float z = (float)b.m_z - (float)a.m_z;
 		return sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
 	}
+	MAP_CONNECTION_DIR GetDirectionTo(const MapVec3 to) const
+	{
+		short xDif = to.m_x - m_x;
+		short zDif = to.m_z - m_z;
+
+		if (xDif < 0)				// 'to' is left of 'from'
+		{
+			if (zDif < 0)			// 'to' is behind 'from'
+				return MAP_CONNECTION_DIR::BACKLEFT;
+			else if (zDif > 0)		// 'to' is in front of 'from'
+				return MAP_CONNECTION_DIR::FRONTLEFT;
+			else
+				return MAP_CONNECTION_DIR::LEFT;
+		}
+		else if (xDif > 0)			// 'to' is right of 'from'
+		{
+			if (zDif < 0)			// 'to' is behind 'from'
+				return MAP_CONNECTION_DIR::BACKRIGHT;
+			else if (zDif > 0)		// 'to' is in front of 'from'
+				return MAP_CONNECTION_DIR::FRONTRIGHT;
+			else
+				return MAP_CONNECTION_DIR::RIGHT;
+		}
+		else
+		{
+			if (zDif < 0)
+				return MAP_CONNECTION_DIR::BACK;
+			else
+				return MAP_CONNECTION_DIR::FRONT;
+		}
+	}
 };
 
 class TileMap
@@ -386,7 +417,9 @@ private:
 
 	std::list<MapVec3> AStarSearch(MapTile* from, MapTile* to);
 
+#ifdef NETWORK_SERVER
 	bool SightBetweenTiles(MapVec3 from, MapVec3 to);
+#endif
 
 public:
 	TileMap();
@@ -398,9 +431,9 @@ public:
 	std::list<MapVec3> FindPath(MapVec3 from, MapVec3 to);
 	std::list<MapVec3> GetWalkableTiles(MapVec3 start, int maxTravelDist);	// TODO
 
-	int CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange = -1);
-
 #ifdef NETWORK_SERVER
+	bool CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange = -1);
+
 	void WriteTilemapNew(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress & address);
 	void WriteTilemapDiff(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress & address);
 #endif

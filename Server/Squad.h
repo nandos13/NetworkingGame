@@ -18,7 +18,7 @@ public:
 	void StartTurn();
 
 #ifdef NETWORK_SERVER
-	void QueryOverwatch(GameAction* action, Character* mover);
+	void QueryOverwatch(GameAction* action, Character* mover, TileMap& map);
 #endif
 
 #ifndef NETWORK_SERVER

@@ -30,6 +30,8 @@ public:
 
 #ifdef NETWORK_SERVER
 	std::list<BaseAction*> * GetActionQueue();
+
+	void Write(RakNet::BitStream& bs);
 #endif
 };
 

@@ -7,6 +7,7 @@ class ShootAction : public BaseAction
 {
 protected:
 	MapVec3 m_target;
+	short m_ammo;
 
 	short m_damage;
 	bool m_crit;
@@ -14,7 +15,11 @@ protected:
 	virtual void _Execute(float dTime);
 
 public:
-	ShootAction(Character* owner, MapVec3 target, short damage, bool crit);
+	ShootAction(Character* owner, MapVec3 target, short damage, bool crit, short ammoUse = 1);
 	~ShootAction();
+
+#ifdef NETWORK_SERVER
+	virtual void Write(RakNet::BitStream& bs);
+#endif
 };
 

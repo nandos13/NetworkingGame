@@ -14,5 +14,8 @@ public:
 	MovementAction(Character* owner, MapVec3 destination);
 	~MovementAction();
 	
+#ifdef NETWORK_SERVER
+	virtual void Write(RakNet::BitStream& bs);
+#endif
 };
 

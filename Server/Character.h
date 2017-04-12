@@ -2,6 +2,7 @@
 
 #include "TileMap.h"
 #include "BaseAction.h"
+#include "GameAction.h"
 #include "GearPieceBase.h"
 
 class Character
@@ -20,6 +21,7 @@ private:
 
 	const unsigned int m_sightRadius = 27;
 	unsigned int m_remainingPoints = 0;
+	unsigned int m_remainingHealth;
 
 	// Gear
 	std::unordered_map<short, GearPieceBase> m_gear;
@@ -39,7 +41,7 @@ public:
 	MapVec3 GetMapTileCoords();
 
 #ifdef NETWORK_SERVER
-	void QueryOverwatch(GameAction* action, Character* mover);
+	void QueryOverwatch(GameAction* action, Character* mover, TileMap& map);
 #endif
 
 	unsigned int RemainingActionPoints();
@@ -61,7 +63,8 @@ public:
 #endif
 
 	MapVec3 GetPosition();
-
+	bool Alive();
+	void EndOverwatch();
 
 };
 

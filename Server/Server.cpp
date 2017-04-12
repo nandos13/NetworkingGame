@@ -11,6 +11,7 @@
 
 void Server::Setup()
 {
+	srand(time(NULL));
 	// Initialize the game instnace
 	m_game = new Game();
 }
@@ -38,7 +39,7 @@ void Server::handleClientShoot(RakNet::Packet * packet)
 	// Create a new shoot action
 	GameAction* action;
 #ifdef NETWORK_SERVER
-	action = m_game->TakeShot(characterID, targetTile);
+	//action = m_game->TakeShot(characterID, targetTile);	// TODO
 #endif
 
 	if (action == nullptr) { return; };
@@ -65,7 +66,7 @@ void Server::handleClientMove(RakNet::Packet* packet)
 	// Process move command on the server-side game
 	GameAction* action;
 #ifdef NETWORK_SERVER
-	action = m_game->MoveCharacter(characterID, destination);
+	action = m_game->CreateMoveAction(characterID, destination);
 #endif
 
 	// Send action back to all clients

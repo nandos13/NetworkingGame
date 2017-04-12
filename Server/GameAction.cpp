@@ -43,7 +43,7 @@ void GameAction::Reset()
 {
 	for each (BaseAction* a in m_queue)
 		a->Reset();
-	m_iter = m_queue->begin();
+	m_iter = m_queue.begin();
 	m_completed = false;
 }
 
@@ -57,5 +57,13 @@ void GameAction::AddToQueue(BaseAction * a)
 std::list<BaseAction*>* GameAction::GetActionQueue()
 {
 	return m_queue;
+}
+
+void GameAction::Write(RakNet::BitStream & bs)
+{
+	for (int i = 0; i < m_queue.size(); i++)
+	{
+		m_queue[i]->Write(bs);
+	}
 }
 #endif
