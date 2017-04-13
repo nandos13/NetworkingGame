@@ -21,7 +21,7 @@ void MovementAction::_Execute(float dTime)
 void MovementAction::_Execute(float dTime)
 {
 	// Move character
-	m_owner->MoveTo(m_destination);
+	m_owner->Move(m_destination);
 
 	// Complete action
 	CompleteSelf();

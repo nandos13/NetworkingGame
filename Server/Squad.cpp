@@ -21,6 +21,17 @@ void Squad::StartTurn()
 	// TODO: take one turn from current debuffs, etc
 }
 
+Character * Squad::FindCharacter(MapVec3 pos)
+{
+	std::unordered_map<short, Character*>::iterator iter;
+	for (iter = m_squaddies.begin(); iter != m_squaddies.end(); iter++)
+	{
+		if (iter->second->GetPosition() == pos)
+			return iter->second;
+	}
+	return nullptr;
+}
+
 #ifdef NETWORK_SERVER
 void Squad::QueryOverwatch(GameAction* action, Character * mover, TileMap& map)
 {

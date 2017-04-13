@@ -261,6 +261,19 @@ void TileMap::AddTile(short x, short y, short z, bool autoConnect)
 	AddTile(MapVec3(x,y,z), autoConnect);
 }
 
+COVER_VALUE TileMap::GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir)
+{
+	// Find tile at this position
+	MapTile* tile = FindTile(position);
+
+	if (tile)
+	{
+		return tile->GetCoverDir(dir);
+	}
+	else
+		return COVER_NONE;
+}
+
 std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
 {
 	MapTile* origin = FindTile(from);

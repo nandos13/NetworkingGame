@@ -22,8 +22,83 @@ Squad * Game::GetWaitingSquad()
 	return &m_squads[currentWaiting];
 }
 
+int Game::GetShotChance(Character * shooter, MapVec3 target)
+{
+	if (shooter)
+	{
+		// Get the direction from the target square to shooter
+		MAP_CONNECTION_DIR dir = target.GetDirectionTo(shooter->GetPosition());
+
+		// Is the target covered from this direction?
+		COVER_VALUE targetCover = m_map->GetCoverInDirection(target, dir);
+		Character* targetCharacter = nullptr;
+		for each (Squad s in m_squads)
+		{
+			targetCharacter = s.FindCharacter(target);
+			if (targetCharacter != nullptr)
+				break;
+		}
+
+		if (targetCharacter == nullptr)
+		{
+			printf("No character found at tile for GetShotChance method\n");
+			return 0;	// TODO: Change implementation for explosions, etc
+		}
+		else
+		{
+			/* Uses xcom chance-calculation formula as seen on the wiki here: 
+			 * http://www.ufopaedia.org/index.php/Chance_to_Hit_(EU2012) 
+			 */
+
+			// Calculate base chance based on shooter's aim and target's defense
+			unsigned int aim = shooter->GetCurrentAimStat();
+			unsigned int def = targetCharacter->GetCurrentDefenseStat() + targetCover;
+			int chance = (int)aim - (int)def;
+			// Clamp if negative
+			if (chance < 1) chance = 1;
+
+			// Calculate range bonus
+			float shotDistance = MapVec3::Distance(shooter->GetPosition(), target);
+			int rangeBonus = shooter->GetAimBonus(shotDistance);
+
+			chance += rangeBonus;
+
+			// Cap chance
+			if (chance > 100) chance = 100;
+			if (chance < 1) chance = 1;
+
+			return chance;
+		}
+	}
+
+	printf("Null reference exception. No shooter specified in GetShotChance method\n");
+	return 0;
+}
+
+int Game::GetCritChance(Character * shooter, MapVec3 target)
+{
+	// TODO:
+	return 0;
+}
+
+int Game::GetDamage(Character * shooter)
+{
+	// TODO: If supporting secondary weapons, etc, this needs to take in which weapon is being used
+
+	std::pair<unsigned int, unsigned int> damageVals = shooter->GetWeaponDamage();
+	int difference = damageVals.second - damageVals.first;
+
+	int r = rand() % difference + (int)damageVals.first;	// TODO: Verify if this actually uses all values?
+
+	return r;
+}
+
 Game::Game()
 {
+	if (!m_singleton)
+		m_singleton = this;
+	// TODO: Fix singleton stuff
+
 	m_currentTurn = 0;
 	m_currentAction = m_actionQueue.begin();
 
@@ -32,6 +107,15 @@ Game::Game()
 
 Game::~Game()
 {
+	if (m_singleton == this)
+		m_singleton = nullptr;
+}
+
+Game * Game::GetInstance()
+{
+	if (m_singleton == nullptr)
+		m_singleton = new Game();
+	return m_singleton;
 }
 
 void Game::Update(float dTime)
@@ -64,9 +148,31 @@ void Game::Draw()
 #endif
 
 #ifdef NETWORK_SERVER
-void Game::GetShotVariables(short & damage, bool & crit, Character * shooter, MapVec3 target)
+void Game::GetShotVariables(short & damage, SHOT_STATUS & shotType, const Character * shooter, const MapVec3 target)
 {
-	// TODO: Use random seed to decide if the shot hits, output this info
+	int chanceToHit = GetShotChance(shooter, target);
+	int r = rand() % 100;
+
+	if (r < chanceToHit)
+	{
+		// Shot hits
+
+		int chanceToCrit = GetCritChance(shooter, target);
+		r = rand() % 100;
+
+		if (r < chanceToCrit)
+			shotType = CRITICAL;
+		else
+			shotType = HIT;
+
+		damage = GetDamage(shooter);
+	}
+	else
+	{
+		// Shot misses
+		damage = 0;
+		crit = false;
+	}
 }
 
 /**

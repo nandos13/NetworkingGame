@@ -159,6 +159,20 @@ private:
 		COVER_VALUE GetCoverRight() { return GetCover(2); };
 		COVER_VALUE GetCoverFront() { return GetCover(4); };
 		COVER_VALUE GetCoverBack() { return GetCover(6); };
+		COVER_VALUE GetCoverDir(MAP_CONNECTION_DIR dir)
+		{
+			switch (dir)
+			{
+			case LEFT:	return GetCoverLeft();
+			case RIGHT: return GetCoverRight();
+			case FRONT: return GetCoverFront();
+			case BACK:	return GetCoverBack();
+			case FRONTLEFT:		return ((int)GetCoverFront() > (int)GetCoverLeft()) ? GetCoverFront() : GetCoverLeft();
+			case FRONTRIGHT:	return ((int)GetCoverFront() > (int)GetCoverRight()) ? GetCoverFront() : GetCoverRight();
+			case BACKRIGHT:		return ((int)GetCoverBack() > (int)GetCoverRight()) ? GetCoverBack() : GetCoverRight();
+			case BACKLEFT:		return ((int)GetCoverBack() > (int)GetCoverLeft()) ? GetCoverBack() : GetCoverLeft();
+			}
+		}
 
 #ifdef NETWORK_SERVER
 		void SetCoverLeft(const COVER_VALUE val) { SetCover(val, 0); };
@@ -428,8 +442,10 @@ public:
 	void AddTile(MapVec3 pos, unsigned char coverData = 0, bool autoConnect = true);
 	void AddTile(short x, short y, short z, bool autoConnect = true);
 
+	COVER_VALUE GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir);
+
 	std::list<MapVec3> FindPath(MapVec3 from, MapVec3 to);
-	std::list<MapVec3> GetWalkableTiles(MapVec3 start, int maxTravelDist);	// TODO
+	//std::list<MapVec3> GetWalkableTiles(MapVec3 start, int maxTravelDist);	// TODO
 
 #ifdef NETWORK_SERVER
 	bool CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange = -1);

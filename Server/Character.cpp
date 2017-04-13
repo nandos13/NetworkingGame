@@ -19,11 +19,13 @@ Character::~Character()
 {
 }
 
+/* Amount of tiles the character is able to move, using a single action point */
 unsigned int Character::GetMoveDistance()
 {
 	return (unsigned int)(CurrentMobility() * 0.625);
 }
 
+/* Amount of tiles the character is able to dash, using both action points */
 unsigned int Character::GetDashDistance()
 {
 	return (unsigned int)(CurrentMobility() * 0.625 * 2);
@@ -32,6 +34,32 @@ unsigned int Character::GetDashDistance()
 MapVec3 Character::GetMapTileCoords()
 {
 	return m_currentPosition;
+}
+
+std::pair<unsigned int, unsigned int> Character::GetWeaponDamage()
+{
+	if (m_gun != nullptr)
+		return std::make_pair(m_gun->GetDamageLow(), m_gun->GetDamageHigh());
+	return std::pair<unsigned int, unsigned int>();
+}
+
+unsigned int Character::GetCurrentAimStat()
+{
+	// TODO:
+	return 0;
+}
+
+unsigned int Character::GetCurrentDefenseStat()
+{
+	// TODO:
+	return 0;
+}
+
+int Character::GetAimBonus(float distance)
+{
+	if (m_gun)
+		return m_gun->GetRangeBonus(distance);
+	return 0;
 }
 
 #ifdef NETWORK_SERVER
@@ -51,9 +79,11 @@ void Character::QueryOverwatch(GameAction* action, Character * mover, TileMap& m
 			{
 				// Create an overwatch-shot action
 
+				Game* game = Game::GetInstance();
+
 				short damage = 0;
-				bool crit = false;
-				Game::GetShotVariables(damage, crit, this, moverPos);
+				SHOT_STATUS shotType = MISS;
+				game->GetShotVariables(damage, shotType, this, moverPos);
 
 				ShootAction* sa = new ShootAction(this, moverPos, damage, crit);
 				OverwatchShotAction* oa = new OverwatchShotAction(this, sa);
@@ -102,7 +132,7 @@ void Character::Draw()
 #endif
 
 #ifdef NETWORK_SERVER
-void Character::MoveTo(MapVec3 destination)
+void Character::Move(MapVec3 destination)
 {
 	// TODO
 }

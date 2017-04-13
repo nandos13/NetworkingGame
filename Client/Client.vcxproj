@@ -95,7 +95,12 @@
     <ClCompile Include="..\Server\Game.cpp" />
     <ClCompile Include="..\Server\GameAction.cpp" />
     <ClCompile Include="..\Server\GearPieceBase.cpp" />
+    <ClCompile Include="..\Server\GunBase.cpp" />
+    <ClCompile Include="..\Server\Shotgun.cpp" />
+    <ClCompile Include="..\Server\SniperRifle.cpp" />
     <ClCompile Include="..\Server\Squad.cpp" />
+    <ClCompile Include="..\Server\StandardGun.cpp" />
+    <ClCompile Include="..\Server\TileMap.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Client.cpp" />
     <ClCompile Include="ClientSideGameManager.cpp" />
@@ -107,7 +112,12 @@
     <ClInclude Include="..\Server\Game.h" />
     <ClInclude Include="..\Server\GameAction.h" />
     <ClInclude Include="..\Server\GearPieceBase.h" />
+    <ClInclude Include="..\Server\GunBase.h" />
+    <ClInclude Include="..\Server\Shotgun.h" />
+    <ClInclude Include="..\Server\SniperRifle.h" />
     <ClInclude Include="..\Server\Squad.h" />
+    <ClInclude Include="..\Server\StandardGun.h" />
+    <ClInclude Include="..\Server\TileMap.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Client.h" />
     <ClInclude Include="ClientSideGameManager.h" />

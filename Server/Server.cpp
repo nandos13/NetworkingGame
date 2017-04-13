@@ -46,10 +46,7 @@ void Server::handleClientShoot(RakNet::Packet * packet)
 
 	// Send action to all clients
 	RakNet::BitStream bs;
-	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SHOOT);
-	// TODO
-
-	// Simulate on the server
+	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
 	// TODO
 }
 
@@ -73,7 +70,7 @@ void Server::handleClientMove(RakNet::Packet* packet)
 	if (action == nullptr) { return; };
 
 	RakNet::BitStream bs;
-	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_MOVE);
+	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
 	bs.Write((char*)action, sizeof(MovementAction));
 	// TODO: Implement Write function within MovementAction to avoid pointers, etc.
 }

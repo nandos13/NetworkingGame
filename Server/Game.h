@@ -10,11 +10,15 @@
 
 struct MapVec3;
 
+enum SHOT_STATUS { MISS, GRAZE, HIT, CRITICAL };
+
 class Game
 {
 private:
 
 	/* Private member variables */
+
+	Game* m_singleton;
 
 	TileMap* m_map;
 
@@ -29,9 +33,15 @@ private:
 	Squad* GetPlayingSquad();
 	Squad* GetWaitingSquad();
 
+	int GetShotChance(Character* shooter, MapVec3 target);
+	int GetCritChance(Character* shooter, MapVec3 target);
+	int GetDamage(Character* shooter);
+
 public:
 	Game();
 	~Game();
+
+	Game* GetInstance();
 
 	void Update(float dTime);
 
@@ -46,7 +56,7 @@ public:
 
 #ifdef NETWORK_SERVER
 
-	static void GetShotVariables(short& damage, bool& crit, Character* shooter, MapVec3 target);
+	void GetShotVariables(short& damage, SHOT_STATUS& shotType, const Character* shooter, const MapVec3 target);
 	//GameAction* TakeShot(const short shooterID, short victimID);
 	GameAction* CreateMoveAction(const short characterID, MapVec3 coords);
 

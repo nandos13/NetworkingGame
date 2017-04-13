@@ -4,6 +4,7 @@
 #include "BaseAction.h"
 #include "GameAction.h"
 #include "GearPieceBase.h"
+#include "GunBase.h"
 
 class Character
 {
@@ -15,9 +16,7 @@ private:
 	unsigned int m_baseDefense;
 	unsigned int m_baseCritChance;
 
-	unsigned int CurrentAim();
 	unsigned int CurrentMobility();
-	unsigned int CurrentDefense();
 
 	const unsigned int m_sightRadius = 27;
 	unsigned int m_remainingPoints = 0;
@@ -25,6 +24,7 @@ private:
 
 	// Gear
 	std::unordered_map<short, GearPieceBase> m_gear;
+	GunBase* m_gun;
 
 	// Other
 	MapVec3 m_currentPosition;
@@ -34,11 +34,14 @@ public:
 	Character();
 	~Character();
 
-	// Amount of tiles the character is able to move, using a single action point
 	unsigned int GetMoveDistance();
-	// Amount of tiles the character is able to dash, using both action points
 	unsigned int GetDashDistance();
 	MapVec3 GetMapTileCoords();
+
+	std::pair<unsigned int, unsigned int> GetWeaponDamage();
+	unsigned int GetCurrentAimStat();
+	unsigned int GetCurrentDefenseStat();
+	int GetAimBonus(float distance);
 
 #ifdef NETWORK_SERVER
 	void QueryOverwatch(GameAction* action, Character* mover, TileMap& map);
@@ -59,7 +62,7 @@ public:
 	/* SERVER-ONLY FUNCTIONALITY */
 #ifdef NETWORK_SERVER
 	// Instantly move character's position
-	void MoveTo(MapVec3 destination);
+	void Move(MapVec3 destination);
 #endif
 
 	MapVec3 GetPosition();

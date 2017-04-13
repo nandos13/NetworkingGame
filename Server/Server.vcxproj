@@ -159,12 +159,16 @@
     <ClCompile Include="GameAction.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GearPieceBase.cpp" />
+    <ClCompile Include="GunBase.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MovementAction.cpp" />
     <ClCompile Include="OverwatchShotAction.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="ShootAction.cpp" />
+    <ClCompile Include="Shotgun.cpp" />
+    <ClCompile Include="SniperRifle.cpp" />
     <ClCompile Include="Squad.cpp" />
+    <ClCompile Include="StandardGun.cpp" />
     <ClCompile Include="TileMap.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -175,11 +179,15 @@
     <ClInclude Include="GameMessages.h" />
     <ClInclude Include="GameObject.h" />
     <ClInclude Include="GearPieceBase.h" />
+    <ClInclude Include="GunBase.h" />
     <ClInclude Include="MovementAction.h" />
     <ClInclude Include="OverwatchShotAction.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="ShootAction.h" />
+    <ClInclude Include="Shotgun.h" />
+    <ClInclude Include="SniperRifle.h" />
     <ClInclude Include="Squad.h" />
+    <ClInclude Include="StandardGun.h" />
     <ClInclude Include="TileMap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

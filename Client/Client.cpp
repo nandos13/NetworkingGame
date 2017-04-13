@@ -151,6 +151,9 @@ void Client::handleNetworkMessages()
 
 			break;
 		}
+		case ID_SERVER_SEND_ACTION:
+			// TODO
+			break;
 
 		default:
 			std::cout << "Received a message with unknown id: " << (int)packet->data[0] << std::endl;

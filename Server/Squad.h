@@ -17,6 +17,8 @@ public:
 
 	void StartTurn();
 
+	Character* FindCharacter(MapVec3 pos);
+
 #ifdef NETWORK_SERVER
 	void QueryOverwatch(GameAction* action, Character* mover, TileMap& map);
 #endif
