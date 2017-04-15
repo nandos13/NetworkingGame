@@ -5,6 +5,7 @@
 // Static definitions
 std::list<BaseAction*> BaseAction::m_timeManipulators;
 float BaseAction::m_currentSlowestTime;
+float BaseAction::m_simulationTime;
 
 void BaseAction::CompleteSelf()
 {
@@ -28,9 +29,20 @@ BaseAction::~BaseAction()
 void BaseAction::Execute(float dTime)
 {
 	if (m_owner != nullptr)
-		_Execute(dTime * m_currentSlowestTime);
+		_Execute(dTime * m_currentSlowestTime * m_simulationTime);
 	else
 		NoOwnerError();
+}
+
+void BaseAction::SetSimTime(float timeScale)
+{
+	// Clamp values
+	if (timeScale < 0.01f)
+		timeScale = 0.01f;
+	else if (timeScale > 6.0f)
+		timeScale = 6.0f;
+
+	m_simulationTime = timeScale;
 }
 
 bool BaseAction::IsCompleted()

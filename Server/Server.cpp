@@ -1,4 +1,7 @@
 #include "Server.h"
+
+#ifdef NETWORK_SERVER
+
 #include <iostream>
 #include <string>
 #include <MessageIdentifiers.h>
@@ -11,22 +14,40 @@
 
 void Server::Setup()
 {
+	// Seed random functionality
 	srand(time(NULL));
-	// Initialize the game instnace
+
+	// Initialize the game instance
 	m_game = new Game();
 }
 
-void Server::sendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
+void Server::SendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
 {
+	// TODO: Check if a client has already connected in m_clientConnections
+	// TODO: Send bool for spectator mode if two players are already connected
 	RakNet::BitStream bs;
 	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SET_CLIENT_ID);
 	bs.Write(nextClientID);
+	m_clientConnections[nextClientID] = address.ToString();
 	nextClientID++;
 
 	pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
 }
 
-void Server::handleClientShoot(RakNet::Packet * packet)
+void Server::SendGameData(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
+{
+	if (m_game != nullptr)
+	{
+		RakNet::BitStream bs;
+		bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_INITIALISE_GAME);
+
+		m_game->Write(bs);
+
+		pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
+	}
+}
+
+void Server::HandleClientShoot(RakNet::Packet * packet)
 {
 	// Get shoot command data
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -38,9 +59,7 @@ void Server::handleClientShoot(RakNet::Packet * packet)
 
 	// Create a new shoot action
 	GameAction* action;
-#ifdef NETWORK_SERVER
 	//action = m_game->TakeShot(characterID, targetTile);	// TODO
-#endif
 
 	if (action == nullptr) { return; };
 
@@ -50,7 +69,7 @@ void Server::handleClientShoot(RakNet::Packet * packet)
 	// TODO
 }
 
-void Server::handleClientMove(RakNet::Packet* packet)
+void Server::HandleClientMove(RakNet::Packet* packet)
 {
 	// Get move command data
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -62,9 +81,7 @@ void Server::handleClientMove(RakNet::Packet* packet)
 
 	// Process move command on the server-side game
 	GameAction* action;
-#ifdef NETWORK_SERVER
 	action = m_game->CreateMoveAction(characterID, destination);
-#endif
 
 	// Send action back to all clients
 	if (action == nullptr) { return; };
@@ -99,8 +116,8 @@ void Server::Run()
 	RakNet::SocketDescriptor sd(PORT, 0);
 
 	// Now call startup - max of 32 connections, on the assigned port
-	pPeerInterface->Startup(32, &sd, 1);
-	pPeerInterface->SetMaximumIncomingConnections(32);
+	pPeerInterface->Startup(10, &sd, 1);
+	pPeerInterface->SetMaximumIncomingConnections(10);
 
 	RakNet::Packet* packet = nullptr;
 
@@ -122,7 +139,8 @@ void Server::HandleConnections(RakNet::RakPeerInterface* pPeerInterface, RakNet:
 			{
 			case ID_NEW_INCOMING_CONNECTION:
 				std::cout << "A connection is incoming.\n";
-				sendNewClientID(pPeerInterface, packet->systemAddress);
+				SendNewClientID(pPeerInterface, packet->systemAddress);
+				SendGameData(pPeerInterface, packet->systemAddress);
 				break;
 			case ID_DISCONNECTION_NOTIFICATION:
 				std::cout << "A client has disconnected.\n";
@@ -131,10 +149,10 @@ void Server::HandleConnections(RakNet::RakPeerInterface* pPeerInterface, RakNet:
 				std::cout << "A client lost connection.\n";
 				break;
 			case ID_CLIENT_SHOOT:
-				handleClientShoot(packet);
+				HandleClientShoot(packet);
 				break;
 			case ID_CLIENT_MOVE:
-				handleClientMove(packet);
+				HandleClientMove(packet);
 				break;
 
 			default:
@@ -157,3 +175,6 @@ void Server::SendClientPing(RakNet::RakPeerInterface * pPeerInterface)
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 	}
 }
+
+
+#endif

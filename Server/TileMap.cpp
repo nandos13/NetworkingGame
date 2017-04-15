@@ -274,6 +274,34 @@ COVER_VALUE TileMap::GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_
 		return COVER_NONE;
 }
 
+MapVec3 TileMap::FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale)
+{
+	if (tileScale > 0)
+	{
+		// TODO: Need to test if this is right
+		short nX = short(x / tileScale);
+		short nY = short(y / tileScale);
+		short nZ = short(z / tileScale);
+
+		return MapVec3(nX, nY, nZ);
+	}
+
+	printf("Error: FindTileAtWorldCoords method was called with tileScale <= 0\n");
+	return MapVec3();
+}
+
+void TileMap::GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale)
+{
+	if (tileScale > 0)
+	{
+		outX = (float)(tilePos.m_x * tileScale);
+		outY = (float)(tilePos.m_y * tileScale);
+		outZ = (float)(tilePos.m_z * tileScale);
+	}
+
+	printf("Error: GetTileWorldCoords method was called with tileScale <= 0\n");
+}
+
 std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
 {
 	MapTile* origin = FindTile(from);
@@ -349,11 +377,8 @@ bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightR
 }
 
 /* Write & send the whole tilemap. */
-void TileMap::WriteTilemapNew(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
+void TileMap::WriteTilemapNew(RakNet::BitStream& bs)
 {
-	RakNet::BitStream bs;
-	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_TILEMAP);
-
 	// List of sent connections. Keeps track of which connections have been sent
 	// to avoid sending twice
 	std::list<ConnectionData> m_sentConnections;
@@ -420,12 +445,10 @@ void TileMap::WriteTilemapNew(RakNet::RakPeerInterface * pPeerInterface, RakNet:
 			}
 		}
 	}
-
-	pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
 }
 
 /* Write & send data that has changed since last update. */
-void TileMap::WriteTilemapDiff(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
+void TileMap::WriteTilemapDiff(RakNet::BitStream& bs)
 {
 	// TODO: Need some way to track what has changed. maybe keep a copy
 	// of the bitstream each time a packet is sent.
@@ -435,13 +458,9 @@ void TileMap::WriteTilemapDiff(RakNet::RakPeerInterface * pPeerInterface, RakNet
 
 #ifndef NETWORK_SERVER
 /* Read a packet as a new tilemap. Wipes all old data if present. */
-void TileMap::ReadTilemapNew(RakNet::Packet * packet)
+void TileMap::ReadTilemapNew(RakNet::BitStream& bsIn)
 {
 	ClearAllData();
-
-	RakNet::BitStream bsIn(packet->data, packet->length, false);
-	// Ignore the system message
-	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 
 	// Declare a map to store connection keys temporarily. See further down where this info is read for more info
 	std::list<ConnectionData*> m_connectKeys;
@@ -530,9 +549,8 @@ void TileMap::ReadTilemapNew(RakNet::Packet * packet)
  * Read a packet as a diff. Will only write over mapped data
  * that exists in the packet. Everything else will remain untouched.
  */
-void TileMap::ReadTilemapDiff(RakNet::Packet * packet)
+void TileMap::ReadTilemapDiff(RakNet::BitStream& bsIn)
 {
-	RakNet::BitStream bsIn(packet->data, packet->length, false);
-	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+	
 }
 #endif

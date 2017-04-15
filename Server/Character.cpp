@@ -4,7 +4,7 @@
 
 
 
-unsigned int Character::CurrentMobility()
+unsigned int Character::CurrentMobility() const
 {
 	// TODO: Iterate through buffs + debuffs
 	return m_baseMobility;
@@ -14,19 +14,18 @@ Character::Character()
 {
 }
 
-
 Character::~Character()
 {
 }
 
 /* Amount of tiles the character is able to move, using a single action point */
-unsigned int Character::GetMoveDistance()
+unsigned int Character::GetMoveDistance() const
 {
 	return (unsigned int)(CurrentMobility() * 0.625);
 }
 
 /* Amount of tiles the character is able to dash, using both action points */
-unsigned int Character::GetDashDistance()
+unsigned int Character::GetDashDistance() const
 {
 	return (unsigned int)(CurrentMobility() * 0.625 * 2);
 }
@@ -36,26 +35,26 @@ MapVec3 Character::GetMapTileCoords()
 	return m_currentPosition;
 }
 
-std::pair<unsigned int, unsigned int> Character::GetWeaponDamage()
+std::pair<unsigned int, unsigned int> Character::GetWeaponDamage() const
 {
 	if (m_gun != nullptr)
 		return std::make_pair(m_gun->GetDamageLow(), m_gun->GetDamageHigh());
 	return std::pair<unsigned int, unsigned int>();
 }
 
-unsigned int Character::GetCurrentAimStat()
+unsigned int Character::GetCurrentAimStat() const
 {
 	// TODO:
 	return 0;
 }
 
-unsigned int Character::GetCurrentDefenseStat()
+unsigned int Character::GetCurrentDefenseStat() const
 {
 	// TODO:
 	return 0;
 }
 
-int Character::GetAimBonus(float distance)
+int Character::GetAimBonus(float distance) const
 {
 	if (m_gun)
 		return m_gun->GetRangeBonus(distance);
@@ -85,7 +84,7 @@ void Character::QueryOverwatch(GameAction* action, Character * mover, TileMap& m
 				SHOT_STATUS shotType = MISS;
 				game->GetShotVariables(damage, shotType, this, moverPos);
 
-				ShootAction* sa = new ShootAction(this, moverPos, damage, crit);
+				ShootAction* sa = new ShootAction(this, moverPos, damage);
 				OverwatchShotAction* oa = new OverwatchShotAction(this, sa);
 				action->AddToQueue(oa);
 			}
@@ -94,7 +93,7 @@ void Character::QueryOverwatch(GameAction* action, Character * mover, TileMap& m
 }
 #endif
 
-unsigned int Character::RemainingActionPoints()
+unsigned int Character::RemainingActionPoints() const
 {
 	return m_remainingPoints;
 }
@@ -104,12 +103,12 @@ unsigned int Character::RemainingActionPoints()
  * from the current position. 
  * Returns 0 if the character does not have enough remaining points to make the move. 
  */
-unsigned int Character::PointsToMove(short moveTiles)
+unsigned int Character::PointsToMove(short moveTiles) const
 {
 	if (m_remainingPoints <= 0 || moveTiles <= 0) { return 0; };	// Can not legally make the move
 
-	if (moveTiles <= GetMoveDistance() && m_remainingPoints > 0) { return 1; };	// One point to move
-	if (moveTiles <= GetDashDistance() && m_remainingPoints > 1) { return 2; };	// Two points to move
+	if (moveTiles <= (int)GetMoveDistance() && (int)m_remainingPoints > 0) { return 1; };	// One point to move
+	if (moveTiles <= (int)GetDashDistance() && (int)m_remainingPoints > 1) { return 2; };	// Two points to move
 
 	return 0;	// 
 }
@@ -122,7 +121,17 @@ void Character::ResetActionPoints()
 #ifndef NETWORK_SERVER
 void Character::Move(MapVec3 destination, float dTime)
 {
+	MapVec3 dir = destination - m_currentPosition;
+	Game* g = Game::GetInstance();
+	TileMap* map = g->GetMap();
 
+	// TODO: Call move function on game object tied to character
+
+	// Check if the character moved past the destination (due to dTime too high, etc)
+	//MapVec3 destWorldPosition = map->GetTileWorldCoords();
+
+	// Find which tile the character is now standing in
+	//m_currentPosition = map->FindTileAtWorldCoords();	// TODO: Add gameobject's position components as parameters here
 }
 
 void Character::Draw()
@@ -143,12 +152,12 @@ void Character::EndOverwatch()
 	m_inOverwatch = false;
 }
 
-MapVec3 Character::GetPosition()
+MapVec3 Character::GetPosition() const
 {
 	return m_currentPosition;
 }
 
-bool Character::Alive()
+bool Character::Alive() const
 {
 	return m_remainingHealth > 0;
 }

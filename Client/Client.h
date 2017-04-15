@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef NETWORK_SERVER
+
 #include "Application.h"
 
 #include <RakPeerInterface.h>
@@ -39,6 +41,8 @@ protected:
 	void initialiseClientConnection();
 	void handleNetworkMessages();
 
+	void ReceiveGameInfo(RakNet::Packet* packet);
+
 	void sendCharacterShoot(short characterID, MapVec3 target);
 	void sendCharacterMove(short characterID, MapVec3 destination);
 
@@ -47,3 +51,6 @@ protected:
 	const char* IP = "127.0.0.1";
 	const unsigned short PORT = 5456;
 };
+
+
+#endif

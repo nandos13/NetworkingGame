@@ -31,6 +31,8 @@ protected:
 
 	// An action's individual time-scale. 
 	float m_thisTimeScale;
+	// General time-scale. Newly connected clients will quickly run through the action queue to catch up
+	static float m_simulationTime;
 
 	void NoOwnerError();
 
@@ -47,6 +49,7 @@ public:
 	virtual ~BaseAction();
 
 	void Execute(float dTime);
+	static void SetSimTime(float timeScale);
 
 	bool IsCompleted();
 

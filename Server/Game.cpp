@@ -2,6 +2,9 @@
 #include "TileMap.h"
 
 
+// Static variable declaration
+Game* Game::m_singleton;
+
 /** 
  * Set up the Game instance. This handles initialization of squads,
  * tile map, etc.
@@ -22,7 +25,7 @@ Squad * Game::GetWaitingSquad()
 	return &m_squads[currentWaiting];
 }
 
-int Game::GetShotChance(Character * shooter, MapVec3 target)
+int Game::GetShotChance(const Character * shooter, MapVec3 target)
 {
 	if (shooter)
 	{
@@ -75,13 +78,13 @@ int Game::GetShotChance(Character * shooter, MapVec3 target)
 	return 0;
 }
 
-int Game::GetCritChance(Character * shooter, MapVec3 target)
+int Game::GetCritChance(const Character * shooter, MapVec3 target)
 {
 	// TODO:
 	return 0;
 }
 
-int Game::GetDamage(Character * shooter)
+int Game::GetDamage(const Character * shooter)
 {
 	// TODO: If supporting secondary weapons, etc, this needs to take in which weapon is being used
 
@@ -111,11 +114,24 @@ Game::~Game()
 		m_singleton = nullptr;
 }
 
+void Game::SafeDelete()
+{
+	if (m_map)
+		delete m_map;
+
+	delete this;
+}
+
 Game * Game::GetInstance()
 {
 	if (m_singleton == nullptr)
 		m_singleton = new Game();
 	return m_singleton;
+}
+
+TileMap * Game::GetMap()
+{
+	return m_map;
 }
 
 void Game::Update(float dTime)
@@ -144,6 +160,11 @@ void Game::Draw()
 {
 	m_squads[0].Draw();
 	m_squads[1].Draw();
+}
+
+void Game::Read(RakNet::Packet * packet)
+{
+	// TODO: Implement along with Write function
 }
 #endif
 
@@ -257,6 +278,12 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 		printf("Error: Could not find character");
 
 	return nullptr;
+}
+
+void Game::Write(RakNet::BitStream & bs)
+{
+	// TODO
+	m_map->Write();
 }
 
 #endif

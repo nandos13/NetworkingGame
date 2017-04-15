@@ -16,7 +16,7 @@ private:
 	unsigned int m_baseDefense;
 	unsigned int m_baseCritChance;
 
-	unsigned int CurrentMobility();
+	unsigned int CurrentMobility() const;
 
 	const unsigned int m_sightRadius = 27;
 	unsigned int m_remainingPoints = 0;
@@ -34,21 +34,21 @@ public:
 	Character();
 	~Character();
 
-	unsigned int GetMoveDistance();
-	unsigned int GetDashDistance();
+	unsigned int GetMoveDistance() const;
+	unsigned int GetDashDistance() const;
 	MapVec3 GetMapTileCoords();
 
-	std::pair<unsigned int, unsigned int> GetWeaponDamage();
-	unsigned int GetCurrentAimStat();
-	unsigned int GetCurrentDefenseStat();
-	int GetAimBonus(float distance);
+	std::pair<unsigned int, unsigned int> GetWeaponDamage() const;
+	unsigned int GetCurrentAimStat() const;
+	unsigned int GetCurrentDefenseStat() const;
+	int GetAimBonus(float distance) const;
 
 #ifdef NETWORK_SERVER
 	void QueryOverwatch(GameAction* action, Character* mover, TileMap& map);
 #endif
 
-	unsigned int RemainingActionPoints();
-	unsigned int PointsToMove(short moveTiles);
+	unsigned int RemainingActionPoints() const;
+	unsigned int PointsToMove(short moveTiles) const;
 	void ResetActionPoints();
 
 	/* CLIENT-ONLY FUNCTIONALITY */
@@ -65,8 +65,8 @@ public:
 	void Move(MapVec3 destination);
 #endif
 
-	MapVec3 GetPosition();
-	bool Alive();
+	MapVec3 GetPosition() const;
+	bool Alive() const;
 	void EndOverwatch();
 
 };

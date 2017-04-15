@@ -1,4 +1,5 @@
 #pragma once
+
 #include "TileMap.h"
 #include "GameAction.h"
 #include "MovementAction.h"
@@ -18,7 +19,7 @@ private:
 
 	/* Private member variables */
 
-	Game* m_singleton;
+	static Game* m_singleton;
 
 	TileMap* m_map;
 
@@ -33,15 +34,17 @@ private:
 	Squad* GetPlayingSquad();
 	Squad* GetWaitingSquad();
 
-	int GetShotChance(Character* shooter, MapVec3 target);
-	int GetCritChance(Character* shooter, MapVec3 target);
-	int GetDamage(Character* shooter);
+	int GetShotChance(const Character* shooter, MapVec3 target);
+	int GetCritChance(const Character* shooter, MapVec3 target);
+	int GetDamage(const Character* shooter);
 
 public:
 	Game();
 	~Game();
+	void SafeDelete();
 
-	Game* GetInstance();
+	static Game* GetInstance();
+	TileMap* GetMap();
 
 	void Update(float dTime);
 
@@ -49,7 +52,11 @@ public:
 
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER
+
 	void Draw();
+
+	void Read(RakNet::Packet* packet);
+
 #endif
 
 	/* SERVER-ONLY FUNCTIONALITY */
@@ -59,6 +66,8 @@ public:
 	void GetShotVariables(short& damage, SHOT_STATUS& shotType, const Character* shooter, const MapVec3 target);
 	//GameAction* TakeShot(const short shooterID, short victimID);
 	GameAction* CreateMoveAction(const short characterID, MapVec3 coords);
+
+	void Write(RakNet::BitStream& bs);
 
 #endif
 };

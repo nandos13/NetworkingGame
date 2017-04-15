@@ -1,4 +1,7 @@
 #include "Client.h"
+
+#ifndef NETWORK_SERVER
+
 #include "Gizmos.h"
 #include "Input.h"
 #include "GameMessages.h"
@@ -21,19 +24,21 @@ Client::Client()
 
 Client::~Client() 
 {
+	if (m_game)
+		m_game->SafeDelete();
 }
 
 bool Client::startup() 
 {
 	handleNetworkConnection();
-
-	// Initialize game
-	m_game = new Game();
 	
 	setBackgroundColour(0.25f, 0.25f, 0.25f);
 
 	// initialise gizmo primitive counts
 	Gizmos::create(10000, 10000, 10000, 10000);
+
+	// Initialize game
+	m_game = new Game();
 
 	return true;
 }
@@ -47,9 +52,6 @@ void Client::update(float deltaTime)
 {
 
 	handleNetworkMessages();
-
-	// query time since application started
-	//float time = getTime();
 
 	Gizmos::clear();
 
@@ -72,11 +74,9 @@ void Client::draw() {
 	clearScreen();
 
 	// Do drawing here
-#ifndef NETWORK_SERVER
 	m_game->Draw();
-#endif
 
-	Gizmos::draw(cam.GetProjectionMatrix(getWindowWidth(), getWindowHeight()) * cam.GetViewMatrix());
+	Gizmos::draw(GetCameraTransform());
 }
 
 glm::mat4 Client::GetCameraTransform()
@@ -86,7 +86,6 @@ glm::mat4 Client::GetCameraTransform()
 
 void Client::handleNetworkConnection()
 {
-	// Initialise the Raknet peer interface first
 	m_pPeerInterface = RakNet::RakPeerInterface::GetInstance();
 	initialiseClientConnection();
 }
@@ -94,7 +93,7 @@ void Client::handleNetworkConnection()
 void Client::initialiseClientConnection()
 {
 	// Create a socket descriptor to describe this connection
-	// No data needed, as we wil be connecting to a server
+	// No data needed, as we will be connecting to a server
 	RakNet::SocketDescriptor sd;
 
 	// Now call startup - max of 1 connections (to the server)
@@ -104,7 +103,7 @@ void Client::initialiseClientConnection()
 	// Now call connect to attempt to connect to the given server
 	RakNet::ConnectionAttemptResult res = m_pPeerInterface->Connect(IP, PORT, nullptr, 0);
 
-	// Finally, check to see if we connection. If not, throw error
+	// Finally, check to see if we connected. If not, throw error
 	if (res != RakNet::CONNECTION_ATTEMPT_STARTED)
 		std::cout << "Unable to start a connection, Error #: " << res << std::endl;
 }
@@ -151,6 +150,9 @@ void Client::handleNetworkMessages()
 
 			break;
 		}
+		case ID_SERVER_INITIALISE_GAME:
+			ReceiveGameInfo(packet);
+			break;
 		case ID_SERVER_SEND_ACTION:
 			// TODO
 			break;
@@ -159,6 +161,15 @@ void Client::handleNetworkMessages()
 			std::cout << "Received a message with unknown id: " << (int)packet->data[0] << std::endl;
 			break;
 		}
+	}
+}
+
+void Client::ReceiveGameInfo(RakNet::Packet * packet)
+{
+	if (m_game != nullptr)
+	{
+		std::cout << "Receiving new game info.\n";
+		m_game->Read(packet);
 	}
 }
 
@@ -184,3 +195,5 @@ void Client::sendCharacterMove(short characterID, MapVec3 destination)
 		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
 }
 
+
+#endif

@@ -25,11 +25,10 @@ void ShootAction::_Execute(float dTime)
 }
 #endif
 
-ShootAction::ShootAction(Character * owner, MapVec3 target, short damage, bool crit, short ammoUse) : BaseAction(owner)
+ShootAction::ShootAction(Character * owner, MapVec3 target, short damage, short ammoUse) : BaseAction(owner)
 {
 	m_target = target;
 	m_damage = damage;
-	m_crit = crit;
 	m_ammo = ammoUse;
 }
 

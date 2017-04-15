@@ -20,14 +20,14 @@ struct MapVec3
 	MapVec3(short x, short y, short z) { m_x = x; m_y = y; m_z = z; };
 	const bool operator== (const MapVec3& rhs) const { return (m_x == rhs.m_x && m_y == rhs.m_y && m_z == rhs.m_z); };
 	const bool operator!= (const MapVec3& rhs) const { return (m_x != rhs.m_x || m_y != rhs.m_y || m_z != rhs.m_z); };
-	MapVec3& operator+ (const MapVec3& rhs) const
+	MapVec3 operator+ (const MapVec3& rhs) const
 	{
 		short x = m_x + rhs.m_x;
 		short y = m_y + rhs.m_y;
 		short z = m_z + rhs.m_z;
 		return MapVec3(x, y, z);
 	}
-	MapVec3& operator- (const MapVec3& rhs) const
+	MapVec3 operator- (const MapVec3& rhs) const
 	{
 		short x = m_x - rhs.m_x;
 		short y = m_y - rhs.m_y;
@@ -163,14 +163,15 @@ private:
 		{
 			switch (dir)
 			{
-			case LEFT:	return GetCoverLeft();
-			case RIGHT: return GetCoverRight();
-			case FRONT: return GetCoverFront();
-			case BACK:	return GetCoverBack();
+			case LEFT:			return GetCoverLeft();
+			case RIGHT:			return GetCoverRight();
+			case FRONT:			return GetCoverFront();
+			case BACK:			return GetCoverBack();
 			case FRONTLEFT:		return ((int)GetCoverFront() > (int)GetCoverLeft()) ? GetCoverFront() : GetCoverLeft();
 			case FRONTRIGHT:	return ((int)GetCoverFront() > (int)GetCoverRight()) ? GetCoverFront() : GetCoverRight();
 			case BACKRIGHT:		return ((int)GetCoverBack() > (int)GetCoverRight()) ? GetCoverBack() : GetCoverRight();
 			case BACKLEFT:		return ((int)GetCoverBack() > (int)GetCoverLeft()) ? GetCoverBack() : GetCoverLeft();
+			default:			return COVER_NONE;
 			}
 		}
 
@@ -444,19 +445,26 @@ public:
 
 	COVER_VALUE GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir);
 
+	MapVec3 FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale);
+	void GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale);
+
 	std::list<MapVec3> FindPath(MapVec3 from, MapVec3 to);
 	//std::list<MapVec3> GetWalkableTiles(MapVec3 start, int maxTravelDist);	// TODO
 
 #ifdef NETWORK_SERVER
+
 	bool CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange = -1);
 
-	void WriteTilemapNew(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress & address);
-	void WriteTilemapDiff(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress & address);
+	void WriteTilemapNew(RakNet::BitStream& bs);
+	void WriteTilemapDiff(RakNet::BitStream& bs);
+
 #endif
 
 #ifndef NETWORK_SERVER
-	void ReadTilemapNew(RakNet::Packet* packet);
-	void ReadTilemapDiff(RakNet::Packet* packet);
+
+	void ReadTilemapNew(RakNet::BitStream& bsIn);
+	void ReadTilemapDiff(RakNet::BitStream& bsIn);
+
 #endif
 };
 
