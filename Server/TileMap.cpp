@@ -387,28 +387,84 @@ bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightR
 		MapVec3 prevPos;
 		MapVec3 currentPos = from;
 		MapVec3 nextPos;
-		MapVec3 dDir = MapVec3(0);	// Delta values
+
+		// TODO: Test: Will this new method work?
+		// Sight-line should now start in the center of the tile, rather than the left side.
+
+		// OLD METHOD. THIS STARTED AT LEFT SIDE OF TILE AND WOULD NOT PRODUCE CORRECT RESULTS.
+		//MapVec3 dDir = MapVec3(0);	// Delta values
+		//
+		//while (currentPos != to)
+		//{
+		//	// Add direction vector
+		//	dDir = dDir + dir;
+		//
+		//	// Check wrap around
+		//	MapVec3 thisMove = MapVec3(0);
+		//	if (dDir.m_x >= maxStep)
+		//	{
+		//		dDir.m_x = dDir.m_x % maxStep;
+		//		thisMove.m_x = 1;
+		//	}
+		//	if (dDir.m_y >= maxStep)
+		//	{
+		//		dDir.m_y = dDir.m_y % maxStep;
+		//		thisMove.m_y = 1;
+		//	}
+		//	if (dDir.m_z >= maxStep)
+		//	{
+		//		dDir.m_z = dDir.m_z % maxStep;
+		//		thisMove.m_z = 1;
+		//	}
+		//
+		//	// Find nextPos from offset
+		//	nextPos = currentPos + thisMove;
+		//
+		//	// Check sight between these two tiles
+		//	bool sight = SightBetweenTiles(currentPos, nextPos);
+		//	if (!sight)
+		//		return false;
+		//
+		//	// Advance to the next tile
+		//	prevPos = currentPos;
+		//	currentPos = nextPos;
+		//}
+		//
+		//return true;
+
+		// Delta values
+		float dDirX = (float)dir.m_x / 2;
+		float dDirY = (float)dir.m_y / 2;
+		float dDirZ = (float)dir.m_z / 2;
 
 		while (currentPos != to)
 		{
 			// Add direction vector
-			dDir = dDir + dir;
+			dDirX += (float)dir.m_x;
+			dDirY += (float)dir.m_y;
+			dDirZ += (float)dir.m_z;
 
 			// Check wrap around
 			MapVec3 thisMove = MapVec3(0);
-			if (dDir.m_x >= maxStep)
+			if (dDirX >= maxStep)
 			{
-				dDir.m_x = dDir.m_x % maxStep;
+				float decimal = dDirX - (float)((int)dDirX);
+				dDirX = (float)((int)dDirX % maxStep);
+				dDirX += decimal;
 				thisMove.m_x = 1;
 			}
-			if (dDir.m_y >= maxStep)
+			if (dDirY >= maxStep)
 			{
-				dDir.m_y = dDir.m_y % maxStep;
+				float decimal = dDirY - (float)((int)dDirY);
+				dDirY = (float)((int)dDirY % maxStep);
+				dDirY += decimal;
 				thisMove.m_y = 1;
 			}
-			if (dDir.m_z >= maxStep)
+			if (dDirZ >= maxStep)
 			{
-				dDir.m_z = dDir.m_z % maxStep;
+				float decimal = dDirZ - (float)((int)dDirZ);
+				dDirZ = (float)((int)dDirZ % maxStep);
+				dDirZ += decimal;
 				thisMove.m_z = 1;
 			}
 

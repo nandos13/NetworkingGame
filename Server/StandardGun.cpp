@@ -2,7 +2,8 @@
 
 
 
-StandardGun::StandardGun()
+StandardGun::StandardGun(unsigned int clipSize, unsigned int minDamage, unsigned int maxDamage, int aimModifier, int critModifier)
+	: GunBase(clipSize, minDamage, maxDamage, aimModifier, critModifier)
 {
 }
 

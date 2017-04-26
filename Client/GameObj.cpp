@@ -34,7 +34,7 @@ bool GameObj::LerpMove(const glm::vec3 destination, const float dTime)
 	return false;
 }
 
-void GameObj::GetWorldPosition(float & x, float & y, float & z)
+void GameObj::GetWorldPosition(float & x, float & y, float & z) const
 {
 	x = m_position.x;
 	y = m_position.y;

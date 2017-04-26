@@ -44,14 +44,26 @@ std::pair<unsigned int, unsigned int> Character::GetWeaponDamage() const
 
 unsigned int Character::GetCurrentAimStat() const
 {
-	// TODO:
-	return 0;
+	unsigned int aim = m_baseAim;
+
+	if (m_gun)
+		aim += m_gun->GetAimModifier();
+
+	// TODO: Account for gear bonuses, debuffs, etc
+
+	return aim;
 }
 
 unsigned int Character::GetCurrentDefenseStat() const
 {
-	// TODO:
-	return 0;
+	unsigned int crit = m_baseCritChance;
+
+	if (m_gun)
+		crit += m_gun->GetCritModifier();
+
+	// TODO: Account for gear bonuses, debuffs, etc
+
+	return crit;
 }
 
 int Character::GetAimBonus(float distance) const
@@ -149,7 +161,7 @@ void Character::Draw()
 /* Instantly move character's position for use on server-side */
 void Character::Move(MapVec3 destination)
 {
-	// TODO
+	m_currentPosition = destination;
 }
 #endif
 

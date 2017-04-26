@@ -5,7 +5,7 @@
 class StandardGun : public GunBase
 {
 public:
-	StandardGun();
+	StandardGun(unsigned int clipSize, unsigned int minDamage, unsigned int maxDamage, int aimModifier = 0, int critModifier = 0);
 	virtual ~StandardGun();
 
 	virtual int GetRangeBonus(float distance);

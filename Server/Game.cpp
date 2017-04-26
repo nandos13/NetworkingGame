@@ -81,6 +81,8 @@ int Game::GetShotChance(const Character * shooter, MapVec3 target)
 int Game::GetCritChance(const Character * shooter, MapVec3 target)
 {
 	// TODO:
+	// Get crit chance of the shooter.
+	// Find if enemy is flanked.
 	return 0;
 }
 
