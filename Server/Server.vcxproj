@@ -91,7 +91,7 @@
       </PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NETWORK_SERVER;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)dependencies\glm;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -157,7 +157,6 @@
     <ClCompile Include="Character.cpp" />
     <ClCompile Include="Game.cpp" />
     <ClCompile Include="GameAction.cpp" />
-    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GearPieceBase.cpp" />
     <ClCompile Include="GunBase.cpp" />
     <ClCompile Include="main.cpp" />
@@ -177,7 +176,6 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GameAction.h" />
     <ClInclude Include="GameMessages.h" />
-    <ClInclude Include="GameObject.h" />
     <ClInclude Include="GearPieceBase.h" />
     <ClInclude Include="GunBase.h" />
     <ClInclude Include="MovementAction.h" />

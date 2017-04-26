@@ -16,15 +16,15 @@ void TileMap::ClearAllData()
 	m_planes.clear();
 }
 
-TileMap::MapTile * TileMap::FindTile(const MapVec3 pos)
+TileMap::MapTile * TileMap::FindTile(const MapVec3 pos) const
 {
 	// Find plane
-	std::unordered_map<short, MapPlane>::iterator it = m_planes.find(pos.m_y);
+	std::unordered_map<short, MapPlane>::const_iterator it = m_planes.find(pos.m_y);
 	if (it != m_planes.end())
 	{
 		// Find tile
-		MapPlane* p = &( it->second );
-		std::map<std::pair<short, short>, MapTile*>::iterator it2;
+		const MapPlane* p = &( it->second );
+		std::map<std::pair<short, short>, MapTile*>::const_iterator it2;
 		it2 = p->m_tiles.find(std::make_pair(pos.m_x, pos.m_z));
 
 		if (it2 != p->m_tiles.end())
@@ -36,7 +36,7 @@ TileMap::MapTile * TileMap::FindTile(const MapVec3 pos)
 	return nullptr;
 }
 
-std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to)
+std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to) const
 {
 	std::list<MapTile*> openList;
 	std::list<MapTile*> closedList;
@@ -302,7 +302,7 @@ void TileMap::GetTileWorldCoords(float& outX, float& outY, float& outZ, const Ma
 	printf("Error: GetTileWorldCoords method was called with tileScale <= 0\n");
 }
 
-std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
+std::list<MapVec3> TileMap::FindPath(const MapVec3 from, const MapVec3 to) const
 {
 	MapTile* origin = FindTile(from);
 	if (origin)
@@ -316,6 +316,60 @@ std::list<MapVec3> TileMap::FindPath(MapVec3 from, MapVec3 to)
 	}
 	printf("Error: Specified origin could not be found in FindPath method.\n");
 	return std::list<MapVec3>();
+}
+
+std::list<MapVec3> TileMap::GetWalkableTiles(const MapVec3 start, const int maxTravelDist) const
+{
+	std::list<MapVec3> firstList;
+	std::list<MapVec3> secondList;
+	float travelled = 0;
+
+	firstList.push_back(start);
+
+	while (travelled <= maxTravelDist)
+	{
+		// Loop through all tiles in first list
+		std::list<MapVec3>::iterator iter;
+		for (iter = firstList.begin(); iter != firstList.end(); iter++)
+		{
+			// Get reference to tile at this location
+			MapTile* tile = FindTile(*iter);
+
+			// Loop through each connection on this tile
+			auto& connectedTiles = tile->GetAllConnections();
+			for each (auto& ct in connectedTiles)
+			{
+				// Get the connected tile
+				MapTileConnection* c = ct.second;
+				MapTile* connected = c->GetConnected(tile);
+				MapVec3 connectedPos = connected->GetTilePos();
+
+				// Check if this tile is already in the second list
+				bool contained = false;
+				for each (MapVec3 mv in secondList)
+				{
+					if (mv == connectedPos)
+					{
+						contained = true;
+						break;
+					}
+				}
+
+				if (!contained)
+					secondList.push_back(connectedPos);
+			}
+		}
+
+		// Check if no new connections were found
+		if (firstList == secondList)
+			break;
+
+		// Set first list to second & increment travelled distance
+		firstList = secondList;
+		travelled++;
+	}
+
+	return firstList;
 }
 
 #ifdef NETWORK_SERVER

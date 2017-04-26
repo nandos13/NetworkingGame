@@ -102,6 +102,7 @@ Game::Game()
 		m_singleton = this;
 	// TODO: Fix singleton stuff
 
+	m_tileScale = 1;
 	m_currentTurn = 0;
 	m_currentAction = m_actionQueue.begin();
 
@@ -131,7 +132,12 @@ Game * Game::GetInstance()
 
 TileMap * Game::GetMap()
 {
-	return m_map;
+	return GetInstance()->m_map;
+}
+
+float Game::GetMapTileScale()
+{
+	return GetInstance()->m_tileScale;
 }
 
 void Game::Update(float dTime)
@@ -192,7 +198,7 @@ void Game::GetShotVariables(short & damage, SHOT_STATUS & shotType, const Charac
 	{
 		// Shot misses
 		damage = 0;
-		crit = false;
+		shotType = MISS;
 	}
 }
 
@@ -283,7 +289,7 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 void Game::Write(RakNet::BitStream & bs)
 {
 	// TODO
-	m_map->Write();
+	m_map->WriteTilemapNew(bs);
 }
 
 #endif

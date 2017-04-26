@@ -119,19 +119,24 @@ void Character::ResetActionPoints()
 }
 
 #ifndef NETWORK_SERVER
-void Character::Move(MapVec3 destination, float dTime)
+/**
+ * Lerps character's position towards it's destination.
+ * Returns true if the character reaches destination this frame.
+ */
+bool Character::Move(MapVec3 destination, float dTime)
 {
-	MapVec3 dir = destination - m_currentPosition;
-	Game* g = Game::GetInstance();
-	TileMap* map = g->GetMap();
+	TileMap* map = Game::GetMap();
 
-	// TODO: Call move function on game object tied to character
+	// Find world coordinates of the specified destination & move character's gameobject
+	float x, y, z;
+	map->GetTileWorldCoords(x, y, z, destination, Game::GetMapTileScale());
+	bool reachedDestination = m_gameObject.LerpMove(x, y, z, dTime);
 
-	// Check if the character moved past the destination (due to dTime too high, etc)
-	//MapVec3 destWorldPosition = map->GetTileWorldCoords();
-
-	// Find which tile the character is now standing in
-	//m_currentPosition = map->FindTileAtWorldCoords();	// TODO: Add gameobject's position components as parameters here
+	// Update character's position
+	m_gameObject.GetWorldPosition(x, y, z);
+	m_currentPosition = map->FindTileAtWorldCoords(x, y, z, Game::GetMapTileScale());
+	
+	return reachedDestination;
 }
 
 void Character::Draw()
@@ -141,6 +146,7 @@ void Character::Draw()
 #endif
 
 #ifdef NETWORK_SERVER
+/* Instantly move character's position for use on server-side */
 void Character::Move(MapVec3 destination)
 {
 	// TODO

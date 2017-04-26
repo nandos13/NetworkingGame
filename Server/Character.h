@@ -6,6 +6,10 @@
 #include "GearPieceBase.h"
 #include "GunBase.h"
 
+#ifndef NETWORK_SERVER
+#include "../Client/GameObj.h"
+#endif
+
 class Character
 {
 private:
@@ -30,6 +34,10 @@ private:
 	MapVec3 m_currentPosition;
 	bool m_inOverwatch = false;
 
+#ifndef NETWORK_SERVER
+	GameObj m_gameObject;
+#endif
+
 public:
 	Character();
 	~Character();
@@ -53,15 +61,13 @@ public:
 
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER
-	// Smoothly lerp character's position
-	void Move(MapVec3 destination, float dTime);
+	bool Move(MapVec3 destination, float dTime);
 
 	void Draw();
 #endif
 
 	/* SERVER-ONLY FUNCTIONALITY */
 #ifdef NETWORK_SERVER
-	// Instantly move character's position
 	void Move(MapVec3 destination);
 #endif
 

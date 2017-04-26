@@ -428,9 +428,9 @@ private:
 	std::unordered_map<short, MapPlane> m_planes;
 	void ClearAllData();
 
-	TileMap::MapTile* FindTile(const MapVec3 pos);
+	TileMap::MapTile* FindTile(const MapVec3 pos) const;
 
-	std::list<MapVec3> AStarSearch(MapTile* from, MapTile* to);
+	std::list<MapVec3> AStarSearch(MapTile* from, MapTile* to) const;
 
 #ifdef NETWORK_SERVER
 	bool SightBetweenTiles(MapVec3 from, MapVec3 to);
@@ -448,8 +448,8 @@ public:
 	MapVec3 FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale);
 	void GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale);
 
-	std::list<MapVec3> FindPath(MapVec3 from, MapVec3 to);
-	//std::list<MapVec3> GetWalkableTiles(MapVec3 start, int maxTravelDist);	// TODO
+	std::list<MapVec3> FindPath(const MapVec3 from, const MapVec3 to) const;
+	std::list<MapVec3> GetWalkableTiles(const MapVec3 start, const int maxTravelDist) const;
 
 #ifdef NETWORK_SERVER
 

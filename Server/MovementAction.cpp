@@ -8,10 +8,7 @@
 void MovementAction::_Execute(float dTime)
 {
 	// Move character
-	m_owner->Move(m_destination, dTime);
-
-	// Check if move is complete
-	if (m_owner->GetPosition() == m_destination)
+	if (m_owner->Move(m_destination, dTime))
 		CompleteSelf();
 }
 #endif

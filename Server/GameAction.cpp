@@ -56,14 +56,15 @@ void GameAction::AddToQueue(BaseAction * a)
 #ifdef NETWORK_SERVER
 std::list<BaseAction*>* GameAction::GetActionQueue()
 {
-	return m_queue;
+	return &m_queue;
 }
 
 void GameAction::Write(RakNet::BitStream & bs)
 {
-	for (int i = 0; i < m_queue.size(); i++)
+	std::list<BaseAction*>::iterator iter;
+	for (iter = m_queue.begin(); iter != m_queue.end(); iter++)
 	{
-		m_queue[i]->Write(bs);
+		(*iter)->Write(bs);
 	}
 }
 #endif

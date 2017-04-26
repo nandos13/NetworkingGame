@@ -22,6 +22,7 @@ private:
 	static Game* m_singleton;
 
 	TileMap* m_map;
+	float m_tileScale;
 
 	Squad m_squads[2];
 	unsigned int m_currentTurn;
@@ -44,7 +45,8 @@ public:
 	void SafeDelete();
 
 	static Game* GetInstance();
-	TileMap* GetMap();
+	static TileMap* GetMap();
+	static float GetMapTileScale();
 
 	void Update(float dTime);
 
