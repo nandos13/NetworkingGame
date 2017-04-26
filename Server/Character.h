@@ -33,13 +33,15 @@ private:
 	// Other
 	MapVec3 m_currentPosition;
 	bool m_inOverwatch = false;
+	short m_ID;
+	short m_homeSquad;
 
 #ifndef NETWORK_SERVER
 	GameObj m_gameObject;
 #endif
 
 public:
-	Character();
+	Character(short ID, short HomeSquad);
 	~Character();
 
 	unsigned int GetMoveDistance() const;
@@ -61,16 +63,24 @@ public:
 
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER
+
 	bool Move(MapVec3 destination, float dTime);
 
 	void Draw();
+
 #endif
 
 	/* SERVER-ONLY FUNCTIONALITY */
 #ifdef NETWORK_SERVER
+
 	void Move(MapVec3 destination);
+
+	void Write(RakNet::BitStream& bs);
+
 #endif
 
+	short GetID() const;
+	short GetHomeSquad() const;
 	MapVec3 GetPosition() const;
 	bool Alive() const;
 	void EndOverwatch();

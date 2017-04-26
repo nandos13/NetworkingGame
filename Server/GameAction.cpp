@@ -64,6 +64,7 @@ void GameAction::Write(RakNet::BitStream & bs)
 	std::list<BaseAction*>::iterator iter;
 	for (iter = m_queue.begin(); iter != m_queue.end(); iter++)
 	{
+		// TODO: Need to write which type of action it is
 		(*iter)->Write(bs);
 	}
 }

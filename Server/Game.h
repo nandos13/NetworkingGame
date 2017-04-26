@@ -62,7 +62,6 @@ public:
 #endif
 
 	/* SERVER-ONLY FUNCTIONALITY */
-
 #ifdef NETWORK_SERVER
 
 	void GetShotVariables(short& damage, SHOT_STATUS& shotType, const Character* shooter, const MapVec3 target);

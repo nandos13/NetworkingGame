@@ -40,3 +40,8 @@ void GameObj::GetWorldPosition(float & x, float & y, float & z) const
 	y = m_position.y;
 	z = m_position.z;
 }
+
+void GameObj::Draw() const
+{
+	// TODO: Probably needs to take in camera matrix, etc
+}

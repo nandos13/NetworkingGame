@@ -10,8 +10,10 @@ unsigned int Character::CurrentMobility() const
 	return m_baseMobility;
 }
 
-Character::Character()
+Character::Character(short ID, short HomeSquad)
 {
+	m_ID = ID;
+	m_homeSquad = HomeSquad;
 }
 
 Character::~Character()
@@ -153,7 +155,7 @@ bool Character::Move(MapVec3 destination, float dTime)
 
 void Character::Draw()
 {
-	// TODO
+	m_gameObject.Draw();
 }
 #endif
 
@@ -163,11 +165,31 @@ void Character::Move(MapVec3 destination)
 {
 	m_currentPosition = destination;
 }
+
+void Character::Write(RakNet::BitStream & bs)
+{
+	// TODO: Finish implementation
+}
 #endif
 
 void Character::EndOverwatch()
 {
 	m_inOverwatch = false;
+}
+
+/* Returns the character's unique ID, which corresponds to the map key it belongs to in the Game class. */
+short Character::GetID() const
+{
+	return m_ID;
+}
+
+/** 
+ * Returns the character's initial squad. 
+ * This may not be the same as the current squad if the unit is under mind control, etc.
+ */
+short Character::GetHomeSquad() const
+{
+	return m_homeSquad;
 }
 
 MapVec3 Character::GetPosition() const

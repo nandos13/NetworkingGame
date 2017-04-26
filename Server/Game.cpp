@@ -172,6 +172,17 @@ void Game::Draw()
 
 void Game::Read(RakNet::Packet * packet)
 {
+	// Get bitstream from the packet
+	RakNet::BitStream bsIn(packet->data, packet->length, false);
+	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+	// Create a new map if it is currently null
+	if (m_map == nullptr) m_map = new TileMap();
+
+	// Read Tilemap data
+	m_map->ReadTilemapNew(bsIn);
+	bsIn.Read(m_tileScale);
+
 	// TODO: Implement along with Write function
 }
 #endif
@@ -290,8 +301,28 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 
 void Game::Write(RakNet::BitStream & bs)
 {
-	// TODO
+	// TODO: Finish this implementation
+
+	// Write Tilemap data
 	m_map->WriteTilemapNew(bs);
+	bs.Write(m_tileScale);
+
+	// Write Character data
+	bs.Write(m_characters.size());
+	for (auto& iter = m_characters.begin(); iter != m_characters.end(); iter++)
+	{
+		// Write character's home squad
+		bs.Write(iter->second.GetHomeSquad());
+		iter->second.Write(bs);
+	}
+
+	// Write the action queue
+	bs.Write(m_actionQueue.size());
+	for (auto& iter = m_actionQueue.begin(); iter != m_actionQueue.end(); iter++)
+	{
+		(*iter)->Write(bs);
+	}
+
 }
 
 #endif

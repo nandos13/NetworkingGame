@@ -49,6 +49,7 @@ void Server::SendGameData(RakNet::RakPeerInterface * pPeerInterface, RakNet::Sys
 
 void Server::HandleClientShoot(RakNet::Packet * packet)
 {
+	// TODO: Check sender is currently playing
 	// Get shoot command data
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
 	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
@@ -71,6 +72,7 @@ void Server::HandleClientShoot(RakNet::Packet * packet)
 
 void Server::HandleClientMove(RakNet::Packet* packet)
 {
+	// TODO: Check sender is currently playing
 	// Get move command data
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
 	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
