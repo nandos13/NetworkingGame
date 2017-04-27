@@ -46,8 +46,9 @@ public:
 
 	unsigned int GetMoveDistance() const;
 	unsigned int GetDashDistance() const;
-	MapVec3 GetMapTileCoords();
+	MapVec3 GetMapTileCoords() const;
 
+	void UseAmmo(const unsigned int amount);
 	std::pair<unsigned int, unsigned int> GetWeaponDamage() const;
 	unsigned int GetCurrentAimStat() const;
 	unsigned int GetCurrentDefenseStat() const;
@@ -82,6 +83,7 @@ public:
 	short GetID() const;
 	short GetHomeSquad() const;
 	MapVec3 GetPosition() const;
+	void ApplyDamage(const int amount, const bool armourShred = false);
 	bool Alive() const;
 	void EndOverwatch();
 

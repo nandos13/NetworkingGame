@@ -12,7 +12,7 @@ SniperRifle::~SniperRifle()
 {
 }
 
-int SniperRifle::GetRangeBonus(float distance)
+int SniperRifle::GetRangeBonus(const float distance)
 {
 	float distSq = distance * distance;
 	float bonus = -27.5 + ( 2 * sqrt(2 * distSq) );

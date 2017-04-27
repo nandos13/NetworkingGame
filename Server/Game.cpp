@@ -163,6 +163,14 @@ void Game::QueueAction(short uniqueID, GameAction* action)
 	m_actionQueue.push_back(action);
 }
 
+Character * Game::FindCharacterAtCoords(const MapVec3 position) const
+{
+	Character* c = m_squads[0].FindCharacter(position);
+	if (c == nullptr)
+		c = m_squads[1].FindCharacter(position);
+	return c;
+}
+
 #ifndef NETWORK_SERVER
 void Game::Draw()
 {

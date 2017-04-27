@@ -38,3 +38,11 @@ int GunBase::GetCritModifier() const
 	// TODO: Account for attachments
 	return m_critModifier;
 }
+
+void GunBase::UseAmmo(const unsigned int amount)
+{
+	if (m_remainingAmmo < amount)
+		m_remainingAmmo = 0;
+	else
+		m_remainingAmmo -= amount;
+}

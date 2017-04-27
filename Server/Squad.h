@@ -17,7 +17,7 @@ public:
 
 	void StartTurn();
 
-	Character* FindCharacter(MapVec3 pos);
+	Character* FindCharacter(const MapVec3 pos) const;
 
 #ifdef NETWORK_SERVER
 

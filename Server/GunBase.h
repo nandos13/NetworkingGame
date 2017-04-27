@@ -17,13 +17,15 @@ public:
 	GunBase(unsigned int clipSize, unsigned int minDamage, unsigned int maxDamage, int aimModifier = 0, int critModifier = 0);
 	virtual ~GunBase();
 
-	virtual int GetRangeBonus(float distance) const = 0;
+	virtual int GetRangeBonus(const float distance) const = 0;
 
 	unsigned int GetDamageHigh() const;
 	unsigned int GetDamageLow() const;
 
 	int GetAimModifier() const;
 	int GetCritModifier() const;
+
+	void UseAmmo(const unsigned int amount);
 
 };
 

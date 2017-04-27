@@ -32,7 +32,7 @@ unsigned int Character::GetDashDistance() const
 	return (unsigned int)(CurrentMobility() * 0.625 * 2);
 }
 
-MapVec3 Character::GetMapTileCoords()
+MapVec3 Character::GetMapTileCoords() const
 {
 	return m_currentPosition;
 }
@@ -42,6 +42,12 @@ std::pair<unsigned int, unsigned int> Character::GetWeaponDamage() const
 	if (m_gun != nullptr)
 		return std::make_pair(m_gun->GetDamageLow(), m_gun->GetDamageHigh());
 	return std::pair<unsigned int, unsigned int>();
+}
+
+void Character::UseAmmo(const unsigned int amount)
+{
+	if (m_gun)
+		m_gun->UseAmmo(amount);
 }
 
 unsigned int Character::GetCurrentAimStat() const
@@ -195,6 +201,16 @@ short Character::GetHomeSquad() const
 MapVec3 Character::GetPosition() const
 {
 	return m_currentPosition;
+}
+
+void Character::ApplyDamage(const int amount, const bool armourShred)
+{
+	// TODO: Check for armour, shredding, etc
+	if ((int)m_remainingHealth < amount)
+		m_remainingHealth = 0;
+	else
+		m_remainingHealth -= amount;
+
 }
 
 bool Character::Alive() const

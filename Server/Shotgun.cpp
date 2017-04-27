@@ -12,7 +12,7 @@ Shotgun::~Shotgun()
 {
 }
 
-int Shotgun::GetRangeBonus(float distance)
+int Shotgun::GetRangeBonus(const float distance)
 {
 	float distSq = distance * distance;
 	return 56 - ( 4 * floor( sqrt(2 * distSq) ) );

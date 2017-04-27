@@ -21,9 +21,9 @@ void Squad::StartTurn()
 	// TODO: take one turn from current debuffs, etc
 }
 
-Character * Squad::FindCharacter(MapVec3 pos)
+Character * Squad::FindCharacter(const MapVec3 pos) const
 {
-	std::unordered_map<short, Character*>::iterator iter;
+	std::unordered_map<short, Character*>::const_iterator iter;
 	for (iter = m_squaddies.begin(); iter != m_squaddies.end(); iter++)
 	{
 		if (iter->second->GetPosition() == pos)

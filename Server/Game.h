@@ -52,6 +52,8 @@ public:
 
 	void QueueAction(short uniqueID, GameAction* action);
 
+	Character* FindCharacterAtCoords(const MapVec3 position) const;
+
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER
 
