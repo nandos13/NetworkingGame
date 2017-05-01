@@ -58,8 +58,50 @@ ShootAction::~ShootAction()
 {
 }
 
+#ifndef NETWORK_SERVER
+ShootAction* ShootAction::Read(RakNet::BitStream & bsIn)
+{
+	// Read info
+	short characterID = 0;
+	MapVec3 target = MapVec3(0);
+	unsigned int ammo = 0;
+	short damage = 0;
+	bool shred = 0;
+
+	bsIn.Read(characterID);
+	bsIn.Read(target);
+	bsIn.Read(ammo);
+	bsIn.Read(damage);
+	bsIn.Read(shred);
+
+	// Find character by ID
+	Character* c = Game::GetInstance()->FindCharacterByID(characterID);
+
+	// Error check
+	if (c == nullptr)
+	{
+		printf("Error: Could not find character with id: %d\n", characterID);
+		return nullptr;
+	}
+
+	// Create & return action
+	ShootAction* sA = new ShootAction(c, target, damage, ammo, shred);
+	return sA;
+}
+#endif
+
 #ifdef NETWORK_SERVER
 void ShootAction::Write(RakNet::BitStream & bs)
 {
+	// Write character index
+	bs.Write(m_owner->GetID());
+
+	// Write target tile
+	bs.Write((char*)&m_target, sizeof(MapVec3));
+
+	// Write damage, ammo, etc
+	bs.Write(m_ammo);
+	bs.Write(m_damage);
+	bs.Write(m_shred);
 }
 #endif

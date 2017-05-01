@@ -35,8 +35,39 @@ MovementAction::~MovementAction()
 {
 }
 
+#ifndef NETWORK_SERVER
+MovementAction * MovementAction::Read(RakNet::BitStream & bsIn)
+{
+	// Read info
+	short characterID = 0;
+	MapVec3 destination = MapVec3(0);
+
+	bsIn.Read(characterID);
+	bsIn.Read(destination);
+
+	// Find character by ID
+	Character* c = Game::GetInstance()->FindCharacterByID(characterID);
+
+	// Error check
+	if (c == nullptr)
+	{
+		printf("Error: Could not find character with id: %d\n", characterID);
+		return nullptr;
+	}
+
+	// Create & return action
+	MovementAction mA = new MovementAction(c, destination);
+	return mA;
+}
+#endif
+
 #ifdef NETWORK_SERVER
 void MovementAction::Write(RakNet::BitStream & bs)
 {
+	// Write character index
+	bs.Write(m_owner->GetID());
+
+	// Write destination
+	bs.Write((char*)&m_destination, sizeof(MapVec3));
 }
 #endif

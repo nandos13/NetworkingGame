@@ -1,6 +1,8 @@
 #include "Game.h"
 #include "TileMap.h"
 
+#include <typeinfo>
+
 
 // Static variable declaration
 Game* Game::m_singleton;
@@ -171,6 +173,14 @@ Character * Game::FindCharacterAtCoords(const MapVec3 position) const
 	return c;
 }
 
+Character * Game::FindCharacterByID(const short id) const
+{
+	Character* c = m_squads[0].FindCharacter(id);
+	if (c == nullptr)
+		c = m_squads[1].FindCharacter(id);
+	return c;
+}
+
 #ifndef NETWORK_SERVER
 void Game::Draw()
 {
@@ -255,7 +265,7 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 			}
 
 			// Check if the character can legally move this far
-			if (c->PointsToMove(path.size()) == 0)
+			if (c->PointsToMove((short)path.size()) == 0)
 				printf("Error: Character (id: %d) cannot legally move %d tiles.\n", characterID, path.size());
 
 			// Create an action
@@ -328,6 +338,14 @@ void Game::Write(RakNet::BitStream & bs)
 	bs.Write(m_actionQueue.size());
 	for (auto& iter = m_actionQueue.begin(); iter != m_actionQueue.end(); iter++)
 	{
+		/* Write action type here.
+		 * This is needed when reading, as each action type has it's own Read implementation.
+		 * Does not seem to be the best way to achieve this. :( Will have to look into it later.
+		 */
+		std::string typeName = typeid(&(iter)).name();
+		bs.Write(typeName.c_str());
+
+		// Write the action
 		(*iter)->Write(bs);
 	}
 

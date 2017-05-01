@@ -32,6 +32,17 @@ Character * Squad::FindCharacter(const MapVec3 pos) const
 	return nullptr;
 }
 
+Character * Squad::FindCharacter(const short id) const
+{
+	std::unordered_map<short, Character*>::const_iterator iter;
+	for (iter = m_squaddies.begin(); iter != m_squaddies.end(); iter++)
+	{
+		if (iter->second->GetID() == id)
+			return iter->second;
+	}
+	return nullptr;
+}
+
 #ifdef NETWORK_SERVER
 void Squad::QueryOverwatch(GameAction* action, Character * mover, TileMap& map)
 {

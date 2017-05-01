@@ -17,6 +17,10 @@ protected:
 public:
 	ShootAction(Character* owner, MapVec3 target, short damage, unsigned int ammoUse = 1, bool armourShred = false);
 	~ShootAction();
+	
+#ifndef NETWORK_SERVER
+	static ShootAction* Read(RakNet::BitStream& bsIn);
+#endif
 
 #ifdef NETWORK_SERVER
 	virtual void Write(RakNet::BitStream& bs);
