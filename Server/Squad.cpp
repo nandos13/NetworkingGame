@@ -11,6 +11,17 @@ Squad::~Squad()
 {
 }
 
+void Squad::AddMember(Character * c)
+{
+	if (c != nullptr)
+	{
+		short id = c->GetID();
+		m_squaddies[id] = c;
+	}
+	else
+		printf("Error: Tried to add a character to squad using null-reference.\n");
+}
+
 void Squad::StartTurn()
 {
 	std::unordered_map<short, Character*>::iterator iter;

@@ -15,6 +15,8 @@ public:
 	Squad();
 	~Squad();
 
+	void AddMember(Character* c);
+
 	void StartTurn();
 
 	Character* FindCharacter(const MapVec3 pos) const;

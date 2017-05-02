@@ -28,6 +28,12 @@ public:
 	void Reset();
 	void AddToQueue(BaseAction* a);
 
+#ifndef NETWORK_SERVER
+
+	void Read(RakNet::BitStream& bsIn);
+
+#endif
+
 #ifdef NETWORK_SERVER
 
 	std::list<BaseAction*> * GetActionQueue();

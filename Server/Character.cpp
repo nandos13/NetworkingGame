@@ -159,6 +159,11 @@ bool Character::Move(MapVec3 destination, float dTime)
 	return reachedDestination;
 }
 
+void Character::Read(RakNet::BitStream & bsIn)
+{
+	// TODO
+}
+
 void Character::Draw()
 {
 	m_gameObject.Draw();

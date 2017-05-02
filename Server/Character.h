@@ -67,6 +67,7 @@ public:
 
 	bool Move(MapVec3 destination, float dTime);
 
+	void Read(RakNet::BitStream& bsIn);
 	void Draw();
 
 #endif

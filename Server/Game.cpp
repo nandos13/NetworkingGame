@@ -1,8 +1,6 @@
 #include "Game.h"
 #include "TileMap.h"
 
-#include <typeinfo>
-
 
 // Static variable declaration
 Game* Game::m_singleton;
@@ -124,6 +122,9 @@ void Game::SafeDelete()
 	if (m_map)
 		delete m_map;
 
+	// TODO: Delete all actions
+
+	m_singleton = nullptr;
 	delete this;
 }
 
@@ -190,6 +191,9 @@ void Game::Draw()
 
 void Game::Read(RakNet::Packet * packet)
 {
+	// TODO: Clear squads & character list, etc in separate function call
+	m_characters.clear();
+
 	// Get bitstream from the packet
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
 	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
@@ -200,6 +204,42 @@ void Game::Read(RakNet::Packet * packet)
 	// Read Tilemap data
 	m_map->ReadTilemapNew(bsIn);
 	bsIn.Read(m_tileScale);
+
+	// Read Character data
+	unsigned int charactersSize = 0;
+	bsIn.Read(charactersSize);
+	for (unsigned int i = 0; i < charactersSize; i++)
+	{
+		short squad = 0;
+		bsIn.Read(squad);
+		short id = 0;
+		bsIn.Read(id);
+
+		Character* c = new Character(id, squad);
+		c->Read(bsIn);
+
+		//m_characters[id] = *c;
+		// ^ This may not be storing the character, but creating a copy instead...
+		// TODO: Does the m_characters map need to store pointers instead? 
+
+		// Place the character in the correct squad
+		if (squad != 0 && squad != 1)
+			printf("Error: Character squad was read as %d. Only 0 or 1 is allowed.\n", (float)squad);
+		else
+			m_squads[squad].AddMember(c);
+	}
+
+	// Read the action queue
+	unsigned int queueSize = 0;
+	bsIn.Read(queueSize);
+	for (unsigned int i = 0; i < queueSize; i++)
+	{
+		GameAction* gA = new GameAction();
+		gA->Read(bsIn);
+
+		// Add the action to the queue
+		m_actionQueue.push_back(gA);
+	}
 
 	// TODO: Implement along with Write function
 }
@@ -326,26 +366,19 @@ void Game::Write(RakNet::BitStream & bs)
 	bs.Write(m_tileScale);
 
 	// Write Character data
-	bs.Write(m_characters.size());
+	bs.Write((unsigned int)m_characters.size());
 	for (auto& iter = m_characters.begin(); iter != m_characters.end(); iter++)
 	{
-		// Write character's home squad
+		// Write character's home squad & ID
 		bs.Write(iter->second.GetHomeSquad());
+		bs.Write(iter->second.GetID());
 		iter->second.Write(bs);
 	}
 
 	// Write the action queue
-	bs.Write(m_actionQueue.size());
+	bs.Write((unsigned int)m_actionQueue.size());
 	for (auto& iter = m_actionQueue.begin(); iter != m_actionQueue.end(); iter++)
 	{
-		/* Write action type here.
-		 * This is needed when reading, as each action type has it's own Read implementation.
-		 * Does not seem to be the best way to achieve this. :( Will have to look into it later.
-		 */
-		std::string typeName = typeid(&(iter)).name();
-		bs.Write(typeName.c_str());
-
-		// Write the action
 		(*iter)->Write(bs);
 	}
 

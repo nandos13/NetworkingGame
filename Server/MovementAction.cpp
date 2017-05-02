@@ -1,5 +1,6 @@
 #include "MovementAction.h"
 #include "Character.h"
+#include "Game.h"
 
 
 
@@ -56,7 +57,7 @@ MovementAction * MovementAction::Read(RakNet::BitStream & bsIn)
 	}
 
 	// Create & return action
-	MovementAction mA = new MovementAction(c, destination);
+	MovementAction* mA = new MovementAction(c, destination);
 	return mA;
 }
 #endif
