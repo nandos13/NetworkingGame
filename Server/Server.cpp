@@ -18,7 +18,9 @@ void Server::Setup()
 	srand(time(NULL));
 
 	// Initialize the game instance
-	m_game = new Game();
+	m_game = Game::GetInstance();
+
+	m_game->TempGameSetup();
 }
 
 void Server::SendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)

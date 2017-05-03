@@ -1,4 +1,5 @@
 #include "GameObj.h"
+#include <Gizmos.h>
 
 #include "TileMap.h"
 
@@ -44,4 +45,5 @@ void GameObj::GetWorldPosition(float & x, float & y, float & z) const
 void GameObj::Draw() const
 {
 	// TODO: Probably needs to take in camera matrix, etc
+	aie::Gizmos::addSphere(m_position, 1, 8, 10, glm::vec4(1, 0, 0, 1));
 }

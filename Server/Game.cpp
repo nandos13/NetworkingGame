@@ -1,18 +1,25 @@
 #include "Game.h"
 #include "TileMap.h"
+#include "StandardGun.h"
+#include "SniperRifle.h"
+#include "Shotgun.h"
 
 
 // Static variable declaration
 Game* Game::m_singleton;
 
+#ifdef NETWORK_SERVER
 /** 
  * Set up the Game instance. This handles initialization of squads,
  * tile map, etc.
  */
 void Game::Setup()
 {
-	// TODO: create a squad for each player. One squad humans, one aliens
+	// TODO: This is only a temporary method for adding characters to each team.
+	// Add a better method, like loading from file, etc.
+	TempGameSetup();
 }
+#endif
 
 Squad * Game::GetPlayingSquad()
 {
@@ -86,16 +93,41 @@ int Game::GetCritChance(const Character * shooter, MapVec3 target)
 	return 0;
 }
 
-int Game::GetDamage(const Character * shooter)
+int Game::GetDamage(const Character * shooter, const bool critical)
 {
 	// TODO: If supporting secondary weapons, etc, this needs to take in which weapon is being used
 
 	std::pair<unsigned int, unsigned int> damageVals = shooter->GetWeaponDamage();
 	int difference = damageVals.second - damageVals.first;
 
-	int r = rand() % difference + (int)damageVals.first;	// TODO: Verify if this actually uses all values?
+	// Choose a damage value between the min and max damage
+	int r = rand() % (difference - 1) + (int)damageVals.first;
+
+	// Apply critical damage
+	if (critical)
+		r = (int)((float)r * 1.5f);
 
 	return r;
+}
+
+void Game::ClearGame()
+{
+	delete m_map;
+	
+	// Delete characters
+	for (auto& iter = m_characters.begin(); iter != m_characters.end(); iter++)
+	{
+		delete iter->second;
+	}
+	m_characters.clear();
+
+	// Delete actions
+	for (auto& iter = m_actionQueue.begin(); iter != m_actionQueue.end(); iter++)
+	{
+		delete *iter;
+	}
+	m_actionQueue.clear();
+	m_currentAction = m_actionQueue.begin();
 }
 
 Game::Game()
@@ -108,7 +140,9 @@ Game::Game()
 	m_currentTurn = 0;
 	m_currentAction = m_actionQueue.begin();
 
+#ifdef NETWORK_SERVER
 	Setup();
+#endif
 }
 
 Game::~Game()
@@ -119,10 +153,7 @@ Game::~Game()
 
 void Game::SafeDelete()
 {
-	if (m_map)
-		delete m_map;
-
-	// TODO: Delete all actions
+	ClearGame();
 
 	m_singleton = nullptr;
 	delete this;
@@ -191,8 +222,7 @@ void Game::Draw()
 
 void Game::Read(RakNet::Packet * packet)
 {
-	// TODO: Clear squads & character list, etc in separate function call
-	m_characters.clear();
+	ClearGame();
 
 	// Get bitstream from the packet
 	RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -218,13 +248,13 @@ void Game::Read(RakNet::Packet * packet)
 		Character* c = new Character(id, squad);
 		c->Read(bsIn);
 
-		//m_characters[id] = *c;
+		m_characters[id] = c;
 		// ^ This may not be storing the character, but creating a copy instead...
 		// TODO: Does the m_characters map need to store pointers instead? 
 
 		// Place the character in the correct squad
 		if (squad != 0 && squad != 1)
-			printf("Error: Character squad was read as %d. Only 0 or 1 is allowed.\n", (float)squad);
+			printf("Error: Character squad was read as %d. Only 0 or 1 is allowed.\n", (int)squad);
 		else
 			m_squads[squad].AddMember(c);
 	}
@@ -258,12 +288,17 @@ void Game::GetShotVariables(short & damage, SHOT_STATUS & shotType, const Charac
 		int chanceToCrit = GetCritChance(shooter, target);
 		r = rand() % 100;
 
+		bool crit = false;
+
 		if (r < chanceToCrit)
+		{
 			shotType = CRITICAL;
+			crit = true;
+		}
 		else
 			shotType = HIT;
 
-		damage = GetDamage(shooter);
+		damage = GetDamage(shooter, crit);
 	}
 	else
 	{
@@ -284,7 +319,7 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 	auto& cIter = m_characters.find(characterID);
 	if (cIter != m_characters.end())
 	{
-		Character* c = &(cIter->second);
+		Character* c = cIter->second;
 		if (c != nullptr)
 		{
 			// Find the tile the character is standing on
@@ -357,6 +392,77 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 	return nullptr;
 }
 
+/**
+ * Temporary way to set up a game. Will implement a better method later,
+ * probably reading from a file or allowing each client to choose their squad.
+ */
+void Game::TempGameSetup()
+{
+	printf("Creating characters for each squad.\n");
+	short id = 0;
+
+	// Loop through both squads
+	for (unsigned int sq = 0; sq < 2; sq++)
+	{
+		printf("Creating squad %i\n", sq);
+		// Add a heavy gunner
+		{
+			Character* c = new Character(id, sq);
+			m_characters[id] = c;
+			id++;
+			m_squads[sq].AddMember(c);
+			StandardGun* g = new StandardGun(3, 3, 5);
+
+			c->SetAim(70);
+			c->SetHealth(5, true);
+			c->SetMobility(9);
+			c->SetPrimaryGun(g);
+		}
+
+		// Add an assault trooper
+		{
+			Character* c = new Character(id, sq);
+			m_characters[id] = c;
+			id++;
+			m_squads[sq].AddMember(c);
+			StandardGun* g = new StandardGun(4, 2, 4, -2, 10);
+
+			c->SetAim(76);
+			c->SetHealth(4, true);
+			c->SetMobility(12);
+			c->SetPrimaryGun(g);
+		}
+
+		// Add a sniper
+		{
+			Character* c = new Character(id, sq);
+			m_characters[id] = c;
+			id++;
+			m_squads[sq].AddMember(c);
+			StandardGun* g = new StandardGun(3, 3, 5, 9, 25);
+
+			c->SetAim(81);
+			c->SetHealth(3, true);
+			c->SetMobility(10);
+			c->SetPrimaryGun(g);
+		}
+
+		// Add a support shotgunner
+		{
+			Character* c = new Character(id, sq);
+			m_characters[id] = c;
+			id++;
+			m_squads[sq].AddMember(c);
+			StandardGun* g = new StandardGun(4, 3, 5, -8, 20);
+
+			c->SetAim(76);
+			c->SetHealth(4, true);
+			c->SetMobility(13);
+			c->SetPrimaryGun(g);
+		}
+	}
+}
+
 void Game::Write(RakNet::BitStream & bs)
 {
 	// TODO: Finish this implementation
@@ -370,9 +476,9 @@ void Game::Write(RakNet::BitStream & bs)
 	for (auto& iter = m_characters.begin(); iter != m_characters.end(); iter++)
 	{
 		// Write character's home squad & ID
-		bs.Write(iter->second.GetHomeSquad());
-		bs.Write(iter->second.GetID());
-		iter->second.Write(bs);
+		bs.Write(iter->second->GetHomeSquad());
+		bs.Write(iter->second->GetID());
+		iter->second->Write(bs);
 	}
 
 	// Write the action queue

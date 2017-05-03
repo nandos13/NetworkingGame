@@ -8,6 +8,6 @@ public:
 	Shotgun(unsigned int clipSize, unsigned int minDamage, unsigned int maxDamage, int aimModifier = 0, int critModifier = 0);
 	virtual ~Shotgun();
 
-	virtual int GetRangeBonus(const float distance);
+	virtual int GetRangeBonus(const float distance) const;
 };
 

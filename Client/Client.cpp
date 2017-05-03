@@ -38,7 +38,7 @@ bool Client::startup()
 	Gizmos::create(10000, 10000, 10000, 10000);
 
 	// Initialize game
-	m_game = new Game();
+	m_game = Game::GetInstance();
 
 	return true;
 }

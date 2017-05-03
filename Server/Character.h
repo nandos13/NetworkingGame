@@ -17,7 +17,7 @@ private:
 	unsigned int m_baseHealth;
 	unsigned int m_baseAim;
 	unsigned int m_baseMobility;
-	unsigned int m_baseDefense;
+	//unsigned int m_baseDefense;
 	unsigned int m_baseCritChance;
 
 	unsigned int CurrentMobility() const;
@@ -76,6 +76,13 @@ public:
 #ifdef NETWORK_SERVER
 
 	void Move(MapVec3 destination);
+
+	void SetPrimaryGun(GunBase* gun);
+	void SetHealth(const unsigned int baseHealth, const bool setCurrentHealth = true);
+	void SetAim(const unsigned int baseAim);
+	void SetMobility(const unsigned int baseMobility);
+	//void SetDefense(const unsigned int baseDefense);
+	void SetCritChance(const unsigned int baseCritChance);
 
 	void Write(RakNet::BitStream& bs);
 

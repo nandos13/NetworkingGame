@@ -26,18 +26,22 @@ private:
 
 	Squad m_squads[2];
 	unsigned int m_currentTurn;
-	std::unordered_map<short, Character>	m_characters;
+	std::unordered_map<short, Character*>	m_characters;
 	std::list<GameAction*>					m_actionQueue;
 	std::list<GameAction*>::iterator		m_currentAction;
 
 	/* Private methods */
+#ifdef NETWORK_SERVER
 	void Setup();
+#endif
 	Squad* GetPlayingSquad();
 	Squad* GetWaitingSquad();
 
 	int GetShotChance(const Character* shooter, MapVec3 target);
 	int GetCritChance(const Character* shooter, MapVec3 target);
-	int GetDamage(const Character* shooter);
+	int GetDamage(const Character* shooter, const bool critical);
+
+	void ClearGame();
 
 public:
 	Game();
@@ -70,6 +74,8 @@ public:
 	void GetShotVariables(short& damage, SHOT_STATUS& shotType, const Character* shooter, const MapVec3 target);
 	//GameAction* TakeShot(const short shooterID, short victimID);
 	GameAction* CreateMoveAction(const short characterID, MapVec3 coords);
+
+	void TempGameSetup();
 
 	void Write(RakNet::BitStream& bs);
 

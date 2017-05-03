@@ -14,10 +14,18 @@ Character::Character(short ID, short HomeSquad)
 {
 	m_ID = ID;
 	m_homeSquad = HomeSquad;
+
+	m_baseHealth = 4;
+	m_baseAim = 68;
+	m_baseMobility = 12;
+	//m_baseDefense;
+	m_baseCritChance;
+	// TODO: ^ Do i need a base crit chance?
 }
 
 Character::~Character()
 {
+	// TODO: Delete gun, etc
 }
 
 /* Amount of tiles the character is able to move, using a single action point */
@@ -64,6 +72,7 @@ unsigned int Character::GetCurrentAimStat() const
 
 unsigned int Character::GetCurrentDefenseStat() const
 {
+	// TODO: Wtf was I doing here? crit stuff in defense thing?
 	unsigned int crit = m_baseCritChance;
 
 	if (m_gun)
@@ -175,6 +184,38 @@ void Character::Draw()
 void Character::Move(MapVec3 destination)
 {
 	m_currentPosition = destination;
+}
+
+void Character::SetPrimaryGun(GunBase * gun)
+{
+	m_gun = gun;
+}
+
+void Character::SetHealth(const unsigned int baseHealth, const bool setCurrentHealth)
+{
+	m_baseHealth = baseHealth;
+	if (setCurrentHealth)
+		m_remainingHealth = baseHealth;
+}
+
+void Character::SetAim(const unsigned int baseAim)
+{
+	m_baseAim = baseAim;
+}
+
+void Character::SetMobility(const unsigned int baseMobility)
+{
+	m_baseMobility = baseMobility;
+}
+
+void Character::SetCritChance(const unsigned int baseCritChance)
+{
+	m_baseCritChance = baseCritChance;
+	if (baseCritChance > 100)
+	{
+		printf("Warning: Tried to set base crit chance to a value over 100.");
+		m_baseCritChance = 100;
+	}
 }
 
 void Character::Write(RakNet::BitStream & bs)

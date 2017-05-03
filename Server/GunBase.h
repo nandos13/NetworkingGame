@@ -25,7 +25,8 @@ public:
 	int GetAimModifier() const;
 	int GetCritModifier() const;
 
-	void UseAmmo(const unsigned int amount);
+	void UseAmmo(const unsigned int amount = 1);
+	unsigned int RemainingAmmo() const;
 
 };
 

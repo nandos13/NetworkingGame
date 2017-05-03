@@ -1,5 +1,7 @@
 #include "GunBase.h"
 
+#include <cstdio>
+
 
 
 GunBase::GunBase(unsigned int clipSize, unsigned int minDamage, unsigned int maxDamage, int aimModifier, int critModifier)
@@ -42,7 +44,15 @@ int GunBase::GetCritModifier() const
 void GunBase::UseAmmo(const unsigned int amount)
 {
 	if (m_remainingAmmo < amount)
+	{
+		printf("Error: Tried to use more ammo than currently loaded in gun.\n");
 		m_remainingAmmo = 0;
+	}
 	else
 		m_remainingAmmo -= amount;
+}
+
+unsigned int GunBase::RemainingAmmo() const
+{
+	return m_remainingAmmo;
 }
