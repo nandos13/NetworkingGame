@@ -208,7 +208,8 @@ TileMap::~TileMap()
 void TileMap::AddTile(MapVec3 pos, unsigned char coverData, bool autoConnect)
 {
 	// Insert a plane at specified y-level if it does not exist
-	m_planes.insert(std::make_pair(pos.m_y, MapPlane()));
+	MapPlane plane;
+	m_planes.insert(std::make_pair(pos.m_y, plane));
 
 	// Insert a tile at (x, z) in the plane
 	MapTile* newTile = new MapTile(pos, &m_planes[pos.m_y], coverData);
@@ -502,10 +503,11 @@ void TileMap::Write(RakNet::BitStream& bs)
 	for (planeIter = m_planes.begin(); planeIter != m_planes.end(); planeIter++)
 	{
 		// Write current plane key (height)
-		bs.Write(&planeIter->first);
+		short planeKey = planeIter->first;
+		bs.Write(planeKey);
 
 		// Write number of tiles in this plane
-		unsigned int tilesQuantity = (&planeIter->second)->m_tiles.size();
+		unsigned int tilesQuantity = (unsigned int)((&planeIter->second)->m_tiles.size());
 		bs.Write(tilesQuantity);
 
 		// Iterate through tiles
@@ -551,7 +553,13 @@ void TileMap::Write(RakNet::BitStream& bs)
 			std::list<ConnectionData>::iterator sendIter;
 			for (sendIter = m_sentConnections.begin(); sendIter != m_sentConnections.end(); sendIter++)
 			{
-				bs.Write((char*)&sendIter, sizeof(ConnectionData));
+				//bs.Write((char*)&sendIter, sizeof(ConnectionData));
+				MapVec3 pos1 = sendIter->GetPos1();
+				MapVec3 pos2 = sendIter->GetPos2();
+				bs.Write((char*)&pos1, sizeof(MapVec3));
+				bs.Write((char*)&pos2, sizeof(MapVec3));
+				bs.Write(sendIter->GetWeight());
+				bs.Write(sendIter->IsBiDirectional());
 			}
 		}
 	}
@@ -613,8 +621,18 @@ void TileMap::Read(RakNet::BitStream& bsIn)
 			for (unsigned int k = 0; k < connectionsQuantity; k++)
 			{
 				// Read connection data
-				ConnectionData* c;
-				bsIn.Read(c);
+				ConnectionData* c = nullptr;
+				MapVec3 pos1, pos2;
+				float weight = 0.0f;
+				bool biDir = false;
+
+				//bsIn.Read(c);
+				bsIn.Read(pos1);
+				bsIn.Read(pos2);
+				bsIn.Read(weight);
+				bsIn.Read(biDir);
+
+				c = new ConnectionData(pos1, pos2, weight, biDir);
 
 				// Add this to the temp list of connections
 				m_connectKeys.push_back(c);

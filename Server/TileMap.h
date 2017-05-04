@@ -420,8 +420,6 @@ private:
 			std::map<std::pair<short, short>, MapTile*>::iterator iter;
 			for (iter = m_tiles.begin(); iter != m_tiles.end(); iter++)
 				delete iter->second;
-
-			delete this;
 		}
 
 		std::map<std::pair<short, short>, MapTile*> m_tiles;

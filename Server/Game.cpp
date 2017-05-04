@@ -407,7 +407,7 @@ void Game::TempGameSetup()
 	printf("Creating characters for each squad.\n");
 	short id = 0;
 
-	// Loop through both squads
+	// Loop through & create both squads
 	for (unsigned int sq = 0; sq < 2; sq++)
 	{
 		printf("Creating squad %i\n", sq);
@@ -467,12 +467,20 @@ void Game::TempGameSetup()
 			c->SetPrimaryGun(g);
 		}
 	}
+
+	// Create a basic tile map
+	printf("Creating a basic tilemap.\n");
+	for (int i = -8; i <= 8; i++)
+	{
+		for (int j = -8; j <= 8; j++)
+		{
+			m_map->AddTile(i, 0, j, true);
+		}
+	}
 }
 
 void Game::Write(RakNet::BitStream & bs)
 {
-	// TODO: Finish this implementation
-
 	// Write Tilemap data
 	m_map->Write(bs);
 	bs.Write(m_tileScale);
@@ -493,7 +501,6 @@ void Game::Write(RakNet::BitStream & bs)
 	{
 		(*iter)->Write(bs);
 	}
-
 }
 
 #endif
