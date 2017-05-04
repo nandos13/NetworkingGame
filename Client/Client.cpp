@@ -20,6 +20,8 @@ using aie::Gizmos;
 
 Client::Client() 
 {
+	m_myID = -1;
+	m_forceSpectatorMode = true;
 }
 
 Client::~Client() 
@@ -139,6 +141,9 @@ void Client::handleNetworkMessages()
 		case ID_CONNECTION_LOST:
 			std::cout << "Connection lost.\n";
 			break;
+		case ID_SERVER_SET_CLIENT_ID:
+			ReceiveClientID(packet);
+			break;
 		case ID_SERVER_TEXT_MESSAGE:
 		{
 			RakNet::BitStream bsIn(packet->data, packet->length, false);
@@ -162,6 +167,29 @@ void Client::handleNetworkMessages()
 			break;
 		}
 	}
+}
+
+void Client::ReceiveClientID(RakNet::Packet * packet)
+{
+	std::cout << "Receiving Client Info..." << std::endl;
+
+	RakNet::BitStream bsIn(packet->data, packet->length, false);
+	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+	// Get Client ID
+	unsigned int id = 0;
+	bsIn.Read(id);
+	m_myID = (int)id;
+	std::cout << "ID: " << m_myID << "\t";
+
+	// Get Spectator-mode state
+	bool isPlayer = false;
+	bsIn.Read(isPlayer);
+	m_forceSpectatorMode = !isPlayer;
+
+	std::cout << "Spectator-Mode: ";
+	if (m_forceSpectatorMode) std::cout << "true" << std::endl;
+	else std::cout << "false" << std::endl;
 }
 
 void Client::ReceiveGameInfo(RakNet::Packet * packet)

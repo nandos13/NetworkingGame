@@ -487,14 +487,14 @@ bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightR
 }
 
 /* Write & send the whole tilemap. */
-void TileMap::WriteTilemapNew(RakNet::BitStream& bs)
+void TileMap::Write(RakNet::BitStream& bs)
 {
 	// List of sent connections. Keeps track of which connections have been sent
 	// to avoid sending twice
 	std::list<ConnectionData> m_sentConnections;
 
 	// Write number of planes
-	unsigned int planesQuantity = m_planes.size();
+	unsigned int planesQuantity = (unsigned int)m_planes.size();
 	bs.Write(planesQuantity);
 
 	// Iterate through planes
@@ -556,19 +556,11 @@ void TileMap::WriteTilemapNew(RakNet::BitStream& bs)
 		}
 	}
 }
-
-/* Write & send data that has changed since last update. */
-void TileMap::WriteTilemapDiff(RakNet::BitStream& bs)
-{
-	// TODO: Need some way to track what has changed. maybe keep a copy
-	// of the bitstream each time a packet is sent.
-	// Or maybe pass in which data to send.
-}
 #endif
 
 #ifndef NETWORK_SERVER
 /* Read a packet as a new tilemap. Wipes all old data if present. */
-void TileMap::ReadTilemapNew(RakNet::BitStream& bsIn)
+void TileMap::Read(RakNet::BitStream& bsIn)
 {
 	ClearAllData();
 
@@ -653,14 +645,5 @@ void TileMap::ReadTilemapNew(RakNet::BitStream& bsIn)
 	// All connections have been created. Clean up temp data
 	for each (ConnectionData* c in m_connectKeys)
 		delete c;
-}
-
-/** 
- * Read a packet as a diff. Will only write over mapped data
- * that exists in the packet. Everything else will remain untouched.
- */
-void TileMap::ReadTilemapDiff(RakNet::BitStream& bsIn)
-{
-	
 }
 #endif

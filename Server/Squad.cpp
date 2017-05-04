@@ -22,6 +22,11 @@ void Squad::AddMember(Character * c)
 		printf("Error: Tried to add a character to squad using null-reference.\n");
 }
 
+void Squad::ClearMembers()
+{
+	m_squaddies.clear();
+}
+
 void Squad::StartTurn()
 {
 	std::unordered_map<short, Character*>::iterator iter;

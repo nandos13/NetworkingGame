@@ -12,6 +12,7 @@
 struct MapVec3;
 
 enum SHOT_STATUS { MISS, GRAZE, HIT, CRITICAL };
+enum GAME_STATE { PLAYING, PAUSED, WAITINGFORPLAYER };
 
 class Game
 {
@@ -20,6 +21,8 @@ private:
 	/* Private member variables */
 
 	static Game* m_singleton;
+
+	bool m_spectating;
 
 	TileMap* m_map;
 	float m_tileScale;
@@ -58,6 +61,8 @@ public:
 
 	Character* FindCharacterAtCoords(const MapVec3 position) const;
 	Character* FindCharacterByID(const short id) const;
+
+	void SetSpectatorMode(const bool state);
 
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER

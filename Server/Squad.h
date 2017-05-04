@@ -16,6 +16,7 @@ public:
 	~Squad();
 
 	void AddMember(Character* c);
+	void ClearMembers();
 
 	void StartTurn();
 

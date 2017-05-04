@@ -32,6 +32,9 @@ protected:
 	ClientSideGameManager gm;
 	Game* m_game;
 
+	int m_myID;
+	bool m_forceSpectatorMode;
+
 	/* Member functions */
 
 	glm::mat4 GetCameraTransform();
@@ -41,6 +44,7 @@ protected:
 	void initialiseClientConnection();
 	void handleNetworkMessages();
 
+	void ReceiveClientID(RakNet::Packet* packet);
 	void ReceiveGameInfo(RakNet::Packet* packet);
 
 	void sendCharacterShoot(short characterID, MapVec3 target);
@@ -48,7 +52,7 @@ protected:
 
 	/* Networking varibles */
 	RakNet::RakPeerInterface* m_pPeerInterface;
-	const char* IP = "127.0.0.1";
+	const char* IP = "127.0.0.1";	// TODO: Implement method for changing IP to connect from two different PCs
 	const unsigned short PORT = 5456;
 };
 

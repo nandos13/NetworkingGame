@@ -151,7 +151,10 @@ private:
 			m_tilePosition = pos;
 			m_coverVals = coverData;
 		}
-		~MapTile() {};
+		~MapTile() 
+		{
+			SafeDelete();
+		}
 
 		// COVER INFO
 
@@ -417,7 +420,6 @@ private:
 			std::map<std::pair<short, short>, MapTile*>::iterator iter;
 			for (iter = m_tiles.begin(); iter != m_tiles.end(); iter++)
 				delete iter->second;
-				//iter->second->SafeDelete();
 
 			delete this;
 		}
@@ -455,16 +457,12 @@ public:
 
 	bool CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange = -1);
 
-	void WriteTilemapNew(RakNet::BitStream& bs);
-	void WriteTilemapDiff(RakNet::BitStream& bs);
+	void Write(RakNet::BitStream& bs);
 
 #endif
 
 #ifndef NETWORK_SERVER
-
-	void ReadTilemapNew(RakNet::BitStream& bsIn);
-	void ReadTilemapDiff(RakNet::BitStream& bsIn);
-
+	void Read(RakNet::BitStream& bsIn);
 #endif
 };
 

@@ -19,8 +19,33 @@ void Server::Setup()
 
 	// Initialize the game instance
 	m_game = Game::GetInstance();
+}
 
-	m_game->TempGameSetup();
+const Server::ConnectionInfo * Server::GetClientInfo(std::string address) const
+{
+	for (auto& iter = m_clientConnections.cbegin(); iter != m_clientConnections.cend(); iter++)
+	{
+		if (iter->second->GetAddress() == address)
+			return iter->second;
+	}
+
+	return nullptr;
+}
+
+const Server::ConnectionInfo * Server::GetClientInfo(unsigned int id) const
+{
+	auto& iter = m_clientConnections.find(id);
+
+	if (iter != m_clientConnections.cend())
+		return iter->second;
+	return nullptr;
+}
+
+const std::string Server::GetClientAddress(const ConnectionInfo * connection) const
+{
+	if (connection != nullptr)
+		return connection->GetAddress();
+	return "";
 }
 
 void Server::SendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
@@ -29,13 +54,47 @@ void Server::SendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::
 	// TODO: Send bool for spectator mode if two players are already connected
 	RakNet::BitStream bs;
 	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SET_CLIENT_ID);
-	bs.Write(nextClientID);
-	m_clientConnections[nextClientID] = address.ToString();
-	nextClientID++;
+
+	std::string address_str(address.ToString());
+
+	const ConnectionInfo* c = GetClientInfo(address_str);
+	if (c == nullptr)
+	{
+		// This is a new connection
+		printf("Connection is a new client.\n");
+		ConnectionInfo* newC = new ConnectionInfo(nextClientID, address_str);
+		m_clientConnections[nextClientID] = newC;
+
+		// Write the new client's ID
+		bs.Write(nextClientID);
+		nextClientID++;
+
+		// Write spectator-mode state (true == playing, false == forced spectator)
+		if (newC->GetID() == 0 || newC->GetID() == 1)
+			bs.Write(true);
+		else
+			bs.Write(false);
+	}
+	else
+	{
+		// This client has connected before
+		printf("Previous client (%i) reconnecting.\n", c->GetID());
+
+		// Write the client's ID
+		bs.Write(c->GetID());
+
+		// Write spectator-mode state (true == playing, false == forced spectator)
+		if (c->GetID() == 0 || c->GetID() == 1)
+			bs.Write(true);
+		else
+			bs.Write(false);
+	}
+	// TODO: address says it may not be reliable. Look into: will this treat two connections on the same pc as the same client? etc.
 
 	pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, address, false);
 }
 
+/* Used to initialize the game when a new client connects. */
 void Server::SendGameData(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
 {
 	if (m_game != nullptr)

@@ -112,7 +112,9 @@ int Game::GetDamage(const Character * shooter, const bool critical)
 
 void Game::ClearGame()
 {
+	// Delete map & clear dangling pointer
 	delete m_map;
+	m_map = nullptr;
 	
 	// Delete characters
 	for (auto& iter = m_characters.begin(); iter != m_characters.end(); iter++)
@@ -120,6 +122,7 @@ void Game::ClearGame()
 		delete iter->second;
 	}
 	m_characters.clear();
+	m_squads[0].ClearMembers();
 
 	// Delete actions
 	for (auto& iter = m_actionQueue.begin(); iter != m_actionQueue.end(); iter++)
@@ -134,7 +137,9 @@ Game::Game()
 {
 	if (!m_singleton)
 		m_singleton = this;
-	// TODO: Fix singleton stuff
+
+	m_spectating = false;
+	m_map = new TileMap();
 
 	m_tileScale = 1;
 	m_currentTurn = 0;
@@ -213,6 +218,11 @@ Character * Game::FindCharacterByID(const short id) const
 	return c;
 }
 
+void Game::SetSpectatorMode(const bool state)
+{
+	m_spectating = state;
+}
+
 #ifndef NETWORK_SERVER
 void Game::Draw()
 {
@@ -232,7 +242,7 @@ void Game::Read(RakNet::Packet * packet)
 	if (m_map == nullptr) m_map = new TileMap();
 
 	// Read Tilemap data
-	m_map->ReadTilemapNew(bsIn);
+	m_map->Read(bsIn);
 	bsIn.Read(m_tileScale);
 
 	// Read Character data
@@ -249,8 +259,6 @@ void Game::Read(RakNet::Packet * packet)
 		c->Read(bsIn);
 
 		m_characters[id] = c;
-		// ^ This may not be storing the character, but creating a copy instead...
-		// TODO: Does the m_characters map need to store pointers instead? 
 
 		// Place the character in the correct squad
 		if (squad != 0 && squad != 1)
@@ -270,8 +278,6 @@ void Game::Read(RakNet::Packet * packet)
 		// Add the action to the queue
 		m_actionQueue.push_back(gA);
 	}
-
-	// TODO: Implement along with Write function
 }
 #endif
 
@@ -468,7 +474,7 @@ void Game::Write(RakNet::BitStream & bs)
 	// TODO: Finish this implementation
 
 	// Write Tilemap data
-	m_map->WriteTilemapNew(bs);
+	m_map->Write(bs);
 	bs.Write(m_tileScale);
 
 	// Write Character data
