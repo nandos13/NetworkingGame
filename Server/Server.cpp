@@ -15,7 +15,7 @@
 void Server::Setup()
 {
 	// Seed random functionality
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 
 	// Initialize the game instance
 	m_game = Game::GetInstance();
@@ -120,7 +120,7 @@ void Server::HandleClientShoot(RakNet::Packet * packet)
 	bsIn.Read(targetTile);
 
 	// Create a new shoot action
-	GameAction* action;
+	GameAction* action = nullptr;
 	//action = m_game->TakeShot(characterID, targetTile);	// TODO
 
 	if (action == nullptr) { return; };
@@ -151,7 +151,7 @@ void Server::HandleClientMove(RakNet::Packet* packet)
 
 	RakNet::BitStream bs;
 	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
-	bs.Write((char*)action, sizeof(MovementAction));
+	action->Write(bs);
 	// TODO: Implement Write function within MovementAction to avoid pointers, etc.
 }
 

@@ -41,13 +41,11 @@ int Game::GetShotChance(const Character * shooter, MapVec3 target)
 
 		// Is the target covered from this direction?
 		COVER_VALUE targetCover = m_map->GetCoverInDirection(target, dir);
-		Character* targetCharacter = nullptr;
-		for each (Squad s in m_squads)
-		{
-			targetCharacter = s.FindCharacter(target);
-			if (targetCharacter != nullptr)
-				break;
-		}
+		unsigned int targetCoverVal = 0;
+		if (targetCover == COVER_HIGH) targetCoverVal = 40;
+		else if (targetCover == COVER_LOW) targetCoverVal = 20;
+
+		Character* targetCharacter = FindCharacterAtCoords(target);
 
 		if (targetCharacter == nullptr)
 		{
@@ -62,7 +60,7 @@ int Game::GetShotChance(const Character * shooter, MapVec3 target)
 
 			// Calculate base chance based on shooter's aim and target's defense
 			unsigned int aim = shooter->GetCurrentAimStat();
-			unsigned int def = targetCharacter->GetCurrentDefenseStat() + targetCover;
+			unsigned int def = targetCharacter->GetCurrentDefense() + targetCoverVal;
 			int chance = (int)aim - (int)def;
 			// Clamp if negative
 			if (chance < 1) chance = 1;
@@ -138,7 +136,7 @@ Game::Game()
 	if (!m_singleton)
 		m_singleton = this;
 
-	m_spectating = false;
+	m_forcedSpectator = false;
 	m_map = new TileMap();
 
 	m_tileScale = 1;
@@ -220,7 +218,12 @@ Character * Game::FindCharacterByID(const short id) const
 
 void Game::SetSpectatorMode(const bool state)
 {
-	m_spectating = state;
+	m_forcedSpectator = state;
+}
+
+bool Game::IsSpectator() const
+{
+	return m_forcedSpectator;
 }
 
 #ifndef NETWORK_SERVER
@@ -250,13 +253,9 @@ void Game::Read(RakNet::Packet * packet)
 	bsIn.Read(charactersSize);
 	for (unsigned int i = 0; i < charactersSize; i++)
 	{
-		short squad = 0;
-		bsIn.Read(squad);
-		short id = 0;
-		bsIn.Read(id);
-
-		Character* c = new Character(id, squad);
-		c->Read(bsIn);
+		Character* c = Character::Read(bsIn);
+		short id = c->GetID();
+		short squad = c->GetHomeSquad();
 
 		m_characters[id] = c;
 
@@ -408,62 +407,55 @@ void Game::TempGameSetup()
 	short id = 0;
 
 	// Loop through & create both squads
+	MapVec3 tempSpawn = MapVec3(0);
 	for (unsigned int sq = 0; sq < 2; sq++)
 	{
 		printf("Creating squad %i\n", sq);
 		// Add a heavy gunner
 		{
-			Character* c = new Character(id, sq);
+			Character* c = new Character(id, sq, 5, 70, 9);
+			c->SetPosition(tempSpawn);
+			tempSpawn = tempSpawn + MapVec3(1,0,1);
 			m_characters[id] = c;
 			id++;
 			m_squads[sq].AddMember(c);
 			StandardGun* g = new StandardGun(3, 3, 5);
-
-			c->SetAim(70);
-			c->SetHealth(5, true);
-			c->SetMobility(9);
 			c->SetPrimaryGun(g);
 		}
 
 		// Add an assault trooper
 		{
-			Character* c = new Character(id, sq);
+			Character* c = new Character(id, sq, 4, 76, 12);
+			c->SetPosition(tempSpawn);
+			tempSpawn = tempSpawn + MapVec3(1, 0, 1);
 			m_characters[id] = c;
 			id++;
 			m_squads[sq].AddMember(c);
 			StandardGun* g = new StandardGun(4, 2, 4, -2, 10);
-
-			c->SetAim(76);
-			c->SetHealth(4, true);
-			c->SetMobility(12);
 			c->SetPrimaryGun(g);
 		}
 
 		// Add a sniper
 		{
-			Character* c = new Character(id, sq);
+			Character* c = new Character(id, sq, 3, 81, 10);
+			c->SetPosition(tempSpawn);
+			tempSpawn = tempSpawn + MapVec3(1, 0, 1);
 			m_characters[id] = c;
 			id++;
 			m_squads[sq].AddMember(c);
 			StandardGun* g = new StandardGun(3, 3, 5, 9, 25);
-
-			c->SetAim(81);
-			c->SetHealth(3, true);
-			c->SetMobility(10);
 			c->SetPrimaryGun(g);
 		}
 
 		// Add a support shotgunner
 		{
-			Character* c = new Character(id, sq);
+			Character* c = new Character(id, sq, 4, 76, 13);
+			c->SetPosition(tempSpawn);
+			tempSpawn = tempSpawn + MapVec3(1, 0, 1);
 			m_characters[id] = c;
 			id++;
 			m_squads[sq].AddMember(c);
 			StandardGun* g = new StandardGun(4, 3, 5, -8, 20);
-
-			c->SetAim(76);
-			c->SetHealth(4, true);
-			c->SetMobility(13);
 			c->SetPrimaryGun(g);
 		}
 	}
@@ -477,6 +469,7 @@ void Game::TempGameSetup()
 			m_map->AddTile(i, 0, j, true);
 		}
 	}
+	// TODO: Spawn points on map
 }
 
 void Game::Write(RakNet::BitStream & bs)
@@ -489,9 +482,6 @@ void Game::Write(RakNet::BitStream & bs)
 	bs.Write((unsigned int)m_characters.size());
 	for (auto& iter = m_characters.begin(); iter != m_characters.end(); iter++)
 	{
-		// Write character's home squad & ID
-		bs.Write(iter->second->GetHomeSquad());
-		bs.Write(iter->second->GetID());
 		iter->second->Write(bs);
 	}
 

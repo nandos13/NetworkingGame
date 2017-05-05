@@ -21,6 +21,7 @@ using aie::Gizmos;
 Client::Client() 
 {
 	m_myID = -1;
+	m_gm = nullptr;
 	m_forceSpectatorMode = true;
 }
 
@@ -60,6 +61,10 @@ void Client::update(float deltaTime)
 	// Update the game
 	m_game->Update(deltaTime);
 
+	// Update the game manager
+	if (m_gm != nullptr)
+		m_gm->Update(deltaTime);
+
 	// Update camera
 	//cam.Update(deltaTime);
 	
@@ -81,9 +86,9 @@ void Client::draw() {
 	Gizmos::draw(GetCameraTransform());
 }
 
-glm::mat4 Client::GetCameraTransform()
+glm::mat4 Client::GetCameraTransform() const
 {
-	return (cam.GetProjectionMatrix(getWindowWidth(), getWindowHeight()) * cam.GetViewMatrix());
+	return ( m_cam.GetMVP(getWindowWidth(), getWindowHeight()) );
 }
 
 void Client::handleNetworkConnection()
@@ -190,6 +195,9 @@ void Client::ReceiveClientID(RakNet::Packet * packet)
 	std::cout << "Spectator-Mode: ";
 	if (m_forceSpectatorMode) std::cout << "true" << std::endl;
 	else std::cout << "false" << std::endl;
+
+	if (!m_forceSpectatorMode)
+		m_gm = new ClientSideGameManager(&m_cam);
 }
 
 void Client::ReceiveGameInfo(RakNet::Packet * packet)
@@ -206,7 +214,7 @@ void Client::sendCharacterShoot(short characterID, MapVec3 target)
 	RakNet::BitStream bs;
 	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_SHOOT);
 	bs.Write(characterID);
-	bs.Write((char*)&target, sizeof(MapVec3));
+	target.Write(bs);
 
 	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
 		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
@@ -217,7 +225,7 @@ void Client::sendCharacterMove(short characterID, MapVec3 destination)
 	RakNet::BitStream bs;
 	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_MOVE);
 	bs.Write(characterID);
-	bs.Write((char*)&destination, sizeof(MapVec3));
+	destination.Write(bs);
 
 	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, 
 		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);

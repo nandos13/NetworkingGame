@@ -17,8 +17,6 @@ private:
 	unsigned int m_baseHealth;
 	unsigned int m_baseAim;
 	unsigned int m_baseMobility;
-	//unsigned int m_baseDefense;
-	unsigned int m_baseCritChance;
 
 	unsigned int CurrentMobility() const;
 
@@ -41,7 +39,7 @@ private:
 #endif
 
 public:
-	Character(short ID, short HomeSquad);
+	Character(short ID, short HomeSquad, unsigned int health = 4, unsigned int aim = 68, unsigned int mobility = 12);
 	~Character();
 
 	unsigned int GetMoveDistance() const;
@@ -51,7 +49,7 @@ public:
 	void UseAmmo(const unsigned int amount);
 	std::pair<unsigned int, unsigned int> GetWeaponDamage() const;
 	unsigned int GetCurrentAimStat() const;
-	unsigned int GetCurrentDefenseStat() const;
+	unsigned int GetCurrentDefense() const;
 	int GetAimBonus(float distance) const;
 
 #ifdef NETWORK_SERVER
@@ -67,7 +65,7 @@ public:
 
 	bool Move(MapVec3 destination, float dTime);
 
-	void Read(RakNet::BitStream& bsIn);
+	static Character* Read(RakNet::BitStream& bsIn);
 	void Draw();
 
 #endif
@@ -81,8 +79,6 @@ public:
 	void SetHealth(const unsigned int baseHealth, const bool setCurrentHealth = true);
 	void SetAim(const unsigned int baseAim);
 	void SetMobility(const unsigned int baseMobility);
-	//void SetDefense(const unsigned int baseDefense);
-	void SetCritChance(const unsigned int baseCritChance);
 
 	void Write(RakNet::BitStream& bs);
 
@@ -91,6 +87,7 @@ public:
 	short GetID() const;
 	short GetHomeSquad() const;
 	MapVec3 GetPosition() const;
+	void SetPosition(const MapVec3 pos);
 	void ApplyDamage(const int amount, const bool armourShred = false);
 	bool Alive() const;
 	void EndOverwatch();

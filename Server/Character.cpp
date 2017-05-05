@@ -10,17 +10,15 @@ unsigned int Character::CurrentMobility() const
 	return m_baseMobility;
 }
 
-Character::Character(short ID, short HomeSquad)
+Character::Character(short ID, short HomeSquad, unsigned int health, unsigned int aim, unsigned int mobility)
 {
 	m_ID = ID;
 	m_homeSquad = HomeSquad;
 
-	m_baseHealth = 4;
-	m_baseAim = 68;
-	m_baseMobility = 12;
-	//m_baseDefense;
-	m_baseCritChance;
-	// TODO: ^ Do i need a base crit chance?
+	m_baseHealth = health;
+	m_remainingHealth = m_baseHealth;
+	m_baseAim = aim;
+	m_baseMobility = mobility;
 }
 
 Character::~Character()
@@ -70,17 +68,11 @@ unsigned int Character::GetCurrentAimStat() const
 	return aim;
 }
 
-unsigned int Character::GetCurrentDefenseStat() const
+unsigned int Character::GetCurrentDefense() const
 {
-	// TODO: Wtf was I doing here? crit stuff in defense thing?
-	unsigned int crit = m_baseCritChance;
-
-	if (m_gun)
-		crit += m_gun->GetCritModifier();
-
-	// TODO: Account for gear bonuses, debuffs, etc
-
-	return crit;
+	// TODO: Factor in gear, hunker-state, etc to get base stat.
+	// TODO: Get defense from position based on cover
+	return 0;
 }
 
 int Character::GetAimBonus(float distance) const
@@ -168,9 +160,30 @@ bool Character::Move(MapVec3 destination, float dTime)
 	return reachedDestination;
 }
 
-void Character::Read(RakNet::BitStream & bsIn)
+Character* Character::Read(RakNet::BitStream & bsIn)
 {
-	// TODO
+	// Read ID info
+	short id, squad;
+	bsIn.Read(id);
+	bsIn.Read(squad);
+
+	// Read base stats
+	unsigned int health, aim, mobility;
+	bsIn.Read(health);
+	bsIn.Read(aim);
+	bsIn.Read(mobility);
+
+	// Create character based on stats
+	Character* c = new Character(id, squad, health, aim, mobility);
+
+	// Read position
+	MapVec3 pos(0);
+	pos.Read(bsIn);
+	c->SetPosition(pos);
+
+	// TODO: Implement rest of function along with Write function
+
+	return c;
 }
 
 void Character::Draw()
@@ -208,19 +221,21 @@ void Character::SetMobility(const unsigned int baseMobility)
 	m_baseMobility = baseMobility;
 }
 
-void Character::SetCritChance(const unsigned int baseCritChance)
-{
-	m_baseCritChance = baseCritChance;
-	if (baseCritChance > 100)
-	{
-		printf("Warning: Tried to set base crit chance to a value over 100.");
-		m_baseCritChance = 100;
-	}
-}
-
 void Character::Write(RakNet::BitStream & bs)
 {
-	// TODO: Finish implementation
+	// Write IDs
+	bs.Write(m_ID);
+	bs.Write(m_homeSquad);
+
+	// Write base stats
+	bs.Write(m_baseHealth);
+	bs.Write(m_baseAim);
+	bs.Write(m_baseMobility);
+
+	// Write position
+	m_currentPosition.Write(bs);
+
+	// TODO: Finish implementation with gun, gear, abilities, etc
 }
 #endif
 
@@ -247,6 +262,11 @@ short Character::GetHomeSquad() const
 MapVec3 Character::GetPosition() const
 {
 	return m_currentPosition;
+}
+
+void Character::SetPosition(const MapVec3 pos)
+{
+	m_currentPosition = pos;
 }
 
 void Character::ApplyDamage(const int amount, const bool armourShred)

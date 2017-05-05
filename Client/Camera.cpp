@@ -3,14 +3,14 @@
 #include "Input.h"
 
 
-float Camera::getFovY(unsigned int width, unsigned int height)
+float Camera::getFovY(const unsigned int width, const unsigned int height) const
 {
 	float asp = (float)width / (float)height;
 	float fovXRad = glm::radians(m_fov);
 	return ( atan(tan(fovXRad / 2) / asp) * 2 );
 }
 
-glm::vec3 Camera::forward()
+glm::vec3 Camera::forward() const
 {
 	float thetaR = glm::radians(m_theta);
 	float phiR = glm::radians(m_phi);
@@ -18,12 +18,12 @@ glm::vec3 Camera::forward()
 	return forward;
 }
 
-glm::vec3 Camera::right()
+glm::vec3 Camera::right() const
 {
 	return glm::cross(forward(), glm::vec3(0, 1, 0));
 }
 
-glm::vec3 Camera::up()
+glm::vec3 Camera::up() const
 {
 	return glm::cross(right(), forward());
 }
@@ -112,27 +112,32 @@ void Camera::SetFov(float fov)
 	m_fov = fov;
 }
 
-glm::mat4 Camera::GetProjectionMatrix(unsigned int w, unsigned int h)
+glm::mat4 Camera::GetProjectionMatrix(const unsigned int w, const unsigned int h) const
 {
 	return glm::perspective(getFovY(w, h), (float)w / (float)h, m_nearPlane, m_farPlane);
 }
 
-glm::mat4 Camera::GetViewMatrix()
+glm::mat4 Camera::GetViewMatrix() const
 {
 	return glm::lookAt(m_position, m_position + forward(), glm::vec3(0,1,0));
 }
 
-glm::vec3 Camera::GetPosition()
+glm::mat4 Camera::GetMVP(const unsigned int w, const unsigned int h) const
+{
+	return GetProjectionMatrix(w, h) * GetViewMatrix();
+}
+
+glm::vec3 Camera::GetPosition() const
 {
 	return m_position;
 }
 
-glm::vec2 Camera::GetViewAngle()
+glm::vec2 Camera::GetViewAngle() const
 {
 	return glm::vec2(m_phi, m_theta);
 }
 
-float Camera::GetFov()
+float Camera::GetFov() const
 {
 	return m_fov;
 }

@@ -22,7 +22,7 @@ private:
 
 	static Game* m_singleton;
 
-	bool m_spectating;
+	bool m_forcedSpectator;
 
 	TileMap* m_map;
 	float m_tileScale;
@@ -63,6 +63,7 @@ public:
 	Character* FindCharacterByID(const short id) const;
 
 	void SetSpectatorMode(const bool state);
+	bool IsSpectator() const;
 
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER

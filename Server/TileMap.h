@@ -73,6 +73,19 @@ struct MapVec3
 				return MAP_CONNECTION_DIR::FRONT;
 		}
 	}
+
+	void Read(RakNet::BitStream& bsIn) const
+	{
+		bsIn.Read(m_x);
+		bsIn.Read(m_y);
+		bsIn.Read(m_z);
+	}
+	void Write(RakNet::BitStream& bs) const
+	{
+		bs.Write(m_x);
+		bs.Write(m_y);
+		bs.Write(m_z);
+	}
 };
 
 class TileMap
@@ -261,6 +274,13 @@ private:
 		// A* values
 		float gScore, hScore, fScore;
 		MapTile* previousNode;
+		void ResetPathingData()
+		{
+			previousNode = nullptr;
+			gScore = 0;
+			hScore = 0;
+			fScore = 0;
+		}
 
 		// GENERAL
 
@@ -426,7 +446,11 @@ private:
 	};
 
 	std::unordered_map<short, MapPlane> m_planes;
+
+	std::vector<MapVec3> m_spawnPoints;
+
 	void ClearAllData();
+	void ResetPathingData();
 
 	TileMap::MapTile* FindTile(const MapVec3 pos) const;
 
@@ -442,6 +466,11 @@ public:
 
 	void AddTile(MapVec3 pos, unsigned char coverData = 0, bool autoConnect = true);
 	void AddTile(short x, short y, short z, bool autoConnect = true);
+
+	void ClearSpawnPoints();
+	void AddSpawnPoint(const MapVec3 pos);
+	void RemoveSpawnPoint(const MapVec3 pos);
+	// TODO: Need to finish spawn point system later
 
 	COVER_VALUE GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir);
 

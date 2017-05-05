@@ -14,6 +14,21 @@ void TileMap::ClearAllData()
 		iter->second.SafeDelete();
 	}
 	m_planes.clear();
+
+	m_spawnPoints.clear();
+}
+
+void TileMap::ResetPathingData()
+{
+	// Loop through all planes
+	for (auto& planeIter = m_planes.begin(); planeIter != m_planes.end(); planeIter++)
+	{
+		// Loop through all tiles
+		for (auto& tileIter = planeIter->second.m_tiles.begin(); tileIter != planeIter->second.m_tiles.end(); tileIter++)
+		{
+			tileIter->second->ResetPathingData();
+		}
+	}
 }
 
 TileMap::MapTile * TileMap::FindTile(const MapVec3 pos) const
@@ -260,6 +275,25 @@ void TileMap::AddTile(MapVec3 pos, unsigned char coverData, bool autoConnect)
 void TileMap::AddTile(short x, short y, short z, bool autoConnect)
 {
 	AddTile(MapVec3(x,y,z), autoConnect);
+}
+
+void TileMap::ClearSpawnPoints()
+{
+	m_spawnPoints.clear();
+}
+
+void TileMap::AddSpawnPoint(const MapVec3 pos)
+{
+	m_spawnPoints.push_back(pos);
+}
+
+void TileMap::RemoveSpawnPoint(const MapVec3 pos)
+{
+	for (auto& iter = m_spawnPoints.begin(); iter != m_spawnPoints.end(); iter++)
+	{
+		if (*iter == pos)
+			m_spawnPoints.erase(iter, iter + 1);
+	}
 }
 
 COVER_VALUE TileMap::GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir)
@@ -553,11 +587,8 @@ void TileMap::Write(RakNet::BitStream& bs)
 			std::list<ConnectionData>::iterator sendIter;
 			for (sendIter = m_sentConnections.begin(); sendIter != m_sentConnections.end(); sendIter++)
 			{
-				//bs.Write((char*)&sendIter, sizeof(ConnectionData));
-				MapVec3 pos1 = sendIter->GetPos1();
-				MapVec3 pos2 = sendIter->GetPos2();
-				bs.Write((char*)&pos1, sizeof(MapVec3));
-				bs.Write((char*)&pos2, sizeof(MapVec3));
+				(sendIter->GetPos1()).Write(bs);
+				(sendIter->GetPos2()).Write(bs);
 				bs.Write(sendIter->GetWeight());
 				bs.Write(sendIter->IsBiDirectional());
 			}
@@ -627,8 +658,8 @@ void TileMap::Read(RakNet::BitStream& bsIn)
 				bool biDir = false;
 
 				//bsIn.Read(c);
-				bsIn.Read(pos1);
-				bsIn.Read(pos2);
+				pos1.Read(bsIn);
+				pos2.Read(bsIn);
 				bsIn.Read(weight);
 				bsIn.Read(biDir);
 

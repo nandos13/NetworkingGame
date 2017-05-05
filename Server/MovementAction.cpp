@@ -69,6 +69,6 @@ void MovementAction::Write(RakNet::BitStream & bs)
 	bs.Write(m_owner->GetID());
 
 	// Write destination
-	bs.Write((char*)&m_destination, sizeof(MapVec3));
+	m_destination.Write(bs);
 }
 #endif

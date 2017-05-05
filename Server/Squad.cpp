@@ -35,6 +35,7 @@ void Squad::StartTurn()
 		(*iter).second->ResetActionPoints();
 	}
 	// TODO: take one turn from current debuffs, etc
+	// TODO: Re-evaluate moveable tiles for each character (this should be a method in character class)
 }
 
 Character * Squad::FindCharacter(const MapVec3 pos) const

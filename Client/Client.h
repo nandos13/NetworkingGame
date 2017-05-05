@@ -28,8 +28,8 @@ protected:
 	
 	/* Member variables */
 	
-	Camera cam;
-	ClientSideGameManager gm;
+	Camera m_cam;
+	ClientSideGameManager* m_gm;
 	Game* m_game;
 
 	int m_myID;
@@ -37,7 +37,7 @@ protected:
 
 	/* Member functions */
 
-	glm::mat4 GetCameraTransform();
+	glm::mat4 GetCameraTransform() const;
 
 	/* Networking functions */
 	void handleNetworkConnection();

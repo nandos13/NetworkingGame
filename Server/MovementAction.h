@@ -16,10 +16,6 @@ public:
 	
 #ifndef NETWORK_SERVER
 	static MovementAction* Read(RakNet::BitStream& bsIn);
-	MovementAction* Read2(RakNet::BitStream& bsIn)
-	{
-		return this;
-	}
 #endif
 
 #ifdef NETWORK_SERVER

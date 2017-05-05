@@ -97,7 +97,7 @@ void ShootAction::Write(RakNet::BitStream & bs)
 	bs.Write(m_owner->GetID());
 
 	// Write target tile
-	bs.Write((char*)&m_target, sizeof(MapVec3));
+	m_target.Write(bs);
 
 	// Write damage, ammo, etc
 	bs.Write(m_ammo);

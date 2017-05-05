@@ -1,12 +1,18 @@
 #include "ClientSideGameManager.h"
 
+#include <glm/ext.hpp>
 
 
-ClientSideGameManager::ClientSideGameManager()
+
+ClientSideGameManager::ClientSideGameManager(Camera* cam)
+{
+	m_cam = cam;
+}
+
+ClientSideGameManager::~ClientSideGameManager()
 {
 }
 
-
-ClientSideGameManager::~ClientSideGameManager()
+void ClientSideGameManager::Update(float dTime)
 {
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Game.h"
+#include "Camera.h"
 
 /**
  * This class handles player input to the game, such as character selection,
@@ -10,8 +11,12 @@ class ClientSideGameManager
 {
 protected:
 
+	Camera* m_cam;
+
 public:
-	ClientSideGameManager();
+	ClientSideGameManager(Camera* cam);
 	~ClientSideGameManager();
+
+	void Update(float dTime);
 };
 
