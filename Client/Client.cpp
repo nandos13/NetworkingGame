@@ -196,8 +196,7 @@ void Client::ReceiveClientID(RakNet::Packet * packet)
 	if (m_forceSpectatorMode) std::cout << "true" << std::endl;
 	else std::cout << "false" << std::endl;
 
-	if (!m_forceSpectatorMode)
-		m_gm = new ClientSideGameManager(&m_cam);
+	m_gm = new ClientSideGameManager(&m_cam, m_forceSpectatorMode);
 }
 
 void Client::ReceiveGameInfo(RakNet::Packet * packet)

@@ -13,6 +13,6 @@ StandardGun::~StandardGun()
 
 int StandardGun::GetRangeBonus(const float distance) const
 {
-	float bonus = (float)42 - 4.5 * distance;
+	float bonus = (float)(42 - (4.5f * distance));
 	return (bonus > 0) ? (int)bonus : 0;
 }

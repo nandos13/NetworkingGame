@@ -479,6 +479,7 @@ public:
 
 	std::list<MapVec3> FindPath(const MapVec3 from, const MapVec3 to) const;
 	std::list<MapVec3> GetWalkableTiles(const MapVec3 start, const int maxTravelDist) const;
+	std::list<MapVec3> Raycast(const float x, const float y, const float z, const float dirX, const float dirY, const float dirZ, const float tileScale) const;
 
 #ifdef NETWORK_SERVER
 

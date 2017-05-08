@@ -36,6 +36,9 @@ public:
 	glm::mat4	GetViewMatrix() const;
 	glm::mat4	GetMVP(const unsigned int w, const unsigned int h) const;
 	glm::vec3	GetPosition() const;
+	glm::vec3	GetForwardVec() const;
+	glm::vec3	GetRightVec() const;
+	glm::vec3	GetUpVec() const;
 	glm::vec2	GetViewAngle() const;
 	float		GetFov() const;
 };

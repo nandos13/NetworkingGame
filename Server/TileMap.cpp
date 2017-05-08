@@ -407,6 +407,44 @@ std::list<MapVec3> TileMap::GetWalkableTiles(const MapVec3 start, const int maxT
 	return firstList;
 }
 
+std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z, const float dirX, const float dirY, const float dirZ, const float tileScale) const
+{
+	// TODO: PRIORITY!! http://www.saltgames.com/article/lineOfSight/
+	return std::list<MapVec3>();
+	// TODO: Figure out where the tile scale needs to be used for accurate results
+
+	// These values vary from step to step
+	float tValue, xGrid, yGrid, zGrid, tNextBorderX, tNextBorderY, tNextBorderZ;
+
+	// Constants
+	const float tForOneX = fabs(1.0 / dirX);	// TODO: Apparently abs is quite slow? look into this some time
+	const float tForOneY = fabs(1.0 / dirY);
+	const float tForOneZ = fabs(1.0 / dirZ);
+	const int xStep = (dirX >= 0) ? 1 : -1;
+	const int yStep = (dirY >= 0) ? 1 : -1;
+	const int zStep = (dirZ >= 0) ? 1 : -1;
+
+	// Start implementation
+	tValue = 0;
+	xGrid = floorf(x);
+	yGrid = floorf(y);
+	zGrid = floorf(z);
+
+	float fracStartPosX = x - floor(x);
+	if (dirX > 0)	tNextBorderX = (1 - fracStartPosX) * tForOneX;
+	else			tNextBorderX = fracStartPosX * tForOneX;
+
+	float fracStartPosY = y - floor(y);
+	if (dirY > 0)	tNextBorderY = (1 - fracStartPosY) * tForOneY;
+	else			tNextBorderY = fracStartPosY * tForOneY;
+
+	float fracStartPosZ = z - floor(z);
+	if (dirZ > 0)	tNextBorderZ = (1 - fracStartPosZ) * tForOneZ;
+	else			tNextBorderZ = fracStartPosZ * tForOneZ;
+
+	// TODO: Finish implementation
+}
+
 #ifdef NETWORK_SERVER
 /* Checks tiles over a sight-line to check whether or not sight is blocked. */
 bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange)

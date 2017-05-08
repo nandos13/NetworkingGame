@@ -132,6 +132,21 @@ glm::vec3 Camera::GetPosition() const
 	return m_position;
 }
 
+glm::vec3 Camera::GetForwardVec() const
+{
+	return forward();
+}
+
+glm::vec3 Camera::GetRightVec() const
+{
+	return right();
+}
+
+glm::vec3 Camera::GetUpVec() const
+{
+	return up();
+}
+
 glm::vec2 Camera::GetViewAngle() const
 {
 	return glm::vec2(m_phi, m_theta);
