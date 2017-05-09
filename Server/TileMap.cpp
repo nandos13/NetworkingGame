@@ -309,7 +309,7 @@ COVER_VALUE TileMap::GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_
 		return COVER_NONE;
 }
 
-MapVec3 TileMap::FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale)
+MapVec3 TileMap::FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale) const
 {
 	if (tileScale > 0)
 	{
@@ -325,7 +325,7 @@ MapVec3 TileMap::FindTileAtWorldCoords(const float x, const float y, const float
 	return MapVec3();
 }
 
-void TileMap::GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale)
+void TileMap::GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const
 {
 	if (tileScale > 0)
 	{
@@ -407,22 +407,31 @@ std::list<MapVec3> TileMap::GetWalkableTiles(const MapVec3 start, const int maxT
 	return firstList;
 }
 
+/* Cast a ray through map voxels. NOTE: dir values must be of a normalized vector to work correctly */
 std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z, const float dirX, const float dirY, const float dirZ, const float tileScale) const
 {
-	// TODO: PRIORITY!! http://www.saltgames.com/article/lineOfSight/
-	return std::list<MapVec3>();
-	// TODO: Figure out where the tile scale needs to be used for accurate results
+	// Function was based on write-up found at: http://www.cs.yorku.ca/~amana/research/grid.pdf
+
+	// Initially found via: http://www.saltgames.com/article/lineOfSight/,
+	// and their source-code at: http://www.saltgames.com/articles/lineOfSight/lineOfSightDemo.js
+
+	std::list<MapVec3> resultList;
 
 	// These values vary from step to step
 	float tValue, xGrid, yGrid, zGrid, tNextBorderX, tNextBorderY, tNextBorderZ;
 
 	// Constants
-	const float tForOneX = fabs(1.0 / dirX);	// TODO: Apparently abs is quite slow? look into this some time
+	const float tileScalePositive = (tileScale >= 0) ? tileScale : -tileScale;
+	// TODO: Apparently abs is quite slow? look into this some time
+	const float tForOneX = fabs(1.0 / dirX);
 	const float tForOneY = fabs(1.0 / dirY);
 	const float tForOneZ = fabs(1.0 / dirZ);
-	const int xStep = (dirX >= 0) ? 1 : -1;
-	const int yStep = (dirY >= 0) ? 1 : -1;
-	const int zStep = (dirZ >= 0) ? 1 : -1;
+	const int xStep = (dirX >= 0) ? tileScalePositive : -tileScalePositive;
+	const int yStep = (dirY >= 0) ? tileScalePositive : -tileScalePositive;
+	const int zStep = (dirZ >= 0) ? tileScalePositive : -tileScalePositive;
+
+	MapVec3 currentPos = FindTileAtWorldCoords(x, y, z, tileScalePositive);
+	resultList.push_back(currentPos);
 
 	// Start implementation
 	tValue = 0;
@@ -442,7 +451,38 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 	if (dirZ > 0)	tNextBorderZ = (1 - fracStartPosZ) * tForOneZ;
 	else			tNextBorderZ = fracStartPosZ * tForOneZ;
 
-	// TODO: Finish implementation
+	while (tValue <= 1.0)
+	{
+		// Find the smallest t-value until next map space
+		float minNextBorder = min(min(tNextBorderX, tNextBorderY), tNextBorderZ);
+
+		/* NOTE: Check if difference is less than 0.000001 in order to allow diagonal movement when the ray is
+		 * very close to the corner of it's containing map grid cube. */
+
+		if (fabs(tNextBorderX - minNextBorder) < 0.000001)
+		{
+			tValue = tNextBorderX;
+			tNextBorderX += tForOneX;
+			xGrid += xStep;
+		}
+		if (fabs(tNextBorderY - minNextBorder) < 0.000001)
+		{
+			tValue = tNextBorderY;
+			tNextBorderY += tForOneY;
+			yGrid += yStep;
+		}
+		if (fabs(tNextBorderZ - minNextBorder) < 0.000001)
+		{
+			tValue = tNextBorderZ;
+			tNextBorderZ += tForOneZ;
+			zGrid += zStep;
+		}
+
+		currentPos = FindTileAtWorldCoords(xGrid, yGrid, zGrid, tileScalePositive);
+		resultList.push_back(currentPos);
+	}
+
+	return resultList;
 }
 
 #ifdef NETWORK_SERVER
@@ -461,6 +501,7 @@ bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightR
 		MapVec3 currentPos = from;
 		MapVec3 nextPos;
 
+		// TODO: Use raycast method instead of bresenhams?
 		// TODO: Test: Will this new method work?
 		// Sight-line should now start in the center of the tile, rather than the left side.
 

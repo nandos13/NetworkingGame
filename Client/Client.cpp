@@ -21,8 +21,7 @@ using aie::Gizmos;
 Client::Client() 
 {
 	m_myID = -1;
-	m_gm = nullptr;
-	m_forceSpectatorMode = true;
+	m_gm = new ClientSideGameManager(this, &m_cam);
 }
 
 Client::~Client() 
@@ -190,13 +189,18 @@ void Client::ReceiveClientID(RakNet::Packet * packet)
 	// Get Spectator-mode state
 	bool isPlayer = false;
 	bsIn.Read(isPlayer);
-	m_forceSpectatorMode = !isPlayer;
 
 	std::cout << "Spectator-Mode: ";
-	if (m_forceSpectatorMode) std::cout << "true" << std::endl;
+	if (!isPlayer) std::cout << "true" << std::endl;
 	else std::cout << "false" << std::endl;
 
-	m_gm = new ClientSideGameManager(&m_cam, m_forceSpectatorMode);
+	// Set spectator variables
+	m_gm->SetSpectatorMode(!isPlayer);
+	Game::GetInstance()->SetSpectatorMode(!isPlayer);
+
+	// If this client is a player, take possession of a squad
+	if (isPlayer)
+		Game::GetInstance()->TakeControlOfSquad((int)id + 1);	// eg. Client id 0 takes squad 1
 }
 
 void Client::ReceiveGameInfo(RakNet::Packet * packet)

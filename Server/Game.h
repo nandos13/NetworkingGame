@@ -28,6 +28,9 @@ private:
 	float m_tileScale;
 
 	Squad m_squads[2];
+#ifndef NETWORK_SERVER
+	int m_mySquad = -1;
+#endif
 	unsigned int m_currentTurn;
 	std::unordered_map<short, Character*>	m_characters;
 	std::list<GameAction*>					m_actionQueue;
@@ -71,6 +74,7 @@ public:
 	void Draw();
 
 	void Read(RakNet::Packet* packet);
+	void TakeControlOfSquad(const int squad);
 
 #endif
 

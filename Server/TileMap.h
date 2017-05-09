@@ -474,8 +474,8 @@ public:
 
 	COVER_VALUE GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir);
 
-	MapVec3 FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale);
-	void GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale);
+	MapVec3 FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale) const;
+	void GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;
 
 	std::list<MapVec3> FindPath(const MapVec3 from, const MapVec3 to) const;
 	std::list<MapVec3> GetWalkableTiles(const MapVec3 start, const int maxTravelDist) const;

@@ -5,6 +5,7 @@ class Camera
 {
 private:
 	glm::vec3	m_position;
+	glm::vec3	m_currentLookTarget;
 	float		m_fov;
 	float		m_phi;
 	float		m_theta;
@@ -23,7 +24,7 @@ public:
 	Camera(glm::vec3 pos, glm::vec2 euler, float fov = 70);
 	~Camera();
 
-	void Update(float deltaTime);
+	void Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, const float rotateTo, const float rotateSpeed, const int windowWidth, const int windowHeight);
 
 	// Set functions
 	void SetViewAngle(float phi, float theta);
@@ -35,6 +36,7 @@ public:
 	glm::mat4	GetProjectionMatrix(const unsigned int w, const unsigned int h) const;
 	glm::mat4	GetViewMatrix() const;
 	glm::mat4	GetMVP(const unsigned int w, const unsigned int h) const;
+	glm::vec3	Get3DPointFromScreenSpace(const glm::vec2 screenSpacePoint, const unsigned int width, const unsigned int height) const;
 	glm::vec3	GetPosition() const;
 	glm::vec3	GetForwardVec() const;
 	glm::vec3	GetRightVec() const;

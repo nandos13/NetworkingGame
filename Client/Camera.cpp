@@ -62,11 +62,28 @@ Camera::~Camera()
 {
 }
 
-void Camera::Update(float deltaTime)
+void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, const float rotateTo, const float rotateSpeed, const int windowWidth, const int windowHeight)
 {
+	// Lerp rotation
+	{
+		float camLerpAmount = deltaTime * rotateSpeed;
+		if ((m_theta - rotateTo) < camLerpAmount)
+			m_theta = rotateTo;
+		else
+		{
+			if (m_theta - rotateTo > 0)
+				camLerpAmount *= -1.0f;
+
+			m_theta += camLerpAmount;
+		}
+	}
+
 	aie::Input* input = aie::Input::getInstance();
 	float thetaR = glm::radians(m_theta);
 	float phiR = glm::radians(m_phi);
+	int mouseX = 0, mouseY = 0;
+	input->getMouseXY(&mouseX, &mouseY);
+	glm::vec2 mousePos = glm::vec2(mouseX, mouseY);
 
 	/** 
 	 * Rather than using the camera's forward direction, we use a direction
@@ -76,16 +93,39 @@ void Camera::Update(float deltaTime)
 	glm::vec3 forwardVec(cos(0)*cos(thetaR), sin(0), cos(0)*sin(thetaR));
 
 	// WASD Key movement
-	const float camSpeed = 2.5f;
-	if (input->isKeyDown(aie::INPUT_KEY_W))
-		m_position += forwardVec	* deltaTime * camSpeed;
-	if (input->isKeyDown(aie::INPUT_KEY_S))
-		m_position += -forwardVec	* deltaTime * camSpeed;
-	if (input->isKeyDown(aie::INPUT_KEY_A))
-		m_position += -right()		* deltaTime * camSpeed;
-	if (input->isKeyDown(aie::INPUT_KEY_D))
-		m_position += right()		* deltaTime * camSpeed;
+	const float camMoveSpeed = 2.5f;
+	if (!lockMovement)
+	{
+		if (input->isKeyDown(aie::INPUT_KEY_W) || mouseY == windowHeight)
+			m_currentLookTarget += forwardVec	* deltaTime * camMoveSpeed;
+		if (input->isKeyDown(aie::INPUT_KEY_S) || mouseY == 0)
+			m_currentLookTarget += -forwardVec	* deltaTime * camMoveSpeed;
+		if (input->isKeyDown(aie::INPUT_KEY_A) || mouseX == 0)
+			m_currentLookTarget += -right()		* deltaTime * camMoveSpeed;
+		if (input->isKeyDown(aie::INPUT_KEY_D) || mouseX == windowWidth)
+			m_currentLookTarget += right()		* deltaTime * camMoveSpeed;
 
+		lookTarget = m_currentLookTarget;
+	}
+	else
+	{
+		// Movement input is locked. Lerp position until camera is looking at the intended target position
+
+		float moveLerpAmount = deltaTime * camMoveSpeed;
+		glm::vec3 moveVector = lookTarget - m_currentLookTarget;
+		glm::vec3 moveDir = glm::normalize(moveVector) * moveLerpAmount;
+
+		if (glm::length(moveDir) > glm::length(moveVector))
+		{
+			// Movement hits it's target. Unlock movement
+			m_currentLookTarget = lookTarget;
+			lockMovement = false;
+		}
+		else
+			m_currentLookTarget += moveDir;
+	}
+
+	// TODO: Move camera to currentLookTarget plus an offset based on angle, and look at the lookTarget
 }
 
 void Camera::SetViewAngle(float phi, float theta)
@@ -125,6 +165,17 @@ glm::mat4 Camera::GetViewMatrix() const
 glm::mat4 Camera::GetMVP(const unsigned int w, const unsigned int h) const
 {
 	return GetProjectionMatrix(w, h) * GetViewMatrix();
+}
+
+glm::vec3 Camera::Get3DPointFromScreenSpace(const glm::vec2 screenSpacePoint, const unsigned int width, const unsigned int height) const
+{
+	// TODO: Verify this method works. May need to change the z component in point3D to 1 rather than 0?
+	double x = 2.0 * screenSpacePoint.x / width - 1;
+	double y = 2.0 * screenSpacePoint.y / height + 1;
+	glm::mat4 viewProjInverse = glm::inverse(GetProjectionMatrix(width, height) * GetViewMatrix());
+
+	glm::vec3 point3D = glm::vec3(x, y, 0);
+	return glm::vec3(viewProjInverse * glm::vec4(point3D, 1));
 }
 
 glm::vec3 Camera::GetPosition() const

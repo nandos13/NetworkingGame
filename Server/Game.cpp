@@ -278,6 +278,17 @@ void Game::Read(RakNet::Packet * packet)
 		m_actionQueue.push_back(gA);
 	}
 }
+
+/* Allows a client to take control of a squad. Use 1 or 2 as input parameter */
+void Game::TakeControlOfSquad(const int squad)
+{
+	if (squad == 1)
+		m_mySquad = 0;
+	else if (squad == 2)
+		m_mySquad = 1;
+
+	// Note: m_mySquad stores the index of squad in array m_squads.
+}
 #endif
 
 #ifdef NETWORK_SERVER

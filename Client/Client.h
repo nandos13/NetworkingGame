@@ -33,7 +33,6 @@ protected:
 	Game* m_game;
 
 	int m_myID;
-	bool m_forceSpectatorMode;
 
 	/* Member functions */
 
