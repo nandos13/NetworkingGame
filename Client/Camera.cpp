@@ -158,7 +158,7 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	}
 
 	// TODO: Move camera to currentLookTarget plus an offset based on angle, and look at the lookTarget
-	glm::vec3 camOffset = glm::vec3(cos(m_theta), 1, sin(m_theta));
+	glm::vec3 camOffset = glm::vec3(sin(m_theta), 1, cos(m_theta));
 	const float camDistance = 5.0f;
 	camOffset *= camDistance;
 	m_position = m_currentLookTarget + camOffset;

@@ -48,8 +48,18 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 				nextCharacter = selectableList.begin();
 			else
 			{
-				if (reverse)	nextCharacter++;
-				else			nextCharacter--;
+				if (!reverse)
+					nextCharacter++;
+				else
+					nextCharacter--;
+			}
+
+			if (nextCharacter == selectableList.end())
+			{
+				if (reverse)
+					nextCharacter--;
+				else
+					nextCharacter = selectableList.begin();
 			}
 
 			// Select the new character
