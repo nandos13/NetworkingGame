@@ -3,6 +3,12 @@
 
 #include <list>
 
+#ifndef NETWORK_SERVER
+#include <gizmos.h>
+#include <glm/ext.hpp>
+#include "Game.h"
+#endif
+
 
 
 /* Deletes all nodes & planes from memory. */
@@ -454,7 +460,8 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 	while (tValue <= 1.0)
 	{
 		// Find the smallest t-value until next map space
-		float minNextBorder = min(min(tNextBorderX, tNextBorderY), tNextBorderZ);
+		float minNextBorder = (tNextBorderX < tNextBorderY) ? tNextBorderX : tNextBorderY;
+		if (tNextBorderZ < minNextBorder)	minNextBorder = tNextBorderZ;
 
 		/* NOTE: Check if difference is less than 0.000001 in order to allow diagonal movement when the ray is
 		 * very close to the corner of it's containing map grid cube. */
@@ -773,5 +780,37 @@ void TileMap::Read(RakNet::BitStream& bsIn)
 	// All connections have been created. Clean up temp data
 	for each (ConnectionData* c in m_connectKeys)
 		delete c;
+}
+
+/* Basic draw function, draws each tile using gizmos */
+void TileMap::Draw() const
+{
+	float tileScale = Game::GetMapTileScale();
+
+	for (auto& planeIter = m_planes.begin(); planeIter != m_planes.end(); planeIter++)
+	{
+		auto tiles = planeIter->second.m_tiles;
+		for (auto& tileIter = tiles.begin(); tileIter != tiles.end(); tileIter++)
+		{
+			MapVec3 tilePos = tileIter->second->GetTilePos();
+
+			glm::vec3 backLeft = glm::vec3(tilePos.m_x * tileScale, tilePos.m_y * tileScale, tilePos.m_z * tileScale);
+			glm::vec3 frontLeft = backLeft + glm::vec3(tileScale, 0, 0);
+			glm::vec3 backRight = backLeft + glm::vec3(0, 0, tileScale);
+			glm::vec3 frontRight = backLeft + glm::vec3(tileScale, 0, tileScale);
+			
+			if (FindTile(tilePos + MapVec3(-1, 0, 0)) != nullptr)
+			{
+				aie::Gizmos::addLine(backLeft, frontLeft, glm::vec4(1));	// Draw left border
+			}
+			if (FindTile(tilePos + MapVec3(0, 0, -1)) != nullptr)
+			{
+				aie::Gizmos::addLine(backLeft, backRight, glm::vec4(1));	// Draw back border
+			}
+
+			aie::Gizmos::addLine(backRight, frontRight, glm::vec4(1));
+			aie::Gizmos::addLine(frontLeft, frontRight, glm::vec4(1));
+		}
+	}
 }
 #endif

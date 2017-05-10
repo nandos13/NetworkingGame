@@ -491,6 +491,7 @@ public:
 
 #ifndef NETWORK_SERVER
 	void Read(RakNet::BitStream& bsIn);
+	void Draw() const;
 #endif
 };
 

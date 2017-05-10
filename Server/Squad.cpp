@@ -106,11 +106,11 @@ void Squad::QueryOverwatch(GameAction* action, Character * mover, TileMap& map)
 #endif
 
 #ifndef NETWORK_SERVER
-void Squad::Draw()
+void Squad::Draw() const
 {
 	// Loop through & draw all characters
-	std::unordered_map<short, Character*>::iterator iter;
-	for (iter = m_squaddies.begin(); iter != m_squaddies.end(); iter++)
+	std::unordered_map<short, Character*>::const_iterator iter;
+	for (iter = m_squaddies.cbegin(); iter != m_squaddies.cend(); iter++)
 	{
 		(*iter).second->Draw();
 	}

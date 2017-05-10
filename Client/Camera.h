@@ -1,4 +1,7 @@
 #pragma once
+
+#ifndef NETWORK_SERVER
+
 #include <glm\glm.hpp>
 
 class Camera
@@ -46,3 +49,5 @@ public:
 	float		GetFov() const;
 };
 
+
+#endif

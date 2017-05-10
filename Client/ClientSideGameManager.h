@@ -32,7 +32,6 @@ protected:
 	Character* m_selectedCharacter;
 	std::list<Character*> m_selectableCharacters;
 	void SelectNextCharacter(const bool reverse = false);
-	void RefreshSelectableCharList();
 
 	// Other
 	MapVec3 GetClickedTile(glm::vec2 clickPointSS, bool& missedTiles) const;

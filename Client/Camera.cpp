@@ -1,6 +1,10 @@
 #include "Camera.h"
+
+#ifndef NETWORK_SERVER
+
 #include <glm\ext.hpp>
 #include "Input.h"
+#include <Gizmos.h>
 
 
 float Camera::getFovY(const unsigned int width, const unsigned int height) const
@@ -76,7 +80,6 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	// Lerp rotation
 	{
 		WrapThetaTo360();
-		printf("Theta: %f\t", m_theta);
 		float camLerpAmount = deltaTime * rotateSpeed * 100;
 
 		float turnAngle = rotateTo - m_theta;
@@ -99,7 +102,6 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 
 			m_theta += camLerpAmount;
 		}
-		printf("%f\t%f\n", m_theta, camLerpAmount);
 	}
 
 	aie::Input* input = aie::Input::getInstance();
@@ -117,7 +119,7 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	glm::vec3 forwardVec(cos(0)*cos(thetaR), sin(0), cos(0)*sin(thetaR));
 
 	// WASD Key movement
-	const float camMoveSpeed = 2.5f;
+	const float camMoveSpeed = 5.0f;
 	if (!lockMovement)
 	{
 		if (input->isKeyDown(aie::INPUT_KEY_W) || mouseY == windowHeight)
@@ -128,6 +130,12 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 			m_currentLookTarget += -right()		* deltaTime * camMoveSpeed;
 		if (input->isKeyDown(aie::INPUT_KEY_D) || mouseX == windowWidth)
 			m_currentLookTarget += right()		* deltaTime * camMoveSpeed;
+
+		// TODO: Temporary pitch control, remove later
+		if (input->isKeyDown(aie::INPUT_KEY_DOWN))
+			m_phi += deltaTime * 30;
+		if (input->isKeyDown(aie::INPUT_KEY_UP))
+			m_phi -= deltaTime * 30;
 
 		lookTarget = m_currentLookTarget;
 	}
@@ -151,9 +159,12 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 
 	// TODO: Move camera to currentLookTarget plus an offset based on angle, and look at the lookTarget
 	glm::vec3 camOffset = glm::vec3(cos(m_theta), 1, sin(m_theta));
-	const float camDistance = 3.0f;
+	const float camDistance = 5.0f;
 	camOffset *= camDistance;
-	//m_position = m_currentLookTarget + camOffset;
+	m_position = m_currentLookTarget + camOffset;
+
+	// Draw a gizmo at the current look target position for debug.
+	aie::Gizmos::addSphere(m_currentLookTarget, 0.5f, 6, 6, glm::vec4(1, 1, 0, 1));
 }
 
 void Camera::SetViewAngle(float phi, float theta)
@@ -235,3 +246,6 @@ float Camera::GetFov() const
 {
 	return m_fov;
 }
+
+
+#endif

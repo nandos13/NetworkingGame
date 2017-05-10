@@ -21,7 +21,7 @@ private:
 	unsigned int CurrentMobility() const;
 
 	const unsigned int m_sightRadius = 27;
-	unsigned int m_remainingPoints = 0;
+	unsigned int m_remainingPoints = 2;
 	unsigned int m_remainingHealth;
 
 	// Gear

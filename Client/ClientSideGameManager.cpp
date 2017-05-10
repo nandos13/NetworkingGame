@@ -12,7 +12,6 @@
 /* Cycles to next available character. If reverse == true, cycles backwards. */
 void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 {
-	// TODO
 	// Get a list of selectable characters
 	std::list<Character*> selectableList = Game::GetInstance()->GetSelectableCharacters();
 
@@ -53,16 +52,18 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 				else			nextCharacter--;
 			}
 
+			// Select the new character
 			m_selectedCharacter = *nextCharacter;
+
+			// Set camera to lerp to the character
+			m_camPosLerping = true;
+			TileMap* map = Game::GetMap();
+			float x = 0, y = 0, z = 0;
+			map->GetTileWorldCoords(x, y, z, m_selectedCharacter->GetPosition(), Game::GetMapTileScale());
+			glm::vec3 characterPos = glm::vec3(x, y, z);
+			m_camCurrentLookTarget = characterPos;
 		}
 	}
-}
-
-void ClientSideGameManager::RefreshSelectableCharList()
-{
-	Game* g = Game::GetInstance();
-	// TODO: Find which player this GM belongs to. Probably needs to be specified in constructor
-	// Should be able to use Game's m_mySquad variable here somehow
 }
 
 MapVec3 ClientSideGameManager::GetClickedTile(glm::vec2 clickPointSS, bool& missedTiles) const
@@ -100,6 +101,8 @@ MapVec3 ClientSideGameManager::GetClickedTile(glm::vec2 clickPointSS, bool& miss
 ClientSideGameManager::ClientSideGameManager(Client* client, Camera* cam)
 	: m_thisClient(client), m_cam(cam)
 {
+	m_camPosLerping = false;
+	m_camRotLerping = false;
 	m_camRotationSpeed = 1.0f;
 	m_camRotationDestination = 0.0f;
 	m_selectedCharacter = nullptr;
@@ -125,6 +128,7 @@ void ClientSideGameManager::Update(const float dTime)
 		if (!missedTiles)
 		{
 			// TODO: Left click, find character on tile clicked and switch if they are in the list
+			printf("Clicked tile: %i, %i, %i\n", clicked.m_x, clicked.m_y, clicked.m_z);
 		}
 	}
 	else if (input->wasMouseButtonPressed(1))

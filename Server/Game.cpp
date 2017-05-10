@@ -231,6 +231,7 @@ void Game::Draw()
 {
 	m_squads[0].Draw();
 	m_squads[1].Draw();
+	m_map->Draw();
 }
 
 void Game::Read(RakNet::Packet * packet)

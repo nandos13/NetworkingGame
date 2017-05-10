@@ -33,7 +33,7 @@ public:
 #endif
 
 #ifndef NETWORK_SERVER
-	void Draw();
+	void Draw() const;
 #endif
 };
 
