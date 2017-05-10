@@ -131,7 +131,7 @@ unsigned int Character::PointsToMove(short moveTiles) const
 	if (moveTiles <= (int)GetMoveDistance() && (int)m_remainingPoints > 0) { return 1; };	// One point to move
 	if (moveTiles <= (int)GetDashDistance() && (int)m_remainingPoints > 1) { return 2; };	// Two points to move
 
-	return 0;	// 
+	return 0;
 }
 
 void Character::ResetActionPoints()
@@ -180,6 +180,12 @@ Character* Character::Read(RakNet::BitStream & bsIn)
 	MapVec3 pos(0);
 	pos.Read(bsIn);
 	c->SetPosition(pos);
+
+	// Set GameObject's position
+	float x = 0, y = 0, z = 0;
+	TileMap* map = Game::GetMap();
+	map->GetTileWorldCoords(x, y, z, pos, Game::GetMapTileScale());
+	c->m_gameObject.SetPosition(x, y, z);
 
 	// TODO: Implement rest of function along with Write function
 

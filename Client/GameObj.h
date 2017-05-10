@@ -18,6 +18,8 @@ public:
 	bool LerpMove(const glm::vec3 destination, const float dTime);
 
 	void GetWorldPosition(float& x, float& y, float& z) const;
+	void SetPosition(const glm::vec3 position);
+	void SetPosition(const float x, const float y, const float z);
 
 	void Draw() const;
 };

@@ -42,6 +42,17 @@ void GameObj::GetWorldPosition(float & x, float & y, float & z) const
 	z = m_position.z;
 }
 
+void GameObj::SetPosition(const glm::vec3 position)
+{
+	m_position = position;
+}
+
+void GameObj::SetPosition(const float x, const float y, const float z)
+{
+	glm::vec3 pos = glm::vec3(x, y, z);
+	SetPosition(pos);
+}
+
 void GameObj::Draw() const
 {
 	// TODO: Probably needs to take in camera matrix, etc

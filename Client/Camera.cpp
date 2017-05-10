@@ -163,6 +163,17 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	camOffset *= camDistance;
 	m_position = m_currentLookTarget + camOffset;
 
+	// Adjust phi angle to point at target tile
+	glm::vec3 camToTile = glm::normalize(m_currentLookTarget - m_position);
+	glm::vec3 rightVec = glm::cross(forwardVec, glm::vec3(0, 1, 0));
+
+	// Get angle from horizontal to the target & convert to degrees
+	// TODO: Does this work?
+	float anglePhi = glm::orientedAngle(camToTile, forwardVec, rightVec);
+	anglePhi = glm::degrees(anglePhi);
+	anglePhi = fabs(anglePhi) * -1.0f;
+	m_phi = anglePhi;
+
 	// Draw a gizmo at the current look target position for debug.
 	aie::Gizmos::addSphere(m_currentLookTarget, 0.5f, 6, 6, glm::vec4(1, 1, 0, 1));
 }

@@ -23,56 +23,52 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 			m_selectedCharacter = *selectableList.begin();
 			return;
 		}
-
-		std::list<Character*>::iterator selectedIter = selectableList.end();
-		for (auto& iter = selectableList.begin(); iter != selectableList.end(); iter++)
-		{
-			if ((*iter) == m_selectedCharacter)
-			{
-				selectedIter = iter;
-				break;
-			}
-		}
-
-		if (selectedIter == selectableList.end())
-		{
-			// Currently selected character is not in the selectable list. Set selected to first character.
-			m_selectedCharacter = *selectableList.begin();
-		}
 		else
 		{
-			auto nextCharacter = selectedIter;
-			if (selectedIter == selectableList.begin() && reverse)
-				nextCharacter = (selectableList.end()--);	// First character is selected, select last
-			else if (selectedIter == selectableList.end()-- && !reverse)
-				nextCharacter = selectableList.begin();
+			std::list<Character*>::iterator selectedIter = selectableList.end();
+			for (auto& iter = selectableList.begin(); iter != selectableList.end(); iter++)
+			{
+				if ((*iter) == m_selectedCharacter)
+				{
+					selectedIter = iter;
+					break;
+				}
+			}
+
+			if (selectedIter == selectableList.end())
+			{
+				// Currently selected character is not in the selectable list. Set selected to first character.
+				m_selectedCharacter = *selectableList.begin();
+			}
 			else
 			{
-				if (!reverse)
-					nextCharacter++;
-				else
-					nextCharacter--;
-			}
+				auto nextCharacter = selectedIter;
+				std::list<Character*>::reverse_iterator lastElement = selectableList.rbegin();
 
-			if (nextCharacter == selectableList.end())
-			{
-				if (reverse)
-					nextCharacter--;
-				else
+				if (selectedIter == selectableList.begin() && reverse)
+					nextCharacter = (lastElement.base());	// First character is selected, select last
+				else if (selectedIter == lastElement.base() && !reverse)
 					nextCharacter = selectableList.begin();
+				else
+				{
+					if (!reverse)
+						nextCharacter++;
+					else
+						nextCharacter--;
+				}
+
+				// Select the new character
+				m_selectedCharacter = *nextCharacter;
 			}
-
-			// Select the new character
-			m_selectedCharacter = *nextCharacter;
-
-			// Set camera to lerp to the character
-			m_camPosLerping = true;
-			TileMap* map = Game::GetMap();
-			float x = 0, y = 0, z = 0;
-			map->GetTileWorldCoords(x, y, z, m_selectedCharacter->GetPosition(), Game::GetMapTileScale());
-			glm::vec3 characterPos = glm::vec3(x, y, z);
-			m_camCurrentLookTarget = characterPos;
 		}
+
+		// Set camera to lerp to the character
+		m_camPosLerping = true;
+		TileMap* map = Game::GetMap();
+		float x = 0, y = 0, z = 0;
+		map->GetTileWorldCoords(x, y, z, m_selectedCharacter->GetPosition(), Game::GetMapTileScale());
+		glm::vec3 characterPos = glm::vec3(x, y, z);
+		m_camCurrentLookTarget = characterPos;
 	}
 }
 
@@ -81,6 +77,7 @@ MapVec3 ClientSideGameManager::GetClickedTile(glm::vec2 clickPointSS, bool& miss
 	glm::vec3 camPos = m_cam->GetPosition();
 	glm::vec3 clickPoint = 
 		m_cam->Get3DPointFromScreenSpace(clickPointSS, m_thisClient->getWindowWidth(), m_thisClient->getWindowHeight());
+	// TODO: Need to take in parameter to control vector length. 
 
 	// Find vector between camera's pos & the click point
 	glm::vec3 clickDir = clickPoint - camPos;
@@ -101,10 +98,19 @@ MapVec3 ClientSideGameManager::GetClickedTile(glm::vec2 clickPointSS, bool& miss
 	}
 	else
 	{
-		missedTiles = false;
-		// TODO: Need to iterate through and find the first MapVec3 that actually corresponds to a tile
-		// in the tilemap. This is currently just returning the MapVec3 which the camera is positioned inside.
-		return *(rayCastHits.begin());
+		// Iterate through tile spaces and find the first one with a physical tile in the tilemap.
+		for (auto& iter = rayCastHits.begin(); iter != rayCastHits.end(); iter++)
+		{
+			if (map->TileAt(*iter))
+			{
+				missedTiles = false;
+				return *iter;
+			}
+		}
+
+		// All tile spaces hit by the ray were empty
+		missedTiles = true;
+		return MapVec3();
 	}
 }
 

@@ -343,6 +343,11 @@ void TileMap::GetTileWorldCoords(float& outX, float& outY, float& outZ, const Ma
 	printf("Error: GetTileWorldCoords method was called with tileScale <= 0\n");
 }
 
+bool TileMap::TileAt(const MapVec3 position) const
+{
+	return ( FindTile(position) != nullptr );
+}
+
 std::list<MapVec3> TileMap::FindPath(const MapVec3 from, const MapVec3 to) const
 {
 	MapTile* origin = FindTile(from);
