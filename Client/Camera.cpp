@@ -36,9 +36,18 @@ void Camera::clampPhi()
 		m_phi = -70;
 }
 
+void Camera::WrapThetaTo360()
+{
+	float thetaDecimal = m_theta - floorf(m_theta);
+	int thetaInt = (int)m_theta;
+	thetaInt = thetaInt % 360;
+	m_theta = (float)thetaInt + thetaDecimal;
+}
+
 Camera::Camera()
 {
 	m_position = glm::vec3(0);
+	m_currentLookTarget = glm::vec3(0);
 	m_fov = 70;
 	m_phi = 0;
 	m_theta = 0;
@@ -62,20 +71,35 @@ Camera::~Camera()
 {
 }
 
-void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, const float rotateTo, const float rotateSpeed, const int windowWidth, const int windowHeight)
+void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, const float rotateTo, bool& lockRotation, const float rotateSpeed, const int windowWidth, const int windowHeight)
 {
 	// Lerp rotation
 	{
-		float camLerpAmount = deltaTime * rotateSpeed;
-		if ((m_theta - rotateTo) < camLerpAmount)
+		WrapThetaTo360();
+		printf("Theta: %f\t", m_theta);
+		float camLerpAmount = deltaTime * rotateSpeed * 100;
+
+		float turnAngle = rotateTo - m_theta;
+		// TODO: FIXME: This shit is fucked up
+		//float turnAngleDecimal = turnAngle - floorf(turnAngle);
+		//int turnAngleInt = (int)turnAngle;
+		//turnAngleInt = turnAngleInt % 360;
+		//turnAngle = (float)turnAngleInt + turnAngleDecimal;
+
+		if (fabs(turnAngle) < camLerpAmount)
+		{
+			// End lerp
 			m_theta = rotateTo;
+			lockRotation = false;
+		}
 		else
 		{
-			if (m_theta - rotateTo > 0)
+			if ((turnAngle < 0 && fabs(turnAngle) <= 180) || fabs(turnAngle) > 180)
 				camLerpAmount *= -1.0f;
 
 			m_theta += camLerpAmount;
 		}
+		printf("%f\t%f\n", m_theta, camLerpAmount);
 	}
 
 	aie::Input* input = aie::Input::getInstance();
@@ -126,6 +150,10 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	}
 
 	// TODO: Move camera to currentLookTarget plus an offset based on angle, and look at the lookTarget
+	glm::vec3 camOffset = glm::vec3(cos(m_theta), 1, sin(m_theta));
+	const float camDistance = 3.0f;
+	camOffset *= camDistance;
+	//m_position = m_currentLookTarget + camOffset;
 }
 
 void Camera::SetViewAngle(float phi, float theta)

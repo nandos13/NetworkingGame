@@ -1,4 +1,7 @@
 #include "ClientSideGameManager.h"
+
+#ifndef NETWORK_SERVER
+
 #include "Client.h"
 
 #include <glm/ext.hpp>
@@ -10,6 +13,49 @@
 void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 {
 	// TODO
+	// Get a list of selectable characters
+	std::list<Character*> selectableList = Game::GetInstance()->GetSelectableCharacters();
+
+	// Find which character is currently selected
+	if (selectableList.size() > 0)
+	{
+		if (m_selectedCharacter == nullptr)
+		{
+			m_selectedCharacter = *selectableList.begin();
+			return;
+		}
+
+		std::list<Character*>::iterator selectedIter = selectableList.end();
+		for (auto& iter = selectableList.begin(); iter != selectableList.end(); iter++)
+		{
+			if ((*iter) == m_selectedCharacter)
+			{
+				selectedIter = iter;
+				break;
+			}
+		}
+
+		if (selectedIter == selectableList.end())
+		{
+			// Currently selected character is not in the selectable list. Set selected to first character.
+			m_selectedCharacter = *selectableList.begin();
+		}
+		else
+		{
+			auto nextCharacter = selectedIter;
+			if (selectedIter == selectableList.begin() && reverse)
+				nextCharacter = (selectableList.end()--);	// First character is selected, select last
+			else if (selectedIter == selectableList.end()-- && !reverse)
+				nextCharacter = selectableList.begin();
+			else
+			{
+				if (reverse)	nextCharacter++;
+				else			nextCharacter--;
+			}
+
+			m_selectedCharacter = *nextCharacter;
+		}
+	}
 }
 
 void ClientSideGameManager::RefreshSelectableCharList()
@@ -95,21 +141,31 @@ void ClientSideGameManager::Update(const float dTime)
 		SelectNextCharacter(false);
 	else if (input->wasKeyPressed(aie::INPUT_KEY_LEFT_SHIFT))
 		SelectNextCharacter(true);
-	else if (input->wasKeyPressed(aie::INPUT_KEY_Q))
+	else if (input->wasKeyPressed(aie::INPUT_KEY_Q) && !m_camRotLerping)
 	{
+		m_camRotLerping = true;
 		m_camRotationDestination += 45.0f;
-		if (m_camRotationDestination >= 360)	m_camRotationDestination -= 360;
+
+		float camRotDecimal = m_camRotationDestination - floorf(m_camRotationDestination);
+		int camRotInt = (int)m_camRotationDestination;
+		camRotInt = camRotInt % 360;
+		m_camRotationDestination = (float)camRotInt + camRotDecimal;
 	}
-	else if (input->wasKeyPressed(aie::INPUT_KEY_E))
+	else if (input->wasKeyPressed(aie::INPUT_KEY_E) && !m_camRotLerping)
 	{
+		m_camRotLerping = true;
 		m_camRotationDestination -= 45.0f;
-		if (m_camRotationDestination <= 0)		m_camRotationDestination += 360;
+		
+		float camRotDecimal = m_camRotationDestination - floorf(m_camRotationDestination);
+		int camRotInt = (int)m_camRotationDestination;
+		camRotInt = camRotInt % 360;
+		m_camRotationDestination = (float)camRotInt + camRotDecimal;
 	}
 
 	/* Update scene stuff */
 
 	m_cam->Update(dTime, m_camCurrentLookTarget, m_camPosLerping, 
-		m_camRotationDestination, m_camRotationSpeed, m_thisClient->getWindowWidth(), m_thisClient->getWindowHeight());
+		m_camRotationDestination, m_camRotLerping, m_camRotationSpeed, m_thisClient->getWindowWidth(), m_thisClient->getWindowHeight());
 }
 
 void ClientSideGameManager::SetCameraSpeed(const float speed)
@@ -126,3 +182,6 @@ void ClientSideGameManager::SetSelectedCharacter(Character * c)
 {
 	m_selectedCharacter = c;
 }
+
+
+#endif

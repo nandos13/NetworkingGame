@@ -283,3 +283,12 @@ bool Character::Alive() const
 {
 	return m_remainingHealth > 0;
 }
+
+bool Character::IsSelectable() const
+{
+	// TODO: Loop through debuffs, find if the character is stunned, etc.
+	if (m_remainingPoints <= 0)
+		return false;
+
+	return true;
+}

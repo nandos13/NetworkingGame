@@ -60,6 +60,33 @@ Character * Squad::FindCharacter(const short id) const
 	return nullptr;
 }
 
+std::list<Character*> Squad::GetAllCharacters() const
+{
+	std::list<Character*> charList;
+	for (auto& iter = m_squaddies.cbegin(); iter != m_squaddies.cend(); iter++)
+	{
+		if (iter->second != nullptr)
+			charList.push_back(iter->second);
+	}
+
+	return charList;
+}
+
+std::list<Character*> Squad::GetSelectableCharacters() const
+{
+	std::list<Character*> charList;
+	for (auto& iter = m_squaddies.cbegin(); iter != m_squaddies.cend(); iter++)
+	{
+		if (iter->second != nullptr)
+		{
+			if (iter->second->IsSelectable())
+				charList.push_back(iter->second);
+		}
+	}
+
+	return charList;
+}
+
 #ifdef NETWORK_SERVER
 void Squad::QueryOverwatch(GameAction* action, Character * mover, TileMap& map)
 {

@@ -160,6 +160,7 @@ void Client::handleNetworkMessages()
 			break;
 		}
 		case ID_SERVER_INITIALISE_GAME:
+			// TODO: Thread this to prevent client from locking up
 			ReceiveGameInfo(packet);
 			break;
 		case ID_SERVER_SEND_ACTION:

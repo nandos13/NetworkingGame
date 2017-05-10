@@ -1,5 +1,7 @@
 #pragma once
 
+#ifndef NETWORK_SERVER
+
 #include "Game.h"
 #include "Camera.h"
 
@@ -22,6 +24,7 @@ protected:
 
 	float m_camRotationSpeed;
 	float m_camRotationDestination;
+	bool m_camRotLerping;
 
 	bool m_forceSpectator;
 
@@ -46,3 +49,5 @@ public:
 	void SetSelectedCharacter(Character* c);
 };
 
+
+#endif

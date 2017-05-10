@@ -23,6 +23,9 @@ public:
 	Character* FindCharacter(const MapVec3 pos) const;
 	Character* FindCharacter(const short id) const;
 
+	std::list<Character*> GetAllCharacters() const;
+	std::list<Character*> GetSelectableCharacters() const;
+
 #ifdef NETWORK_SERVER
 
 	void QueryOverwatch(GameAction* action, Character* mover, TileMap& map);

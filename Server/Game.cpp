@@ -289,6 +289,15 @@ void Game::TakeControlOfSquad(const int squad)
 
 	// Note: m_mySquad stores the index of squad in array m_squads.
 }
+
+/* Returns a list of the characters which are currently selectable, based on the player's team. */
+std::list<Character*> Game::GetSelectableCharacters() const
+{
+	if (m_mySquad != 0 && m_mySquad != 1)
+		return std::list<Character*>();
+
+	return m_squads[m_mySquad].GetSelectableCharacters();
+}
 #endif
 
 #ifdef NETWORK_SERVER

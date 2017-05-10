@@ -75,6 +75,7 @@ public:
 
 	void Read(RakNet::Packet* packet);
 	void TakeControlOfSquad(const int squad);
+	std::list<Character*> GetSelectableCharacters() const;
 
 #endif
 

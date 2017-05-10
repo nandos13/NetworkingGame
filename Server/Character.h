@@ -90,6 +90,7 @@ public:
 	void SetPosition(const MapVec3 pos);
 	void ApplyDamage(const int amount, const bool armourShred = false);
 	bool Alive() const;
+	bool IsSelectable() const;
 	void EndOverwatch();
 
 };
