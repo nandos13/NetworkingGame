@@ -9,6 +9,7 @@ class Camera
 private:
 	glm::vec3	m_position;
 	glm::vec3	m_currentLookTarget;
+	float		m_lerpSpeed;
 	float		m_fov;
 	float		m_phi;
 	float		m_theta;

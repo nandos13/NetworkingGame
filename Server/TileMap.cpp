@@ -339,8 +339,8 @@ void TileMap::GetTileWorldCoords(float& outX, float& outY, float& outZ, const Ma
 		outY = (float)(tilePos.m_y * tileScale);
 		outZ = (float)(tilePos.m_z * tileScale);
 	}
-
-	printf("Error: GetTileWorldCoords method was called with tileScale <= 0\n");
+	else
+		printf("Error: GetTileWorldCoords method was called with tileScale <= 0\n");
 }
 
 bool TileMap::TileAt(const MapVec3 position) const

@@ -21,7 +21,6 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 		if (m_selectedCharacter == nullptr)
 		{
 			m_selectedCharacter = *selectableList.begin();
-			return;
 		}
 		else
 		{
@@ -43,11 +42,12 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 			else
 			{
 				auto nextCharacter = selectedIter;
-				std::list<Character*>::reverse_iterator lastElement = selectableList.rbegin();
+				std::list<Character*>::iterator lastElement = selectableList.end();
+				lastElement--;
 
 				if (selectedIter == selectableList.begin() && reverse)
-					nextCharacter = (lastElement.base());	// First character is selected, select last
-				else if (selectedIter == lastElement.base() && !reverse)
+					nextCharacter = lastElement;	// First character is selected, select last
+				else if (selectedIter == lastElement && !reverse)
 					nextCharacter = selectableList.begin();
 				else
 				{
@@ -170,6 +170,8 @@ void ClientSideGameManager::Update(const float dTime)
 		int camRotInt = (int)m_camRotationDestination;
 		camRotInt = camRotInt % 360;
 		m_camRotationDestination = (float)camRotInt + camRotDecimal;
+		if (m_camRotationDestination < 0)
+			m_camRotationDestination += 360;
 	}
 	else if (input->wasKeyPressed(aie::INPUT_KEY_E) && !m_camRotLerping)
 	{
@@ -180,6 +182,8 @@ void ClientSideGameManager::Update(const float dTime)
 		int camRotInt = (int)m_camRotationDestination;
 		camRotInt = camRotInt % 360;
 		m_camRotationDestination = (float)camRotInt + camRotDecimal;
+		if (m_camRotationDestination < 0)
+			m_camRotationDestination += 360;
 	}
 
 	/* Update scene stuff */

@@ -46,6 +46,11 @@ void Camera::WrapThetaTo360()
 	int thetaInt = (int)m_theta;
 	thetaInt = thetaInt % 360;
 	m_theta = (float)thetaInt + thetaDecimal;
+	if (m_theta < 0)
+	{
+		m_theta -= 1;
+		m_theta += 360;
+	}
 }
 
 Camera::Camera()
@@ -80,27 +85,35 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	// Lerp rotation
 	{
 		WrapThetaTo360();
+
 		float camLerpAmount = deltaTime * rotateSpeed * 100;
 
-		float turnAngle = rotateTo - m_theta;
-		// TODO: FIXME: This shit is fucked up
-		//float turnAngleDecimal = turnAngle - floorf(turnAngle);
-		//int turnAngleInt = (int)turnAngle;
-		//turnAngleInt = turnAngleInt % 360;
-		//turnAngle = (float)turnAngleInt + turnAngleDecimal;
-
-		if (fabs(turnAngle) < camLerpAmount)
+		if (m_theta != rotateTo)
 		{
-			// End lerp
-			m_theta = rotateTo;
-			lockRotation = false;
-		}
-		else
-		{
-			if ((turnAngle < 0 && fabs(turnAngle) <= 180) || fabs(turnAngle) > 180)
-				camLerpAmount *= -1.0f;
+			float turnAngle = rotateTo - m_theta;
 
-			m_theta += camLerpAmount;
+			float turnAngleDecimal = turnAngle - floorf(turnAngle);
+			int turnAngleInt = (int)turnAngle;
+			turnAngleInt = turnAngleInt % 360;
+			turnAngle = (float)turnAngleInt + turnAngleDecimal;
+			if (turnAngle < 0)
+				turnAngle += 360;
+
+			if (fabs(turnAngle) < camLerpAmount)
+			{
+				// End lerp
+				m_theta = rotateTo;
+				lockRotation = false;
+			}
+			else
+			{
+				if ((turnAngle < 0 && turnAngle > -180) || turnAngle > 180)
+					camLerpAmount *= -1.0f;
+				//if ((turnAngle < 0 && fabs(turnAngle) <= 180) || fabs(turnAngle) > 180)
+				//	camLerpAmount *= -1.0f;
+
+				m_theta += camLerpAmount;
+			}
 		}
 	}
 
@@ -119,23 +132,19 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	glm::vec3 forwardVec(cos(0)*cos(thetaR), sin(0), cos(0)*sin(thetaR));
 
 	// WASD Key movement
-	const float camMoveSpeed = 5.0f;
+	const float camMoveSpeed = 15.0f;
+	const float camLerpTime = 0.35f;
 	if (!lockMovement)
 	{
-		if (input->isKeyDown(aie::INPUT_KEY_W) || mouseY == windowHeight)
+		// TODO: Re-enable edge scrolling. Maybe accept several pixels?
+		if (input->isKeyDown(aie::INPUT_KEY_W) /*|| mouseY == windowHeight*/)
 			m_currentLookTarget += forwardVec	* deltaTime * camMoveSpeed;
-		if (input->isKeyDown(aie::INPUT_KEY_S) || mouseY == 0)
+		if (input->isKeyDown(aie::INPUT_KEY_S) /*|| mouseY == 0*/)
 			m_currentLookTarget += -forwardVec	* deltaTime * camMoveSpeed;
-		if (input->isKeyDown(aie::INPUT_KEY_A) || mouseX == 0)
+		if (input->isKeyDown(aie::INPUT_KEY_A) /*|| mouseX == 0*/)
 			m_currentLookTarget += -right()		* deltaTime * camMoveSpeed;
-		if (input->isKeyDown(aie::INPUT_KEY_D) || mouseX == windowWidth)
+		if (input->isKeyDown(aie::INPUT_KEY_D) /*|| mouseX == windowWidth*/)
 			m_currentLookTarget += right()		* deltaTime * camMoveSpeed;
-
-		// TODO: Temporary pitch control, remove later
-		if (input->isKeyDown(aie::INPUT_KEY_DOWN))
-			m_phi += deltaTime * 30;
-		if (input->isKeyDown(aie::INPUT_KEY_UP))
-			m_phi -= deltaTime * 30;
 
 		lookTarget = m_currentLookTarget;
 	}
@@ -143,39 +152,40 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	{
 		// Movement input is locked. Lerp position until camera is looking at the intended target position
 
-		float moveLerpAmount = deltaTime * camMoveSpeed;
-		glm::vec3 moveVector = lookTarget - m_currentLookTarget;
-		glm::vec3 moveDir = glm::normalize(moveVector) * moveLerpAmount;
+		if (m_lerpSpeed <= 0)
+			m_lerpSpeed = (glm::distance(lookTarget, m_currentLookTarget)) / camLerpTime;
 
-		if (glm::length(moveDir) > glm::length(moveVector))
+		glm::vec3 moveDistance = lookTarget - m_currentLookTarget;
+		glm::vec3 moveDir = glm::normalize(moveDistance);
+		glm::vec3 moveVector = moveDir * m_lerpSpeed * deltaTime;
+
+		if (glm::length(moveVector) > glm::length(moveDistance) || m_lerpSpeed <= 0)
 		{
 			// Movement hits it's target. Unlock movement
 			m_currentLookTarget = lookTarget;
 			lockMovement = false;
+			m_lerpSpeed = 0;
 		}
 		else
-			m_currentLookTarget += moveDir;
+			m_currentLookTarget += moveVector;
 	}
 
-	// TODO: Move camera to currentLookTarget plus an offset based on angle, and look at the lookTarget
-	glm::vec3 camOffset = glm::vec3(sin(m_theta), 1, cos(m_theta));
+	glm::vec3 camOffset = glm::vec3( sin(glm::radians(m_theta - 90) ), 1, cos( glm::radians(m_theta + 90)) );
 	const float camDistance = 5.0f;
 	camOffset *= camDistance;
 	m_position = m_currentLookTarget + camOffset;
 
 	// Adjust phi angle to point at target tile
-	glm::vec3 camToTile = glm::normalize(m_currentLookTarget - m_position);
-	glm::vec3 rightVec = glm::cross(forwardVec, glm::vec3(0, 1, 0));
+	{
+		glm::vec3 camToTile = glm::normalize(m_currentLookTarget - m_position);
+		glm::vec3 rightVec = glm::cross(forwardVec, glm::vec3(0, 1, 0));
 
-	// Get angle from horizontal to the target & convert to degrees
-	// TODO: Does this work?
-	float anglePhi = glm::orientedAngle(camToTile, forwardVec, rightVec);
-	anglePhi = glm::degrees(anglePhi);
-	anglePhi = fabs(anglePhi) * -1.0f;
-	m_phi = anglePhi;
-
-	// Draw a gizmo at the current look target position for debug.
-	aie::Gizmos::addSphere(m_currentLookTarget, 0.5f, 6, 6, glm::vec4(1, 1, 0, 1));
+		// Get angle from horizontal to the target & convert to degrees
+		float anglePhi = glm::orientedAngle(camToTile, forwardVec, rightVec);
+		anglePhi = glm::degrees(anglePhi);
+		anglePhi = fabs(anglePhi) * -1.0f;
+		m_phi = anglePhi;
+	}
 }
 
 void Camera::SetViewAngle(float phi, float theta)
