@@ -3,6 +3,7 @@
 #ifndef NETWORK_SERVER
 
 #include <glm\glm.hpp>
+#include <..\glfw\include\GLFW\glfw3.h>
 
 class Camera
 {
@@ -41,7 +42,7 @@ public:
 	glm::mat4	GetProjectionMatrix(const unsigned int w, const unsigned int h) const;
 	glm::mat4	GetViewMatrix() const;
 	glm::mat4	GetMVP(const unsigned int w, const unsigned int h) const;
-	glm::vec3	Get3DPointFromScreenSpace(const glm::vec2 screenSpacePoint, const unsigned int width, const unsigned int height) const;
+	glm::vec3	Get3DPointFromScreenSpace(GLFWwindow* window, const unsigned int width, const unsigned int height) const;
 	glm::vec3	GetPosition() const;
 	glm::vec3	GetForwardVec() const;
 	glm::vec3	GetRightVec() const;

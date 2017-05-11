@@ -6,6 +6,7 @@
 
 #include <glm/ext.hpp>
 #include <Input.h>
+#include <Gizmos.h>
 
 
 
@@ -72,16 +73,17 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 	}
 }
 
-MapVec3 ClientSideGameManager::GetClickedTile(glm::vec2 clickPointSS, bool& missedTiles) const
+MapVec3 ClientSideGameManager::GetClickedTile(bool& missedTiles) const
 {
 	glm::vec3 camPos = m_cam->GetPosition();
-	glm::vec3 clickPoint = 
-		m_cam->Get3DPointFromScreenSpace(clickPointSS, m_thisClient->getWindowWidth(), m_thisClient->getWindowHeight());
-	// TODO: Need to take in parameter to control vector length. 
 
+	// Get click point in world space (This is the world coordinate on the near plane.)
+	glm::vec3 clickPoint = 
+		m_cam->Get3DPointFromScreenSpace(m_thisClient->getWindowPtr(), m_thisClient->getWindowWidth(), m_thisClient->getWindowHeight());
+	
 	// Find vector between camera's pos & the click point
-	glm::vec3 clickDir = clickPoint - camPos;
-	clickDir = glm::normalize(clickDir);
+	glm::vec3 rayDir = glm::normalize(clickPoint - camPos);
+	printf("Ray Direction: %f, %f, %f\n", rayDir.x, rayDir.y, rayDir.z);
 
 	// Get map info
 	TileMap* map = Game::GetMap();
@@ -89,7 +91,7 @@ MapVec3 ClientSideGameManager::GetClickedTile(glm::vec2 clickPointSS, bool& miss
 
 	// Get a list of tiles under the mouse
 	std::list<MapVec3> rayCastHits =
-		map->Raycast(camPos.x, camPos.y, camPos.z, clickDir.x, clickDir.y, clickDir.z, tileScale);
+		map->Raycast(camPos.x, camPos.y, camPos.z, rayDir.x, rayDir.y, rayDir.z, tileScale);
 
 	if (rayCastHits.size() == 0)
 	{
@@ -103,8 +105,17 @@ MapVec3 ClientSideGameManager::GetClickedTile(glm::vec2 clickPointSS, bool& miss
 		{
 			if (map->TileAt(*iter))
 			{
-				missedTiles = false;
-				return *iter;
+				// The tile-space has a physical tile. Check if the ray hit the bottom of this tile
+				auto iter2 = iter;
+				iter2++;
+				if (iter2 != rayCastHits.end())
+				{
+					if ((*iter2).m_y != (*iter).m_y)
+					{
+						missedTiles = false;
+						return *iter;
+					}
+				}
 			}
 		}
 
@@ -132,25 +143,25 @@ void ClientSideGameManager::Update(const float dTime)
 {
 	/* Handle input */
 	aie::Input* input = aie::Input::getInstance();
-	int mouseX, mouseY;
-	input->getMouseXY(&mouseX, &mouseY);
-	glm::vec2 mousePos = glm::vec2(mouseX, mouseY);
 
 	if (input->wasMouseButtonPressed(0))
 	{
 		bool missedTiles = false;
-		MapVec3 clicked = GetClickedTile(mousePos, missedTiles);
+		MapVec3 clicked = GetClickedTile(missedTiles);
 
 		if (!missedTiles)
 		{
 			// TODO: Left click, find character on tile clicked and switch if they are in the list
 			printf("Clicked tile: %i, %i, %i\n", clicked.m_x, clicked.m_y, clicked.m_z);
+
+			// TEMP CODE:
+			Game::GetMap()->GetTileWorldCoords(clickedTile.x, clickedTile.y, clickedTile.z, clicked, Game::GetMapTileScale());
 		}
 	}
 	else if (input->wasMouseButtonPressed(1))
 	{
 		bool missedTiles = false;
-		MapVec3 clicked = GetClickedTile(mousePos, missedTiles);
+		MapVec3 clicked = GetClickedTile(missedTiles);
 
 		if (!missedTiles)
 		{
@@ -190,6 +201,10 @@ void ClientSideGameManager::Update(const float dTime)
 
 	m_cam->Update(dTime, m_camCurrentLookTarget, m_camPosLerping, 
 		m_camRotationDestination, m_camRotLerping, m_camRotationSpeed, m_thisClient->getWindowWidth(), m_thisClient->getWindowHeight());
+
+	// TEMP CODE:
+	float tileScale = Game::GetMapTileScale();
+	aie::Gizmos::addAABBFilled(clickedTile, glm::vec3(tileScale / 2, 0, tileScale / 2), glm::vec4(1,0.5f,1,0.8f));
 }
 
 void ClientSideGameManager::SetCameraSpeed(const float speed)

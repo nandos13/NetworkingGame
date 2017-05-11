@@ -15,6 +15,9 @@ class ClientSideGameManager
 {
 protected:
 
+	// TODO: TESTING, DELETE LATER
+	glm::vec3 clickedTile;
+
 	Client* m_thisClient;
 
 	// Camera variables
@@ -34,7 +37,7 @@ protected:
 	void SelectNextCharacter(const bool reverse = false);
 
 	// Other
-	MapVec3 GetClickedTile(glm::vec2 clickPointSS, bool& missedTiles) const;
+	MapVec3 GetClickedTile(bool& missedTiles) const;
 
 public:
 	ClientSideGameManager(Client* client, Camera* cam);

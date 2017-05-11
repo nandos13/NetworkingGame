@@ -319,7 +319,6 @@ MapVec3 TileMap::FindTileAtWorldCoords(const float x, const float y, const float
 {
 	if (tileScale > 0)
 	{
-		// TODO: Need to test if this is right
 		short nX = short(x / tileScale);
 		short nY = short(y / tileScale);
 		short nZ = short(z / tileScale);
@@ -331,7 +330,32 @@ MapVec3 TileMap::FindTileAtWorldCoords(const float x, const float y, const float
 	return MapVec3();
 }
 
+/* Returns world coordinates at the bottom-center of the tile */
 void TileMap::GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const
+{
+	if (tileScale > 0)
+	{
+		outX = (float)(tilePos.m_x * tileScale) + tileScale / 2;
+		outY = (float)(tilePos.m_y * tileScale);
+		outZ = (float)(tilePos.m_z * tileScale) + tileScale / 2;
+	}
+	else	printf("Error: GetTileWorldCoords method was called with tileScale <= 0\n");
+}
+
+/* Returns world coordinates at the center of the tile */
+void TileMap::GetTileWorldCoordsCenter(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
+{
+	if (tileScale > 0)
+	{
+		outX = (float)(tilePos.m_x * tileScale) + tileScale / 2;
+		outY = (float)(tilePos.m_y * tileScale) + tileScale / 2;
+		outZ = (float)(tilePos.m_z * tileScale) + tileScale / 2;
+	}
+	else	printf("Error: GetTileWorldCoordsCenter method was called with tileScale <= 0\n");
+}
+
+/* Returns world coordinates at the bottom-back-left of the tile */
+void TileMap::GetTileWorldCoordsBackLeft(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
 {
 	if (tileScale > 0)
 	{
@@ -339,8 +363,43 @@ void TileMap::GetTileWorldCoords(float& outX, float& outY, float& outZ, const Ma
 		outY = (float)(tilePos.m_y * tileScale);
 		outZ = (float)(tilePos.m_z * tileScale);
 	}
-	else
-		printf("Error: GetTileWorldCoords method was called with tileScale <= 0\n");
+	else	printf("Error: GetTileWorldCoordsBackLeft method was called with tileScale <= 0\n");
+}
+
+/* Returns world coordinates at the bottom-back-right of the tile */
+void TileMap::GetTileWorldCoordsBackRight(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
+{
+	if (tileScale > 0)
+	{
+		outX = (float)(tilePos.m_x * tileScale);
+		outY = (float)(tilePos.m_y * tileScale);
+		outZ = (float)(tilePos.m_z * tileScale) + tileScale;
+	}
+	else	printf("Error: GetTileWorldCoordsBackRight method was called with tileScale <= 0\n");
+}
+
+/* Returns world coordinates at the bottom-front-left of the tile */
+void TileMap::GetTileWorldCoordsFrontLeft(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
+{
+	if (tileScale > 0)
+	{
+		outX = (float)(tilePos.m_x * tileScale) + tileScale;
+		outY = (float)(tilePos.m_y * tileScale);
+		outZ = (float)(tilePos.m_z * tileScale);
+	}
+	else	printf("Error: GetTileWorldCoordsFrontLeft method was called with tileScale <= 0\n");
+}
+
+/* Returns world coordinates at the bottom-front-right of the tile */
+void TileMap::GetTileWorldCoordsFrontRight(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
+{
+	if (tileScale > 0)
+	{
+		outX = (float)(tilePos.m_x * tileScale) + tileScale;
+		outY = (float)(tilePos.m_y * tileScale);
+		outZ = (float)(tilePos.m_z * tileScale) + tileScale;
+	}
+	else	printf("Error: GetTileWorldCoordsFrontRight method was called with tileScale <= 0\n");
 }
 
 bool TileMap::TileAt(const MapVec3 position) const
@@ -462,7 +521,8 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 	if (dirZ > 0)	tNextBorderZ = (1 - fracStartPosZ) * tForOneZ;
 	else			tNextBorderZ = fracStartPosZ * tForOneZ;
 
-	while (tValue <= 1.0)
+	const float rayLength = 1000.0f;
+	while (tValue <= rayLength)
 	{
 		// Find the smallest t-value until next map space
 		float minNextBorder = (tNextBorderX < tNextBorderY) ? tNextBorderX : tNextBorderY;
@@ -492,6 +552,8 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 
 		currentPos = FindTileAtWorldCoords(xGrid, yGrid, zGrid, tileScalePositive);
 		resultList.push_back(currentPos);
+
+		// TODO: Exit if we escape the bounds of the tilemap
 	}
 
 	return resultList;

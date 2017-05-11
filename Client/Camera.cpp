@@ -227,15 +227,13 @@ glm::mat4 Camera::GetMVP(const unsigned int w, const unsigned int h) const
 	return GetProjectionMatrix(w, h) * GetViewMatrix();
 }
 
-glm::vec3 Camera::Get3DPointFromScreenSpace(const glm::vec2 screenSpacePoint, const unsigned int width, const unsigned int height) const
+glm::vec3 Camera::Get3DPointFromScreenSpace(GLFWwindow* window, const unsigned int width, const unsigned int height) const
 {
-	// TODO: Verify this method works. May need to change the z component in point3D to 1 rather than 0?
-	double x = 2.0 * screenSpacePoint.x / width - 1;
-	double y = 2.0 * screenSpacePoint.y / height + 1;
-	glm::mat4 viewProjInverse = glm::inverse(GetProjectionMatrix(width, height) * GetViewMatrix());
-
-	glm::vec3 point3D = glm::vec3(x, y, 0);
-	return glm::vec3(viewProjInverse * glm::vec4(point3D, 1));
+	double x = 0, y = 0;
+	glfwGetCursorPos(window, &x, &y);
+	glm::vec3 windowCoords = glm::vec3(x, height - y, 0);
+	glm::vec4 viewport = glm::vec4(0.0f, 0.0f, width, height);
+	return glm::unProject(windowCoords, GetViewMatrix(), GetProjectionMatrix(width, height), viewport);
 }
 
 glm::vec3 Camera::GetPosition() const

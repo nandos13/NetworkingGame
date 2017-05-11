@@ -56,5 +56,5 @@ void GameObj::SetPosition(const float x, const float y, const float z)
 void GameObj::Draw() const
 {
 	// TODO: Probably needs to take in camera matrix, etc
-	aie::Gizmos::addSphere(m_position, 1, 8, 10, glm::vec4(1, 0, 0, 0.5f));
+	aie::Gizmos::addSphere(m_position, 0.4f, 8, 10, glm::vec4(1, 0, 0, 0.5f));
 }
