@@ -112,7 +112,7 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to) const
 /**
  * Internal use for checking sight between two tiles.
  */
-bool TileMap::SightBetweenTiles(const MapVec3 from, const MapVec3 to)
+bool TileMap::SightBetweenTiles(const MapVec3 from, const MapVec3 to) const
 {
 	if (from == to)
 		return true;	// Error?
@@ -493,12 +493,12 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 	// Constants
 	const float tileScalePositive = (tileScale >= 0) ? tileScale : -tileScale;
 	// TODO: Apparently abs is quite slow? look into this some time
-	const float tForOneX = fabs(1.0 / dirX);
-	const float tForOneY = fabs(1.0 / dirY);
-	const float tForOneZ = fabs(1.0 / dirZ);
-	const int xStep = (dirX >= 0) ? tileScalePositive : -tileScalePositive;
-	const int yStep = (dirY >= 0) ? tileScalePositive : -tileScalePositive;
-	const int zStep = (dirZ >= 0) ? tileScalePositive : -tileScalePositive;
+	const float tForOneX = fabs(1.0f / dirX);
+	const float tForOneY = fabs(1.0f / dirY);
+	const float tForOneZ = fabs(1.0f / dirZ);
+	const int xStep = (dirX >= 0) ? (int)tileScalePositive : (int)-tileScalePositive;
+	const int yStep = (dirY >= 0) ? (int)tileScalePositive : (int)-tileScalePositive;
+	const int zStep = (dirZ >= 0) ? (int)tileScalePositive : (int)-tileScalePositive;
 
 	MapVec3 currentPos = FindTileAtWorldCoords(x, y, z, tileScalePositive);
 	resultList.push_back(currentPos);
@@ -561,117 +561,45 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 
 #ifdef NETWORK_SERVER
 /* Checks tiles over a sight-line to check whether or not sight is blocked. */
-bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, int maxSightRange)
+bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, const float tileScale, int maxSightRange) const
 {
-	MapTile* toTile = FindTile(to);
-	if (MapVec3::Distance(from, to) <= maxSightRange && toTile != nullptr)
+	if (MapVec3::Distance(from, to) <= maxSightRange)
 	{
-		/* Use Bresenham's line algorithm to check which tiles the sight-line passes through. */
+		// Get coordinates for center of 'from' tile
+		float x1 = 0, y1 = 0, z1 = 0;
+		GetTileWorldCoordsCenter(x1, y1, z1, from, tileScale);
 
-		const MapVec3 dir = to - from;
-		const short maxStep = max(max(dir.m_x, dir.m_y), dir.m_z);
+		// Get coordinates for center of 'to' tile
+		float x2 = 0, y2 = 0, z2 = 0;
+		GetTileWorldCoordsCenter(x2, y2, z2, to, tileScale);
 
-		MapVec3 prevPos;
-		MapVec3 currentPos = from;
-		MapVec3 nextPos;
+		// Find direction between the two points
+		float dirX = x2 - x1;
+		float dirY = y2 - y1;
+		float dirZ = z2 - z1;
 
-		// TODO: Use raycast method instead of bresenhams?
-		// TODO: Test: Will this new method work?
-		// Sight-line should now start in the center of the tile, rather than the left side.
+		std::list<MapVec3> sightPath = Raycast(x1, y1, z1, dirX, dirY, dirZ, tileScale);
 
-		// OLD METHOD. THIS STARTED AT LEFT SIDE OF TILE AND WOULD NOT PRODUCE CORRECT RESULTS.
-		//MapVec3 dDir = MapVec3(0);	// Delta values
-		//
-		//while (currentPos != to)
-		//{
-		//	// Add direction vector
-		//	dDir = dDir + dir;
-		//
-		//	// Check wrap around
-		//	MapVec3 thisMove = MapVec3(0);
-		//	if (dDir.m_x >= maxStep)
-		//	{
-		//		dDir.m_x = dDir.m_x % maxStep;
-		//		thisMove.m_x = 1;
-		//	}
-		//	if (dDir.m_y >= maxStep)
-		//	{
-		//		dDir.m_y = dDir.m_y % maxStep;
-		//		thisMove.m_y = 1;
-		//	}
-		//	if (dDir.m_z >= maxStep)
-		//	{
-		//		dDir.m_z = dDir.m_z % maxStep;
-		//		thisMove.m_z = 1;
-		//	}
-		//
-		//	// Find nextPos from offset
-		//	nextPos = currentPos + thisMove;
-		//
-		//	// Check sight between these two tiles
-		//	bool sight = SightBetweenTiles(currentPos, nextPos);
-		//	if (!sight)
-		//		return false;
-		//
-		//	// Advance to the next tile
-		//	prevPos = currentPos;
-		//	currentPos = nextPos;
-		//}
-		//
-		//return true;
-
-		// Delta values
-		float dDirX = (float)dir.m_x / 2;
-		float dDirY = (float)dir.m_y / 2;
-		float dDirZ = (float)dir.m_z / 2;
-
-		while (currentPos != to)
+		// Iterate through each tile in the path, checking sight between each adjacent tile
+		for (auto& iter = sightPath.cbegin(); iter != sightPath.cend(); iter++)
 		{
-			// Add direction vector
-			dDirX += (float)dir.m_x;
-			dDirY += (float)dir.m_y;
-			dDirZ += (float)dir.m_z;
-
-			// Check wrap around
-			MapVec3 thisMove = MapVec3(0);
-			if (dDirX >= maxStep)
+			// Get next tile along path
+			auto& iterNext = iter;
+			iterNext++;
+			if (iterNext != sightPath.cend())
 			{
-				float decimal = dDirX - (float)((int)dDirX);
-				dDirX = (float)((int)dDirX % maxStep);
-				dDirX += decimal;
-				thisMove.m_x = 1;
-			}
-			if (dDirY >= maxStep)
-			{
-				float decimal = dDirY - (float)((int)dDirY);
-				dDirY = (float)((int)dDirY % maxStep);
-				dDirY += decimal;
-				thisMove.m_y = 1;
-			}
-			if (dDirZ >= maxStep)
-			{
-				float decimal = dDirZ - (float)((int)dDirZ);
-				dDirZ = (float)((int)dDirZ % maxStep);
-				dDirZ += decimal;
-				thisMove.m_z = 1;
-			}
+				MapVec3 thisTile = *iter;
+				MapVec3 nextTile = *iterNext;
 
-			// Find nextPos from offset
-			nextPos = currentPos + thisMove;
-
-			// Check sight between these two tiles
-			bool sight = SightBetweenTiles(currentPos, nextPos);
-			if (!sight)
-				return false;
-
-			// Advance to the next tile
-			prevPos = currentPos;
-			currentPos = nextPos;
+				if (!SightBetweenTiles(thisTile, nextTile))
+					return false;
+			}
 		}
 
-		return true;
+		return true;	// Sight through all tiles in path
 	}
-	return false;	// 'to' tile is out of sight range
+
+	return false;		// Destination tile out of sight range
 }
 
 /* Write & send the whole tilemap. */
