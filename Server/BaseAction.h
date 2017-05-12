@@ -15,6 +15,7 @@ class BaseAction
 protected:
 	bool m_completed;
 	Character* m_owner;
+	int m_actionType = 0;
 
 	/**
 	* A list of actions currently affecting playback time.
@@ -48,6 +49,7 @@ public:
 	BaseAction(Character* owner);
 	virtual ~BaseAction();
 
+	int GetActionTypeID() const;
 	void Execute(float dTime);
 	static void SetSimTime(float timeScale);
 

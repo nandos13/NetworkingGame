@@ -3,6 +3,7 @@
 #include "TileMap.h"
 #include "GameAction.h"
 #include "MovementAction.h"
+#include "RefreshWalkableTilesAction.h"
 #include "Squad.h"
 
 #include <list>
@@ -29,7 +30,7 @@ private:
 
 	Squad m_squads[2];
 #ifndef NETWORK_SERVER
-	int m_mySquad = -1;
+	int m_mySquad = -1;		// Tracks which squad a client has control over
 #endif
 	unsigned int m_currentTurn;
 	std::unordered_map<short, Character*>	m_characters;
@@ -39,6 +40,7 @@ private:
 	/* Private methods */
 #ifdef NETWORK_SERVER
 	void Setup();
+	GameAction* CreateInitialWalkableTilesAction();
 #endif
 	Squad* GetPlayingSquad();
 	Squad* GetWaitingSquad();
@@ -60,13 +62,15 @@ public:
 
 	void Update(float dTime);
 
-	void QueueAction(short uniqueID, GameAction* action);
+	void QueueAction(GameAction* action);
 
 	Character* FindCharacterAtCoords(const MapVec3 position) const;
 	Character* FindCharacterByID(const short id) const;
+	std::list<Character*> GetCharactersByHomeSquad(const unsigned int squad) const;
 
 	void SetSpectatorMode(const bool state);
 	bool IsSpectator() const;
+	bool IsPlayersTurn(const unsigned int playerID) const;
 
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER
@@ -83,7 +87,7 @@ public:
 #ifdef NETWORK_SERVER
 
 	void GetShotVariables(short& damage, SHOT_STATUS& shotType, const Character* shooter, const MapVec3 target);
-	//GameAction* TakeShot(const short shooterID, short victimID);
+	GameAction* CreateShootAction(const short shooterID, short victimID);
 	GameAction* CreateMoveAction(const short characterID, MapVec3 coords);
 
 	void TempGameSetup();

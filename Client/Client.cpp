@@ -63,9 +63,6 @@ void Client::update(float deltaTime)
 	// Update the game manager
 	if (m_gm != nullptr)
 		m_gm->Update(deltaTime);
-
-	// Update camera
-	//cam.Update(deltaTime);
 	
 	// quit if we press escape
 	aie::Input* input = aie::Input::getInstance();
@@ -83,6 +80,11 @@ void Client::draw() {
 	m_game->Draw();
 
 	Gizmos::draw(GetCameraTransform());
+}
+
+int Client::GetID() const
+{
+	return m_myID;
 }
 
 glm::mat4 Client::GetCameraTransform() const
@@ -226,6 +228,7 @@ void Client::sendCharacterShoot(short characterID, MapVec3 target)
 
 void Client::sendCharacterMove(short characterID, MapVec3 destination)
 {
+	printf("Sending character move action request.\n");
 	RakNet::BitStream bs;
 	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_MOVE);
 	bs.Write(characterID);

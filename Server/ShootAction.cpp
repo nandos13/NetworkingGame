@@ -48,6 +48,8 @@ void ShootAction::_Execute(float dTime)
 
 ShootAction::ShootAction(Character * owner, MapVec3 target, short damage, unsigned int ammoUse, bool armourShred) : BaseAction(owner)
 {
+	m_actionType = 2;
+
 	m_target = target;
 	m_damage = damage;
 	m_shred = armourShred;

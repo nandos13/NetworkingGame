@@ -38,6 +38,26 @@ unsigned int Character::GetDashDistance() const
 	return (unsigned int)(CurrentMobility() * 0.625 * 2);
 }
 
+std::list<MapVec3> Character::Get1PointWalkTiles() const
+{
+	return m_1PointWalkableTiles;
+}
+
+std::list<MapVec3> Character::Get2PointWalkTiles() const
+{
+	return m_2PointWalkableTiles;
+}
+
+void Character::Set1PointWalkableTiles(std::list<MapVec3> tiles)
+{
+	m_2PointWalkableTiles = tiles;
+}
+
+void Character::Set2PointWalkableTiles(std::list<MapVec3> tiles)
+{
+	m_1PointWalkableTiles = tiles;
+}
+
 MapVec3 Character::GetMapTileCoords() const
 {
 	return m_currentPosition;
@@ -95,7 +115,7 @@ void Character::QueryOverwatch(GameAction* action, Character * mover, TileMap& m
 			MapVec3 moverPos = mover->GetPosition();
 
 			// Check if the character can see the mover's position tile
-			if (map.CheckTileSight(m_currentPosition, moverPos, m_sightRadius))
+			if (map.CheckTileSight(m_currentPosition, moverPos, (float)m_sightRadius))
 			{
 				// Create an overwatch-shot action
 
@@ -293,7 +313,7 @@ bool Character::Alive() const
 bool Character::IsSelectable() const
 {
 	// TODO: Loop through debuffs, find if the character is stunned, etc.
-	if (m_remainingPoints <= 0)
+	if (m_remainingPoints <= 0 || !Alive())
 		return false;
 
 	return true;

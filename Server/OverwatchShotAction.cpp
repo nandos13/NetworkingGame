@@ -30,6 +30,8 @@ void OverwatchShotAction::_Execute(float dTime)
 
 OverwatchShotAction::OverwatchShotAction(Character* owner, ShootAction* shootAction) : BaseAction(owner)
 {
+	m_actionType = 3;
+
 	m_shoot = shootAction;
 }
 

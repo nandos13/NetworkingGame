@@ -3,9 +3,9 @@
 #include "MovementAction.h"
 #include "ShootAction.h"
 #include "OverwatchShotAction.h"
+#include "RefreshWalkableTilesAction.h"
 
 #include <BitStream.h>
-#include <typeinfo>
 
 
 
@@ -17,6 +17,7 @@ void GameAction::CompleteSelf()
 GameAction::GameAction()
 {
 	m_iter = m_queue.begin();
+	m_completed = true;
 }
 
 GameAction::~GameAction()
@@ -57,6 +58,11 @@ void GameAction::Reset()
 void GameAction::AddToQueue(BaseAction * a)
 {
 	m_queue.push_back(a);
+	if (m_queue.size() == 1)
+	{
+		// This was the first action to be added. Set current action
+		m_iter = m_queue.begin();
+	}
 	m_completed = false;
 }
 
@@ -70,21 +76,26 @@ void GameAction::Read(RakNet::BitStream & bsIn)
 	for (unsigned int i = 0; i < queueSize; i++)
 	{
 		// Read action type
-		char* typeName = nullptr;
-		bsIn.Read(typeName);
+		int id = 0;
+		bsIn.Read(id);
 
 		BaseAction* a = nullptr;
 
 		// Use the correct Read function depending on the type.
-		if (typeName == "MovementAction") { a = MovementAction::Read(bsIn); }
-		else if (typeName == "ShootAction") { a = ShootAction::Read(bsIn); }
-		else if (typeName == "OverwatchShotAction") { a = OverwatchShotAction::Read(bsIn); }
+		if (id == 1)		{ a = MovementAction::Read(bsIn); }
+		else if (id == 2)	{ a = ShootAction::Read(bsIn); }
+		else if (id == 3)	{ a = OverwatchShotAction::Read(bsIn); }
+		else if (id == 4)	{ a = RefreshWalkableTilesAction::Read(bsIn); }
 		else { printf("Error: Action type did not match any expected types.\n"); }
 
 		// Add the action to the queue
 		m_queue.push_back(a);
+	}
 
-		// TODO: Does typeName need to be deleted here? Not sure if bsIn.Read(typeName) allocates memory
+	if (m_queue.size() > 0)
+	{
+		m_completed = false;
+		m_iter = m_queue.begin();
 	}
 }
 #endif
@@ -103,14 +114,16 @@ void GameAction::Write(RakNet::BitStream & bs)
 	std::list<BaseAction*>::iterator iter;
 	for (iter = m_queue.begin(); iter != m_queue.end(); iter++)
 	{
-		/* Write action type here.
-		* This is needed when reading, as each action type has it's own Read implementation.
-		* Does not seem to be the best way to achieve this. :( Will have to look into it later.
-		*/
-		std::string typeName = typeid(&(iter)).name();
-		bs.Write(typeName.c_str());
+		/* Write action-type ID here.
+		 * This is needed when reading, as each action type has it's own Read implementation.
+		 */
+		if (*iter != nullptr)
+		{
+			int id = (*iter)->GetActionTypeID();
+			bs.Write(id);
 
-		(*iter)->Write(bs);
+			(*iter)->Write(bs);
+		}
 	}
 }
 #endif

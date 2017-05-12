@@ -30,6 +30,8 @@ private:
 
 	// Other
 	MapVec3 m_currentPosition;
+	std::list<MapVec3> m_1PointWalkableTiles;
+	std::list<MapVec3> m_2PointWalkableTiles;
 	bool m_inOverwatch = false;
 	short m_ID;
 	short m_homeSquad;
@@ -44,6 +46,10 @@ public:
 
 	unsigned int GetMoveDistance() const;
 	unsigned int GetDashDistance() const;
+	std::list<MapVec3> Get1PointWalkTiles() const;
+	std::list<MapVec3> Get2PointWalkTiles() const;
+	void Set1PointWalkableTiles(std::list<MapVec3> tiles);
+	void Set2PointWalkableTiles(std::list<MapVec3> tiles);
 	MapVec3 GetMapTileCoords() const;
 
 	void UseAmmo(const unsigned int amount);

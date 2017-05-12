@@ -26,6 +26,11 @@ BaseAction::~BaseAction()
 {
 }
 
+int BaseAction::GetActionTypeID() const
+{
+	return m_actionType;
+}
+
 void BaseAction::Execute(float dTime)
 {
 	if (m_owner != nullptr)

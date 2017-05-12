@@ -29,6 +29,8 @@ void MovementAction::_Execute(float dTime)
 
 MovementAction::MovementAction(Character * owner, MapVec3 destination) : BaseAction(owner)
 {
+	m_actionType = 1;
+
 	m_destination = destination;
 }
 

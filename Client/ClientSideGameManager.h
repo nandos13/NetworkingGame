@@ -15,9 +15,6 @@ class ClientSideGameManager
 {
 protected:
 
-	// TODO: TESTING, DELETE LATER
-	glm::vec3 clickedTile;
-
 	Client* m_thisClient;
 
 	// Camera variables
@@ -33,11 +30,13 @@ protected:
 
 	// Character selection
 	Character* m_selectedCharacter;
-	std::list<Character*> m_selectableCharacters;
+	void SelectCharacter(Character* c);
 	void SelectNextCharacter(const bool reverse = false);
 
 	// Other
-	MapVec3 GetClickedTile(bool& missedTiles) const;
+	MapVec3 m_hoveredTile;
+	bool	m_mouseIsOverVoidSpace;
+	MapVec3 GetTileUnderMouse(bool& missedTiles) const;
 
 public:
 	ClientSideGameManager(Client* client, Camera* cam);

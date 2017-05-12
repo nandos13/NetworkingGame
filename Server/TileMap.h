@@ -476,6 +476,7 @@ public:
 
 	MapVec3 FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale) const;
 
+	// TODO: These functions should be static MapVec3 functions.
 	void GetTileWorldCoords				(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;
 	void GetTileWorldCoordsCenter		(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;
 	void GetTileWorldCoordsBackLeft		(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;

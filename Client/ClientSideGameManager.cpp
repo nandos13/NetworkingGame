@@ -10,6 +10,36 @@
 
 
 
+/* Verifies the specified character a part of the player's team, and selects them if true. */
+void ClientSideGameManager::SelectCharacter(Character * c)
+{
+	if (c != nullptr)
+	{
+		// Get a list of all characters on team
+		Game* g = Game::GetInstance();
+		std::list<Character*> teamCharacters = g->GetCharactersByHomeSquad(m_thisClient->GetID());
+
+		// Iterate through & check if the specified character is in the list
+		for (auto& iter = teamCharacters.cbegin(); iter != teamCharacters.cend(); iter++)
+		{
+			if ((*iter) == c)
+			{
+				m_selectedCharacter = c;
+
+				// Set camera to lerp to the character
+				m_camPosLerping = true;
+				TileMap* map = Game::GetMap();
+				float x = 0, y = 0, z = 0;
+				map->GetTileWorldCoords(x, y, z, m_selectedCharacter->GetPosition(), Game::GetMapTileScale());
+				glm::vec3 characterPos = glm::vec3(x, y, z);
+				m_camCurrentLookTarget = characterPos;
+
+				break;
+			}
+		}
+	}
+}
+
 /* Cycles to next available character. If reverse == true, cycles backwards. */
 void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 {
@@ -73,17 +103,16 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 	}
 }
 
-MapVec3 ClientSideGameManager::GetClickedTile(bool& missedTiles) const
+MapVec3 ClientSideGameManager::GetTileUnderMouse(bool& missedTiles) const
 {
 	glm::vec3 camPos = m_cam->GetPosition();
 
 	// Get click point in world space (This is the world coordinate on the near plane.)
-	glm::vec3 clickPoint = 
+	glm::vec3 mousePoint = 
 		m_cam->Get3DPointFromScreenSpace(m_thisClient->getWindowPtr(), m_thisClient->getWindowWidth(), m_thisClient->getWindowHeight());
 	
 	// Find vector between camera's pos & the click point
-	glm::vec3 rayDir = glm::normalize(clickPoint - camPos);
-	printf("Ray Direction: %f, %f, %f\n", rayDir.x, rayDir.y, rayDir.z);
+	glm::vec3 rayDir = glm::normalize(mousePoint - camPos);
 
 	// Get map info
 	TileMap* map = Game::GetMap();
@@ -133,6 +162,9 @@ ClientSideGameManager::ClientSideGameManager(Client* client, Camera* cam)
 	m_camRotationSpeed = 1.0f;
 	m_camRotationDestination = 0.0f;
 	m_selectedCharacter = nullptr;
+
+	m_hoveredTile = MapVec3(0);
+	m_mouseIsOverVoidSpace = true;
 }
 
 ClientSideGameManager::~ClientSideGameManager()
@@ -141,31 +173,84 @@ ClientSideGameManager::~ClientSideGameManager()
 
 void ClientSideGameManager::Update(const float dTime)
 {
+	/* Update mouse-hover-point */
+	m_hoveredTile = GetTileUnderMouse(m_mouseIsOverVoidSpace);
+
+	// Draw a translucent gizmo over the hovered tile
+	if (!m_mouseIsOverVoidSpace)
+	{
+		float tileScale = Game::GetMapTileScale();
+		TileMap* map = Game::GetMap();
+
+		float x = 0, y = 0, z = 0;
+		map->GetTileWorldCoords(x, y, z, m_hoveredTile, tileScale);
+		glm::vec3 worldSpaceTilePos = glm::vec3(x, y, z);
+
+		aie::Gizmos::addAABBFilled(worldSpaceTilePos, glm::vec3(tileScale / 2, 0, tileScale / 2), glm::vec4(1, 0.5f, 1, 0.4f));
+	}
+
+	// Get lists of tiles the selected character is able to move to
+	std::list<MapVec3> walkTiles;
+	std::list<MapVec3> dashTiles;
+	if (m_selectedCharacter != nullptr)
+	{
+		walkTiles = m_selectedCharacter->Get1PointWalkTiles();
+		dashTiles= m_selectedCharacter->Get2PointWalkTiles();
+	}
+
 	/* Handle input */
 	aie::Input* input = aie::Input::getInstance();
 
-	if (input->wasMouseButtonPressed(0))
+	if (input->wasMouseButtonPressed(0))	// Left click: Select friendly character at clicked tile
 	{
-		bool missedTiles = false;
-		MapVec3 clicked = GetClickedTile(missedTiles);
-
-		if (!missedTiles)
+		if (!m_mouseIsOverVoidSpace)
 		{
-			// TODO: Left click, find character on tile clicked and switch if they are in the list
-			printf("Clicked tile: %i, %i, %i\n", clicked.m_x, clicked.m_y, clicked.m_z);
-
-			// TEMP CODE:
-			Game::GetMap()->GetTileWorldCoords(clickedTile.x, clickedTile.y, clickedTile.z, clicked, Game::GetMapTileScale());
+			// Find character at the clicked position
+			Game* game = Game::GetInstance();
+			Character* charAtHoverTile = game->FindCharacterAtCoords(m_hoveredTile);
+			
+			// Select the character. (SelectCharacter function will also verify if the character is friendly)
+			if (charAtHoverTile != nullptr)
+				SelectCharacter(charAtHoverTile);
 		}
 	}
-	else if (input->wasMouseButtonPressed(1))
+	else if (input->wasMouseButtonPressed(1))	// Right click: Move selected character to clicked target
 	{
-		bool missedTiles = false;
-		MapVec3 clicked = GetClickedTile(missedTiles);
-
-		if (!missedTiles)
+		if (!m_mouseIsOverVoidSpace && Game::GetInstance()->IsPlayersTurn(m_thisClient->GetID()))
 		{
-			// TODO: Right click, try to move if tile is within range of current selected character
+			if (m_selectedCharacter != nullptr)
+			{
+				bool moveable = false;
+
+				// Check the walk list for the clicked tile
+				for (auto& iter = walkTiles.cbegin(); iter != walkTiles.cend(); iter++)
+				{
+					if ((*iter) == m_hoveredTile)
+					{
+						moveable = true;
+						break;
+					}
+				}
+
+				// Check the dash list for the clicked tile
+				if (!moveable)
+				{
+					for (auto& iter = dashTiles.cbegin(); iter != dashTiles.cend(); iter++)
+					{
+						if ((*iter) == m_hoveredTile)
+						{
+							moveable = true;
+							break;
+						}
+					}
+				}
+
+				if (moveable)
+				{
+					// This seems to be a legal move. Send a message to the server
+					m_thisClient->sendCharacterMove(m_selectedCharacter->GetID(), m_hoveredTile);
+				}
+			}
 		}
 	}
 	else if (input->wasKeyPressed(aie::INPUT_KEY_TAB))
@@ -201,10 +286,6 @@ void ClientSideGameManager::Update(const float dTime)
 
 	m_cam->Update(dTime, m_camCurrentLookTarget, m_camPosLerping, 
 		m_camRotationDestination, m_camRotLerping, m_camRotationSpeed, m_thisClient->getWindowWidth(), m_thisClient->getWindowHeight());
-
-	// TEMP CODE:
-	float tileScale = Game::GetMapTileScale();
-	aie::Gizmos::addAABBFilled(clickedTile, glm::vec3(tileScale / 2, 0, tileScale / 2), glm::vec4(1,0.5f,1,0.8f));
 }
 
 void ClientSideGameManager::SetCameraSpeed(const float speed)

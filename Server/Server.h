@@ -42,6 +42,17 @@ protected:
 		{
 			return m_address;
 		}
+
+		static ConnectionInfo* FindClient(const std::vector<ConnectionInfo*> connections, const std::string address)
+		{
+			for (auto& iter = connections.cbegin(); iter != connections.cend(); iter++)
+			{
+				if ((*iter)->GetAddress() == address)
+					return *iter;
+			}
+
+			return nullptr;
+		}
 	};
 
 	void Setup();
@@ -52,12 +63,13 @@ protected:
 	const ConnectionInfo* GetClientInfo(std::string address) const;
 	const ConnectionInfo* GetClientInfo(unsigned int id) const;
 	const std::string GetClientAddress(const ConnectionInfo* connection) const;
+	const std::vector<ConnectionInfo*> GetConnections() const;
 
 	void SendNewClientID(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress& address);
 	void SendGameData(RakNet::RakPeerInterface* pPeerInterface, RakNet::SystemAddress& address);
 
-	void HandleClientShoot(RakNet::Packet* packet);
-	void HandleClientMove(RakNet::Packet* packet);
+	void HandleClientShoot	(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet* packet);
+	void HandleClientMove	(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet* packet);
 
 	// Game instance
 	Game* m_game;

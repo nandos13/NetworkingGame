@@ -24,6 +24,10 @@ public:
 	virtual void update(float deltaTime);
 	virtual void draw();
 
+	int GetID() const;
+
+	void sendCharacterMove(short characterID, MapVec3 destination);
+
 protected:
 	
 	/* Member variables */
@@ -47,7 +51,6 @@ protected:
 	void ReceiveGameInfo(RakNet::Packet* packet);
 
 	void sendCharacterShoot(short characterID, MapVec3 target);
-	void sendCharacterMove(short characterID, MapVec3 destination);
 
 	/* Networking varibles */
 	RakNet::RakPeerInterface* m_pPeerInterface;

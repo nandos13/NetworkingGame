@@ -48,6 +48,17 @@ const std::string Server::GetClientAddress(const ConnectionInfo * connection) co
 	return "";
 }
 
+const std::vector<Server::ConnectionInfo*> Server::GetConnections() const
+{
+	std::vector<ConnectionInfo*> returnList;
+	for (auto& iter = m_clientConnections.cbegin(); iter != m_clientConnections.cend(); iter++)
+	{
+		returnList.push_back((*iter).second);
+	}
+
+	return returnList;
+}
+
 void Server::SendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
 {
 	// TODO: Check if a client has already connected in m_clientConnections
@@ -108,51 +119,89 @@ void Server::SendGameData(RakNet::RakPeerInterface * pPeerInterface, RakNet::Sys
 	}
 }
 
-void Server::HandleClientShoot(RakNet::Packet * packet)
+void Server::HandleClientShoot(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet * packet)
 {
-	// TODO: Check sender is currently playing
-	// Get shoot command data
-	RakNet::BitStream bsIn(packet->data, packet->length, false);
-	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-	short characterID;
-	bsIn.Read(characterID);
-	MapVec3 targetTile;
-	bsIn.Read(targetTile);
+	// Find sender connection
+	std::string senderAddress = packet->systemAddress.ToString();
+	auto connectionVec = GetConnections();
+	ConnectionInfo* sender = ConnectionInfo::FindClient(connectionVec, senderAddress);
 
-	// Create a new shoot action
-	GameAction* action = nullptr;
-	//action = m_game->TakeShot(characterID, targetTile);	// TODO
+	if (sender != nullptr && m_game != nullptr)
+	{
+		// Verify the sender is currently playing
+		unsigned int senderID = sender->GetID();
 
-	if (action == nullptr) { return; };
+		if (m_game->IsPlayersTurn(senderID))
+		{
+			// Get shoot command data
+			RakNet::BitStream bsIn(packet->data, packet->length, false);
+			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+			short characterID;
+			bsIn.Read(characterID);
+			MapVec3 targetTile;
+			bsIn.Read(targetTile);
 
-	// Send action to all clients
-	RakNet::BitStream bs;
-	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
-	// TODO
+			// Create a new shoot action
+			Character* victim = m_game->FindCharacterAtCoords(targetTile);
+			if (victim != nullptr)
+			{
+				GameAction* action = nullptr;
+				action = m_game->CreateShootAction(characterID, victim->GetID());
+
+				if (action == nullptr) { return; };
+
+				// Send action to all clients
+				RakNet::BitStream bs;
+				bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
+				action->Write(bs);
+
+				// Send bitstream
+				pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+			}
+		}
+	}
 }
 
-void Server::HandleClientMove(RakNet::Packet* packet)
+void Server::HandleClientMove(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet* packet)
 {
-	// TODO: Check sender is currently playing
-	// Get move command data
-	RakNet::BitStream bsIn(packet->data, packet->length, false);
-	bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
-	short characterID;
-	bsIn.Read(characterID);
-	MapVec3 destination;
-	bsIn.Read(destination);
+	printf("Receiving request to move a character.\n");
+	// Find sender connection
+	std::string senderAddress = packet->systemAddress.ToString();
+	auto connectionVec = GetConnections();
+	ConnectionInfo* sender = ConnectionInfo::FindClient(connectionVec, senderAddress);
+	
+	if (sender != nullptr && m_game != nullptr)
+	{
+		// Verify the sender is currently playing
+		unsigned int senderID = sender->GetID();
 
-	// Process move command on the server-side game
-	GameAction* action;
-	action = m_game->CreateMoveAction(characterID, destination);
+		if (m_game->IsPlayersTurn(senderID))
+		{
+			// Get move command data
+			RakNet::BitStream bsIn(packet->data, packet->length, false);
+			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+			short characterID;
+			bsIn.Read(characterID);
+			MapVec3 destination;
+			bsIn.Read(destination);
 
-	// Send action back to all clients
-	if (action == nullptr) { return; };
+			// Process move command on the server-side game
+			GameAction* action;
+			action = m_game->CreateMoveAction(characterID, destination);
 
-	RakNet::BitStream bs;
-	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
-	action->Write(bs);
-	// TODO: Implement Write function within MovementAction to avoid pointers, etc.
+			// Send action back to all clients
+			if (action == nullptr) { return; };
+
+			RakNet::BitStream bs;
+			bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
+			action->Write(bs);
+
+			// Send bitstream
+			pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+		}
+		else
+			printf("Not player's turn.\n");
+	}
 }
 
 Server::Server()
@@ -212,10 +261,10 @@ void Server::HandleConnections(RakNet::RakPeerInterface* pPeerInterface, RakNet:
 				std::cout << "A client lost connection.\n";
 				break;
 			case ID_CLIENT_SHOOT:
-				HandleClientShoot(packet);
+				HandleClientShoot(pPeerInterface, packet);
 				break;
 			case ID_CLIENT_MOVE:
-				HandleClientMove(packet);
+				HandleClientMove(pPeerInterface, packet);
 				break;
 
 			default:

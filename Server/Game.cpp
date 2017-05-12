@@ -19,6 +19,49 @@ void Game::Setup()
 	// Add a better method, like loading from file, etc.
 	TempGameSetup();
 }
+
+/**
+ * Creates an action to initialize each character's walkable tiles.
+ * Should be used when initializing the game.
+ */
+GameAction * Game::CreateInitialWalkableTilesAction()
+{
+	GameAction* g = new GameAction();
+
+	for (auto& iter = m_characters.cbegin(); iter != m_characters.cend(); iter++)
+	{
+		Character* c = iter->second;
+
+		if (c != nullptr)
+		{
+			auto list1P = m_map->GetWalkableTiles(c->GetPosition(), c->GetMoveDistance());
+			auto list2P = m_map->GetWalkableTiles(c->GetPosition(), c->GetDashDistance());
+
+			// TODO: FIXME: Code crashes here
+			// Remove any 1-point-walk tiles from the 2P list
+			//for (auto& iter1P = list1P.begin(); iter1P != list1P.end(); iter1P++)
+			//{
+			//	// Removing elements while iterating with for loop does not work. Use a while loop instead
+			//	auto& iter2P = list2P.begin();
+			//	while (iter2P != list2P.end())
+			//	{
+			//		auto& previousIter2P = iter2P;
+			//
+			//		// Increment iterator
+			//		iter2P++;
+			//
+			//		// Check previous iter
+			//		if ((*iter1P) == (*previousIter2P))
+			//			list2P.remove(*previousIter2P);
+			//	}
+			//}
+			RefreshWalkableTilesAction* rwtA = new RefreshWalkableTilesAction(c, list1P, list2P);
+			g->AddToQueue(rwtA);
+		}
+	}
+
+	return g;
+}
 #endif
 
 Squad * Game::GetPlayingSquad()
@@ -194,10 +237,15 @@ void Game::Update(float dTime)
  * Add an action to the queue. Actions will be executed one by one
  * by the client, in the order they were sent by the server.
  */
-void Game::QueueAction(short uniqueID, GameAction* action)
+void Game::QueueAction(GameAction* action)
 {
 	if (action == nullptr) { return; };
 	m_actionQueue.push_back(action);
+	if (m_actionQueue.size() == 1)
+	{
+		// This was the first action to be added. Set current action
+		m_currentAction = m_actionQueue.begin();
+	}
 }
 
 Character * Game::FindCharacterAtCoords(const MapVec3 position) const
@@ -216,6 +264,18 @@ Character * Game::FindCharacterByID(const short id) const
 	return c;
 }
 
+/* Returns a list of all characters which initially belonged to the specified squad. */
+std::list<Character*> Game::GetCharactersByHomeSquad(const unsigned int squad) const
+{
+	std::list<Character*> returnList;
+	for (auto& iter = m_characters.cbegin(); iter != m_characters.cend(); iter++)
+	{
+		if ((*iter).second->GetHomeSquad() == squad)
+			returnList.push_back((*iter).second);
+	}
+	return returnList;
+}
+
 void Game::SetSpectatorMode(const bool state)
 {
 	m_forcedSpectator = state;
@@ -224,6 +284,13 @@ void Game::SetSpectatorMode(const bool state)
 bool Game::IsSpectator() const
 {
 	return m_forcedSpectator;
+}
+
+bool Game::IsPlayersTurn(const unsigned int playerID) const
+{
+	if (m_currentTurn == playerID)
+		return true;
+	return false;
 }
 
 #ifndef NETWORK_SERVER
@@ -276,7 +343,7 @@ void Game::Read(RakNet::Packet * packet)
 		gA->Read(bsIn);
 
 		// Add the action to the queue
-		m_actionQueue.push_back(gA);
+		QueueAction(gA);
 	}
 }
 
@@ -335,6 +402,30 @@ void Game::GetShotVariables(short & damage, SHOT_STATUS & shotType, const Charac
 }
 
 /**
+ * Handle character shooting. 
+ * Returns null if the shot is not possible.
+ */
+GameAction * Game::CreateShootAction(const short shooterID, short victimID)
+{
+	// Find the referenced character
+	auto& cIter = m_characters.find(shooterID);
+	if (cIter != m_characters.end())
+	{
+		Character* c = cIter->second;
+		if (c != nullptr)
+		{
+			// TODO: Finish implementation
+		}
+		else
+			printf("Error: CreateShootAction function could not find character with id %i.\n", shooterID);
+	}
+	else
+		printf("Error: Could not find character.\n");
+
+	return nullptr;
+}
+
+/**
  * Handle character movement to a specified map coordinate. 
  * Returns null if the character or map coordinate could not be found, or if the
  * move is not valid.
@@ -367,7 +458,7 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 
 			// Check if the character can legally move this far
 			if (c->PointsToMove((short)path.size()) == 0)
-				printf("Error: Character (id: %d) cannot legally move %d tiles.\n", characterID, path.size());
+				printf("Error: Character (id: %d) cannot legally move %d tiles.\n", characterID, (int)path.size());
 
 			// Create an action
 			GameAction* g = new GameAction();
@@ -385,23 +476,48 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 				// Check for overwatch triggers. If any are triggered, actions will be added to the list
 				waitingSquad->QueryOverwatch(g, c, *m_map);
 
-				// Create movement to next tile in the path
-				MovementAction* mA = new MovementAction(c, nextPos);
-				g->AddToQueue(mA);
-
 				// Simulate on the server
 				// NOTE: Execute takes a float, but this does not do anything when simulated on the server, 
 				// as everything is done instantly
-				while (!g->IsCompleted())
-					g->Execute(0);
+				while (!g->IsCompleted())	g->Execute(0);
+
+				// Create movement to next tile in the path
+				if (c->Alive())
+				{
+					MovementAction* mA = new MovementAction(c, nextPos);
+					g->AddToQueue(mA);
+				}
+
+				// Simulate move on server
+				while (!g->IsCompleted())	g->Execute(0);
 			}
 
 			// Check overwatch triggers for final tile move
 			waitingSquad->QueryOverwatch(g, c, *m_map);
 
 			// Simulate last overwatch
-			while (!g->IsCompleted())
-				g->Execute(0);
+			while (!g->IsCompleted())	g->Execute(0);
+
+			// Set the moving character's moveable tiles lists
+			if (c->Alive())
+			{
+				auto list1P = m_map->GetWalkableTiles(c->GetPosition(), c->GetMoveDistance());
+				auto list2P = m_map->GetWalkableTiles(c->GetPosition(), c->GetDashDistance());
+				// Remove any 1-point-walk tiles from the 2P list
+				for (auto& iter1P = list1P.begin(); iter1P != list1P.end(); iter1P++)
+				{
+					for (auto& iter2P = list2P.begin(); iter2P != list2P.end(); iter2P++)
+					{
+						if ((*iter1P) == (*iter2P))
+							list2P.remove(*iter2P);
+					}
+				}
+				RefreshWalkableTilesAction* rwtA = new RefreshWalkableTilesAction(c, list1P, list2P);
+				g->AddToQueue(rwtA);
+
+				// Simulate last overwatch
+				while (!g->IsCompleted())	g->Execute(0);
+			}
 
 			// Reset the game action. 
 			// (Reverses the effects of simulating it on the server, so it is again ready to use on a client)
@@ -410,10 +526,10 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 			return g;
 		}
 		else
-			printf("Error: MoveCharacter function could not find character with id %d.\n", characterID);
+			printf("Error: CreateMoveAction function could not find character with id %i.\n", characterID);
 	}
 	else
-		printf("Error: Could not find character");
+		printf("Error: Could not find character.\n");
 
 	return nullptr;
 }
@@ -491,6 +607,9 @@ void Game::TempGameSetup()
 		}
 	}
 	// TODO: Spawn points on map
+
+	GameAction* g = CreateInitialWalkableTilesAction();
+	QueueAction(g);
 }
 
 void Game::Write(RakNet::BitStream & bs)
