@@ -166,7 +166,7 @@ void Client::handleNetworkMessages()
 			ReceiveGameInfo(packet);
 			break;
 		case ID_SERVER_SEND_ACTION:
-			// TODO
+			ReceiveAction(packet);
 			break;
 
 		default:
@@ -212,6 +212,21 @@ void Client::ReceiveGameInfo(RakNet::Packet * packet)
 	{
 		std::cout << "Receiving new game info.\n";
 		m_game->Read(packet);
+	}
+}
+
+void Client::ReceiveAction(RakNet::Packet * packet)
+{
+	if (m_game != nullptr)
+	{
+		std::cout << "Receiving a new action.\n";
+
+		RakNet::BitStream bsIn(packet->data, packet->length, false);
+		bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+
+		GameAction* gA = new GameAction();
+		gA->Read(bsIn);
+		m_game->QueueAction(gA);
 	}
 }
 

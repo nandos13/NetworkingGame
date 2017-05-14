@@ -49,6 +49,7 @@ protected:
 
 	void ReceiveClientID(RakNet::Packet* packet);
 	void ReceiveGameInfo(RakNet::Packet* packet);
+	void ReceiveAction(RakNet::Packet* packet);
 
 	void sendCharacterShoot(short characterID, MapVec3 target);
 

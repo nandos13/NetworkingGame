@@ -74,6 +74,93 @@ struct MapVec3
 		}
 	}
 
+	static MapVec3 FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale)
+	{
+		if (tileScale > 0)
+		{
+			/* NOTE: Converting a negative float to short will drop any decimal value, (eg. -1.5 becomes -1) which causes the wrong
+			* coordinate to be returned if the specified x, y or z values are not perfect integer numbers. */
+
+			short nX = short(x / tileScale);
+			short nY = short(y / tileScale);
+			short nZ = short(z / tileScale);
+
+			// TODO: FIXME
+
+			return MapVec3(nX, nY, nZ);
+		}
+
+		printf("Error: FindTileAtWorldCoords method was called with tileScale <= 0\n");
+		return MapVec3();
+	}
+	
+	/* Returns world coordinates at the bottom-center of the tile */
+	static void GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale)
+	{
+		if (tileScale > 0)
+		{
+			outX = (float)(tilePos.m_x * tileScale) + tileScale / 2;
+			outY = (float)(tilePos.m_y * tileScale);
+			outZ = (float)(tilePos.m_z * tileScale) + tileScale / 2;
+		}
+		else	printf("Error: GetTileWorldCoords method was called with tileScale <= 0\n");
+	}
+	/* Returns world coordinates at the center of the tile */
+	static void GetTileWorldCoordsCenter(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale)
+	{
+		if (tileScale > 0)
+		{
+			outX = (float)(tilePos.m_x * tileScale) + tileScale / 2;
+			outY = (float)(tilePos.m_y * tileScale) + tileScale / 2;
+			outZ = (float)(tilePos.m_z * tileScale) + tileScale / 2;
+		}
+		else	printf("Error: GetTileWorldCoordsCenter method was called with tileScale <= 0\n");
+	}
+	/* Returns world coordinates at the bottom-back-left of the tile */
+	static void GetTileWorldCoordsBackLeft(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale)
+	{
+		if (tileScale > 0)
+		{
+			outX = (float)(tilePos.m_x * tileScale);
+			outY = (float)(tilePos.m_y * tileScale);
+			outZ = (float)(tilePos.m_z * tileScale);
+		}
+		else	printf("Error: GetTileWorldCoordsBackLeft method was called with tileScale <= 0\n");
+	}
+	/* Returns world coordinates at the bottom-back-right of the tile */
+	static void GetTileWorldCoordsBackRight(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale)
+	{
+		if (tileScale > 0)
+		{
+			outX = (float)(tilePos.m_x * tileScale);
+			outY = (float)(tilePos.m_y * tileScale);
+			outZ = (float)(tilePos.m_z * tileScale) + tileScale;
+		}
+		else	printf("Error: GetTileWorldCoordsBackRight method was called with tileScale <= 0\n");
+	}
+	/* Returns world coordinates at the bottom-front-left of the tile */
+	static void GetTileWorldCoordsFrontLeft(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale)
+	{
+		if (tileScale > 0)
+		{
+			outX = (float)(tilePos.m_x * tileScale) + tileScale;
+			outY = (float)(tilePos.m_y * tileScale);
+			outZ = (float)(tilePos.m_z * tileScale);
+		}
+		else	printf("Error: GetTileWorldCoordsFrontLeft method was called with tileScale <= 0\n");
+	}
+	/* Returns world coordinates at the bottom-front-right of the tile */
+	static void GetTileWorldCoordsFrontRight(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale)
+	{
+		if (tileScale > 0)
+		{
+			outX = (float)(tilePos.m_x * tileScale) + tileScale;
+			outY = (float)(tilePos.m_y * tileScale);
+			outZ = (float)(tilePos.m_z * tileScale) + tileScale;
+		}
+		else	printf("Error: GetTileWorldCoordsFrontRight method was called with tileScale <= 0\n");
+	}
+	
 	void Read(RakNet::BitStream& bsIn) const
 	{
 		bsIn.Read(m_x);
@@ -128,7 +215,7 @@ private:
 			m_coverVals |= ((val == COVER_NONE) ? 0 : 1) << bitOffset + 1;	// Set the bit to 0 if there is no cover in this direction
 		}
 #endif
-		COVER_VALUE GetCover(short bitOffset)
+		COVER_VALUE GetCover(short bitOffset) const
 		{
 			// Isolate the two bits corresponding to the direction we are checking
 			unsigned char isolatedBits = (3 << bitOffset) & (m_coverVals);
@@ -171,11 +258,11 @@ private:
 
 		// COVER INFO
 
-		COVER_VALUE GetCoverLeft() { return GetCover(0); };
-		COVER_VALUE GetCoverRight() { return GetCover(2); };
-		COVER_VALUE GetCoverFront() { return GetCover(4); };
-		COVER_VALUE GetCoverBack() { return GetCover(6); };
-		COVER_VALUE GetCoverDir(MAP_CONNECTION_DIR dir)
+		COVER_VALUE GetCoverLeft()	const { return GetCover(0); };
+		COVER_VALUE GetCoverRight() const { return GetCover(2); };
+		COVER_VALUE GetCoverFront() const { return GetCover(4); };
+		COVER_VALUE GetCoverBack()	const { return GetCover(6); };
+		COVER_VALUE GetCoverDir(MAP_CONNECTION_DIR dir) const
 		{
 			switch (dir)
 			{
@@ -215,10 +302,10 @@ private:
 				m_connectedTiles.erase(dir);
 			}
 		}
-		bool IsConnected(MapTile* tile)
+		bool IsConnected(MapTile* tile) const
 		{
-			std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*>::iterator iter;
-			for (iter = m_connectedTiles.begin(); iter != m_connectedTiles.end(); iter++)
+			std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*>::const_iterator iter;
+			for (iter = m_connectedTiles.cbegin(); iter != m_connectedTiles.cend(); iter++)
 			{
 				if (iter->second->GetConnected(this) == tile)
 					return true;
@@ -226,9 +313,9 @@ private:
 			return false;
 		}
 
-		std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*> GetAllConnections() { return m_connectedTiles; };
+		std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*> GetAllConnections() const { return m_connectedTiles; };
 
-		MapTile* GetConnectedTile(MAP_CONNECTION_DIR dir, MAP_CONNECTION_LEVEL level = LEVEL)
+		MapTile* GetConnectedTile(MAP_CONNECTION_DIR dir, MAP_CONNECTION_LEVEL level = LEVEL) const
 		{
 			// Offsets for tiles connected in same plane. These values correspond to MAP_CONNECTION_DIR values
 			const MapVec3 m_offsetVecs[] = { MapVec3(-1,0,0),  MapVec3(1,0,0),
@@ -284,7 +371,7 @@ private:
 
 		// GENERAL
 
-		MapVec3 GetTilePos() { return m_tilePosition; };
+		MapVec3 GetTilePos() const { return m_tilePosition; };
 		void SafeDelete() 
 		{ 
 			// Remove this tile as a connection from all connected
@@ -330,13 +417,13 @@ private:
 		}
 
 		/* Returns the node connected to 'me' */
-		MapTile* GetConnected(MapTile* me)
+		MapTile* GetConnected(const MapTile* me) const
 		{
 			return ( (m_nodeA == me) ? m_nodeB : m_nodeA );
 		}
 
 		/* Returns the direction of connection for tile 'me' */
-		MAP_CONNECTION_DIR GetDirection(MapTile* me)
+		MAP_CONNECTION_DIR GetDirection(const MapTile* me) const
 		{
 			MapVec3 from, to;
 			if (m_nodeA == me)
@@ -375,9 +462,9 @@ private:
 			return (MAP_CONNECTION_DIR)MAP_CONNECTION_LEVEL::LEVEL;
 		}
 
-		float GetWeight() { return m_weight; };
+		float GetWeight() const { return m_weight; };
 
-		bool IsBiDirectional()
+		bool IsBiDirectional() const
 		{
 			if (m_nodeA->IsConnected(m_nodeB) && m_nodeB->IsConnected(m_nodeA))
 				return true;
@@ -411,7 +498,7 @@ private:
 			m_biDirectional = biDir;
 		}
 
-		const bool operator==(const ConnectionData& rhs)
+		const bool operator==(const ConnectionData& rhs) const
 		{
 			// TODO: This might need to be changed.
 			if (m_pos1 == rhs.m_pos1 && m_pos2 == rhs.m_pos2)
@@ -421,10 +508,10 @@ private:
 			return false;
 		}
 
-		MapVec3 GetPos1() { return m_pos1; };
-		MapVec3 GetPos2() { return m_pos2; };
-		float GetWeight() { return m_weight; };
-		bool IsBiDirectional() { return m_biDirectional; };
+		MapVec3 GetPos1() const { return m_pos1; };
+		MapVec3 GetPos2() const { return m_pos2; };
+		float GetWeight() const { return m_weight; };
+		bool IsBiDirectional() const { return m_biDirectional; };
 	};
 
 	struct MapPlane
@@ -473,16 +560,6 @@ public:
 	// TODO: Need to finish spawn point system later
 
 	COVER_VALUE GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir);
-
-	MapVec3 FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale) const;
-
-	// TODO: These functions should be static MapVec3 functions.
-	void GetTileWorldCoords				(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;
-	void GetTileWorldCoordsCenter		(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;
-	void GetTileWorldCoordsBackLeft		(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;
-	void GetTileWorldCoordsBackRight	(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;
-	void GetTileWorldCoordsFrontLeft	(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;
-	void GetTileWorldCoordsFrontRight	(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const;
 
 	bool TileAt(const MapVec3 position) const;
 

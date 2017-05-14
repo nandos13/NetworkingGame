@@ -86,8 +86,13 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to) const
 		{
 			MapTile* n = cIter->second->GetConnected(currentNode);
 
-			if (*(std::find(closedList.begin(), closedList.end(), n)) != nullptr)
-				openList.push_back(n);
+			// Check if n is already in closedList
+			auto nIter = std::find(closedList.begin(), closedList.end(), n);
+			if (nIter != closedList.end())
+			{
+				if (*nIter != nullptr)
+					openList.push_back(n);
+			}
 
 			n->gScore = currentNode->gScore + cIter->second->GetWeight();
 			n->hScore = MapVec3::Distance(n->GetTilePos(), to->GetTilePos());
@@ -315,93 +320,6 @@ COVER_VALUE TileMap::GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_
 		return COVER_NONE;
 }
 
-MapVec3 TileMap::FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale) const
-{
-	if (tileScale > 0)
-	{
-		short nX = short(x / tileScale);
-		short nY = short(y / tileScale);
-		short nZ = short(z / tileScale);
-
-		return MapVec3(nX, nY, nZ);
-	}
-
-	printf("Error: FindTileAtWorldCoords method was called with tileScale <= 0\n");
-	return MapVec3();
-}
-
-/* Returns world coordinates at the bottom-center of the tile */
-void TileMap::GetTileWorldCoords(float& outX, float& outY, float& outZ, const MapVec3 tilePos, const float tileScale) const
-{
-	if (tileScale > 0)
-	{
-		outX = (float)(tilePos.m_x * tileScale) + tileScale / 2;
-		outY = (float)(tilePos.m_y * tileScale);
-		outZ = (float)(tilePos.m_z * tileScale) + tileScale / 2;
-	}
-	else	printf("Error: GetTileWorldCoords method was called with tileScale <= 0\n");
-}
-
-/* Returns world coordinates at the center of the tile */
-void TileMap::GetTileWorldCoordsCenter(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
-{
-	if (tileScale > 0)
-	{
-		outX = (float)(tilePos.m_x * tileScale) + tileScale / 2;
-		outY = (float)(tilePos.m_y * tileScale) + tileScale / 2;
-		outZ = (float)(tilePos.m_z * tileScale) + tileScale / 2;
-	}
-	else	printf("Error: GetTileWorldCoordsCenter method was called with tileScale <= 0\n");
-}
-
-/* Returns world coordinates at the bottom-back-left of the tile */
-void TileMap::GetTileWorldCoordsBackLeft(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
-{
-	if (tileScale > 0)
-	{
-		outX = (float)(tilePos.m_x * tileScale);
-		outY = (float)(tilePos.m_y * tileScale);
-		outZ = (float)(tilePos.m_z * tileScale);
-	}
-	else	printf("Error: GetTileWorldCoordsBackLeft method was called with tileScale <= 0\n");
-}
-
-/* Returns world coordinates at the bottom-back-right of the tile */
-void TileMap::GetTileWorldCoordsBackRight(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
-{
-	if (tileScale > 0)
-	{
-		outX = (float)(tilePos.m_x * tileScale);
-		outY = (float)(tilePos.m_y * tileScale);
-		outZ = (float)(tilePos.m_z * tileScale) + tileScale;
-	}
-	else	printf("Error: GetTileWorldCoordsBackRight method was called with tileScale <= 0\n");
-}
-
-/* Returns world coordinates at the bottom-front-left of the tile */
-void TileMap::GetTileWorldCoordsFrontLeft(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
-{
-	if (tileScale > 0)
-	{
-		outX = (float)(tilePos.m_x * tileScale) + tileScale;
-		outY = (float)(tilePos.m_y * tileScale);
-		outZ = (float)(tilePos.m_z * tileScale);
-	}
-	else	printf("Error: GetTileWorldCoordsFrontLeft method was called with tileScale <= 0\n");
-}
-
-/* Returns world coordinates at the bottom-front-right of the tile */
-void TileMap::GetTileWorldCoordsFrontRight(float & outX, float & outY, float & outZ, const MapVec3 tilePos, const float tileScale) const
-{
-	if (tileScale > 0)
-	{
-		outX = (float)(tilePos.m_x * tileScale) + tileScale;
-		outY = (float)(tilePos.m_y * tileScale);
-		outZ = (float)(tilePos.m_z * tileScale) + tileScale;
-	}
-	else	printf("Error: GetTileWorldCoordsFrontRight method was called with tileScale <= 0\n");
-}
-
 bool TileMap::TileAt(const MapVec3 position) const
 {
 	return ( FindTile(position) != nullptr );
@@ -500,7 +418,7 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 	const int yStep = (dirY >= 0) ? (int)tileScalePositive : (int)-tileScalePositive;
 	const int zStep = (dirZ >= 0) ? (int)tileScalePositive : (int)-tileScalePositive;
 
-	MapVec3 currentPos = FindTileAtWorldCoords(x, y, z, tileScalePositive);
+	MapVec3 currentPos = MapVec3::FindTileAtWorldCoords(x, y, z, tileScalePositive);
 	resultList.push_back(currentPos);
 
 	// Start implementation
@@ -550,7 +468,7 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 			zGrid += zStep;
 		}
 
-		currentPos = FindTileAtWorldCoords(xGrid, yGrid, zGrid, tileScalePositive);
+		currentPos = MapVec3::FindTileAtWorldCoords(xGrid, yGrid, zGrid, tileScalePositive);
 		resultList.push_back(currentPos);
 
 		// TODO: Exit if we escape the bounds of the tilemap
@@ -567,11 +485,11 @@ bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, const float t
 	{
 		// Get coordinates for center of 'from' tile
 		float x1 = 0, y1 = 0, z1 = 0;
-		GetTileWorldCoordsCenter(x1, y1, z1, from, tileScale);
+		MapVec3::GetTileWorldCoordsCenter(x1, y1, z1, from, tileScale);
 
 		// Get coordinates for center of 'to' tile
 		float x2 = 0, y2 = 0, z2 = 0;
-		GetTileWorldCoordsCenter(x2, y2, z2, to, tileScale);
+		MapVec3::GetTileWorldCoordsCenter(x2, y2, z2, to, tileScale);
 
 		// Find direction between the two points
 		float dirX = x2 - x1;

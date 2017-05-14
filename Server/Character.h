@@ -69,7 +69,8 @@ public:
 	/* CLIENT-ONLY FUNCTIONALITY */
 #ifndef NETWORK_SERVER
 
-	bool Move(MapVec3 destination, float dTime);
+	bool Move(MapVec3 destination, const float speed, const float dTime);
+	void GetGameObjPosition(float& x, float& y, float& z);
 
 	static Character* Read(RakNet::BitStream& bsIn);
 	void Draw();

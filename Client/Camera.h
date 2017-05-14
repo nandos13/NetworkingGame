@@ -30,7 +30,7 @@ public:
 	Camera(glm::vec3 pos, glm::vec2 euler, float fov = 70);
 	~Camera();
 
-	void Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, const float rotateTo, bool& lockRotation, const float rotateSpeed, const int windowWidth, const int windowHeight);
+	void Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, const glm::vec3 followTarget, bool& camPosFollow, const float rotateTo, bool& lockRotation, const float rotateSpeed, const int windowWidth, const int windowHeight);
 
 	// Set functions
 	void SetViewAngle(float phi, float theta);

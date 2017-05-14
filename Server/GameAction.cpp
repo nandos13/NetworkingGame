@@ -89,13 +89,7 @@ void GameAction::Read(RakNet::BitStream & bsIn)
 		else { printf("Error: Action type did not match any expected types.\n"); }
 
 		// Add the action to the queue
-		m_queue.push_back(a);
-	}
-
-	if (m_queue.size() > 0)
-	{
-		m_completed = false;
-		m_iter = m_queue.begin();
+		AddToQueue(a);
 	}
 }
 #endif

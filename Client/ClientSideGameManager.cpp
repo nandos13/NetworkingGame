@@ -7,6 +7,7 @@
 #include <glm/ext.hpp>
 #include <Input.h>
 #include <Gizmos.h>
+#include <imgui.h>
 
 
 
@@ -28,9 +29,9 @@ void ClientSideGameManager::SelectCharacter(Character * c)
 
 				// Set camera to lerp to the character
 				m_camPosLerping = true;
-				TileMap* map = Game::GetMap();
+				m_camPosFollow = true;
 				float x = 0, y = 0, z = 0;
-				map->GetTileWorldCoords(x, y, z, m_selectedCharacter->GetPosition(), Game::GetMapTileScale());
+				MapVec3::GetTileWorldCoords(x, y, z, m_selectedCharacter->GetPosition(), Game::GetMapTileScale());
 				glm::vec3 characterPos = glm::vec3(x, y, z);
 				m_camCurrentLookTarget = characterPos;
 
@@ -95,9 +96,9 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 
 		// Set camera to lerp to the character
 		m_camPosLerping = true;
-		TileMap* map = Game::GetMap();
+		m_camPosFollow = true;
 		float x = 0, y = 0, z = 0;
-		map->GetTileWorldCoords(x, y, z, m_selectedCharacter->GetPosition(), Game::GetMapTileScale());
+		MapVec3::GetTileWorldCoords(x, y, z, m_selectedCharacter->GetPosition(), Game::GetMapTileScale());
 		glm::vec3 characterPos = glm::vec3(x, y, z);
 		m_camCurrentLookTarget = characterPos;
 	}
@@ -154,10 +155,31 @@ MapVec3 ClientSideGameManager::GetTileUnderMouse(bool& missedTiles) const
 	}
 }
 
+void ClientSideGameManager::DrawHUD()
+{
+	// Draw character info
+	ImGui::Begin("Current Character", (bool*)0, ImGuiWindowFlags_NoCollapse);
+
+	if (m_selectedCharacter == nullptr)
+	{
+		ImGui::Text("No character selected.");
+	}
+	else
+	{
+		int actionPoints = (int)m_selectedCharacter->RemainingActionPoints();
+		ImGui::InputInt("Action Points", &actionPoints);
+	}
+
+	ImGui::End();
+
+	ImGui::DragFloat3("", &m_camCurrentLookTarget.x);
+}
+
 ClientSideGameManager::ClientSideGameManager(Client* client, Camera* cam)
 	: m_thisClient(client), m_cam(cam)
 {
 	m_camPosLerping = false;
+	m_camPosFollow = false;
 	m_camRotLerping = false;
 	m_camRotationSpeed = 1.0f;
 	m_camRotationDestination = 0.0f;
@@ -180,10 +202,9 @@ void ClientSideGameManager::Update(const float dTime)
 	if (!m_mouseIsOverVoidSpace)
 	{
 		float tileScale = Game::GetMapTileScale();
-		TileMap* map = Game::GetMap();
 
 		float x = 0, y = 0, z = 0;
-		map->GetTileWorldCoords(x, y, z, m_hoveredTile, tileScale);
+		MapVec3::GetTileWorldCoords(x, y, z, m_hoveredTile, tileScale);
 		glm::vec3 worldSpaceTilePos = glm::vec3(x, y, z);
 
 		aie::Gizmos::addAABBFilled(worldSpaceTilePos, glm::vec3(tileScale / 2, 0, tileScale / 2), glm::vec4(1, 0.5f, 1, 0.4f));
@@ -283,9 +304,20 @@ void ClientSideGameManager::Update(const float dTime)
 	}
 
 	/* Update scene stuff */
+	glm::vec3 followTarget = glm::vec3(0);
+	if (m_camPosFollow && m_selectedCharacter != nullptr)
+	{
+		// Follow the character as they move
+		float x = 0, y = 0, z = 0;
+		m_selectedCharacter->GetGameObjPosition(x, y, z);
 
-	m_cam->Update(dTime, m_camCurrentLookTarget, m_camPosLerping, 
+		followTarget = glm::vec3(x, y, z);
+	}
+
+	m_cam->Update(dTime, m_camCurrentLookTarget, m_camPosLerping, followTarget, m_camPosFollow,
 		m_camRotationDestination, m_camRotLerping, m_camRotationSpeed, m_thisClient->getWindowWidth(), m_thisClient->getWindowHeight());
+
+	DrawHUD();
 }
 
 void ClientSideGameManager::SetCameraSpeed(const float speed)

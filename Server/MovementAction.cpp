@@ -8,9 +8,32 @@
 // Client-side execution
 void MovementAction::_Execute(float dTime)
 {
+	if (m_lerpSpeed <= 0)
+	{
+		float tileScale = Game::GetMapTileScale();
+		float x = 0, y = 0, z = 0;
+
+		// Get owner's position
+		MapVec3 ownerTilePos = m_owner->GetPosition();
+		MapVec3::GetTileWorldCoords(x, y, z, ownerTilePos, tileScale);
+		glm::vec3 ownerPos = glm::vec3(x, y, z);
+		printf("OwnerPos: %f, %f, %f\n", ownerPos.x, ownerPos.y, ownerPos.z);
+
+		MapVec3::GetTileWorldCoords(x, y, z, m_destination, tileScale);
+		glm::vec3 destinationPos = glm::vec3(x, y, z);
+		printf("DestPos: %f, %f, %f\n", destinationPos.x, destinationPos.y, destinationPos.z);
+
+		float distance = glm::distance(ownerPos, destinationPos);
+		m_lerpSpeed = distance / 0.8f;
+		printf("LerpSpeed: %f\n", m_lerpSpeed);
+	}
+
 	// Move character
-	if (m_owner->Move(m_destination, dTime))
+	if (m_owner->Move(m_destination, m_lerpSpeed, dTime))
+	{
+		m_lerpSpeed = 0.0f;
 		CompleteSelf();
+	}
 }
 #endif
 
@@ -32,6 +55,10 @@ MovementAction::MovementAction(Character * owner, MapVec3 destination) : BaseAct
 	m_actionType = 1;
 
 	m_destination = destination;
+
+#ifndef NETWORK_SERVER
+	m_lerpSpeed = 0.0f;
+#endif
 }
 
 MovementAction::~MovementAction()

@@ -164,20 +164,23 @@ void Character::ResetActionPoints()
  * Lerps character's position towards it's destination.
  * Returns true if the character reaches destination this frame.
  */
-bool Character::Move(MapVec3 destination, float dTime)
+bool Character::Move(MapVec3 destination, const float speed, const float dTime)
 {
-	TileMap* map = Game::GetMap();
-
 	// Find world coordinates of the specified destination & move character's gameobject
 	float x, y, z;
-	map->GetTileWorldCoords(x, y, z, destination, Game::GetMapTileScale());
-	bool reachedDestination = m_gameObject.LerpMove(x, y, z, dTime);
+	MapVec3::GetTileWorldCoords(x, y, z, destination, Game::GetMapTileScale());
+	bool reachedDestination = m_gameObject.LerpMove(x, y, z, speed, dTime);
 
 	// Update character's position
 	m_gameObject.GetWorldPosition(x, y, z);
-	m_currentPosition = map->FindTileAtWorldCoords(x, y, z, Game::GetMapTileScale());
+	m_currentPosition = MapVec3::FindTileAtWorldCoords(x, y, z, Game::GetMapTileScale());
 	
 	return reachedDestination;
+}
+
+void Character::GetGameObjPosition(float & x, float & y, float & z)
+{
+	m_gameObject.GetWorldPosition(x, y, z);
 }
 
 Character* Character::Read(RakNet::BitStream & bsIn)
@@ -203,8 +206,7 @@ Character* Character::Read(RakNet::BitStream & bsIn)
 
 	// Set GameObject's position
 	float x = 0, y = 0, z = 0;
-	TileMap* map = Game::GetMap();
-	map->GetTileWorldCoords(x, y, z, pos, Game::GetMapTileScale());
+	MapVec3::GetTileWorldCoords(x, y, z, pos, Game::GetMapTileScale());
 	c->m_gameObject.SetPosition(x, y, z);
 
 	// TODO: Implement rest of function along with Write function

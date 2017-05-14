@@ -246,6 +246,19 @@ void Game::QueueAction(GameAction* action)
 		// This was the first action to be added. Set current action
 		m_currentAction = m_actionQueue.begin();
 	}
+
+	if (m_currentAction == m_actionQueue.end())
+	{
+		// Set iterator to first non-complete action
+		for (auto& iter = m_actionQueue.begin(); iter != m_actionQueue.end(); iter++)
+		{
+			if (!(*iter)->IsCompleted())
+			{
+				m_currentAction = iter;
+				break;
+			}
+		}
+	}
 }
 
 Character * Game::FindCharacterAtCoords(const MapVec3 position) const
@@ -458,7 +471,10 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 
 			// Check if the character can legally move this far
 			if (c->PointsToMove((short)path.size()) == 0)
+			{
 				printf("Error: Character (id: %d) cannot legally move %d tiles.\n", characterID, (int)path.size());
+				return nullptr;
+			}
 
 			// Create an action
 			GameAction* g = new GameAction();
@@ -470,6 +486,10 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 			std::list<MapVec3>::iterator pathIter;
 			for (pathIter = path.begin(); pathIter != path.end(); pathIter++)
 			{
+				// Do not create a move for the first tile, as FindPath returns a list with the origin tile included
+				if (pathIter == path.begin())
+					continue;
+
 				MapVec3 thisPos = c->GetPosition();
 				MapVec3 nextPos = (*pathIter);
 
@@ -503,15 +523,25 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 			{
 				auto list1P = m_map->GetWalkableTiles(c->GetPosition(), c->GetMoveDistance());
 				auto list2P = m_map->GetWalkableTiles(c->GetPosition(), c->GetDashDistance());
+				// TODO: FIXME: Code crashes here
 				// Remove any 1-point-walk tiles from the 2P list
-				for (auto& iter1P = list1P.begin(); iter1P != list1P.end(); iter1P++)
-				{
-					for (auto& iter2P = list2P.begin(); iter2P != list2P.end(); iter2P++)
-					{
-						if ((*iter1P) == (*iter2P))
-							list2P.remove(*iter2P);
-					}
-				}
+				//for (auto& iter1P = list1P.begin(); iter1P != list1P.end(); iter1P++)
+				//{
+				//	// Removing elements while iterating with for loop does not work. Use a while loop instead
+				//	auto& iter2P = list2P.begin();
+				//	while (iter2P != list2P.end())
+				//	{
+				//		auto& previousIter2P = iter2P;
+				//
+				//		// Increment iterator
+				//		iter2P++;
+				//
+				//		// Check previous iter
+				//		if ((*iter1P) == (*previousIter2P))
+				//			list2P.remove(*previousIter2P);
+				//	}
+				//}
+				// Remove any 1-point-walk tiles from the 2P list
 				RefreshWalkableTilesAction* rwtA = new RefreshWalkableTilesAction(c, list1P, list2P);
 				g->AddToQueue(rwtA);
 

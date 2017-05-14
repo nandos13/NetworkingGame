@@ -21,6 +21,7 @@ protected:
 	Camera* m_cam;
 	glm::vec3 m_camCurrentLookTarget;
 	bool m_camPosLerping;
+	bool m_camPosFollow;
 
 	float m_camRotationSpeed;
 	float m_camRotationDestination;
@@ -37,6 +38,9 @@ protected:
 	MapVec3 m_hoveredTile;
 	bool	m_mouseIsOverVoidSpace;
 	MapVec3 GetTileUnderMouse(bool& missedTiles) const;
+
+	// HUD
+	void DrawHUD();
 
 public:
 	ClientSideGameManager(Client* client, Camera* cam);

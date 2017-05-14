@@ -80,9 +80,10 @@ Camera::~Camera()
 {
 }
 
-void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, const float rotateTo, bool& lockRotation, const float rotateSpeed, const int windowWidth, const int windowHeight)
+void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, const glm::vec3 followTarget, bool& camPosFollow, const float rotateTo, bool& lockRotation, const float rotateSpeed, const int windowWidth, const int windowHeight)
 {
 	// Lerp rotation
+	// TODO: FIXME: Still getting jittery rotation when wrapping around from 0 to 360 or vice versa
 	{
 		WrapThetaTo360();
 
@@ -138,13 +139,25 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	{
 		// TODO: Re-enable edge scrolling. Maybe accept several pixels?
 		if (input->isKeyDown(aie::INPUT_KEY_W) /*|| mouseY == windowHeight*/)
+		{
+			camPosFollow = false;
 			m_currentLookTarget += forwardVec	* deltaTime * camMoveSpeed;
+		}
 		if (input->isKeyDown(aie::INPUT_KEY_S) /*|| mouseY == 0*/)
+		{
+			camPosFollow = false;
 			m_currentLookTarget += -forwardVec	* deltaTime * camMoveSpeed;
+		}
 		if (input->isKeyDown(aie::INPUT_KEY_A) /*|| mouseX == 0*/)
+		{
+			camPosFollow = false;
 			m_currentLookTarget += -right()		* deltaTime * camMoveSpeed;
+		}
 		if (input->isKeyDown(aie::INPUT_KEY_D) /*|| mouseX == windowWidth*/)
+		{
+			camPosFollow = false;
 			m_currentLookTarget += right()		* deltaTime * camMoveSpeed;
+		}
 
 		lookTarget = m_currentLookTarget;
 	}
@@ -170,6 +183,25 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 			m_currentLookTarget += moveVector;
 	}
 
+	// Follow characters as they move
+	if (camPosFollow && !lockMovement)
+	{
+		// Get vectors to followTarget
+		glm::vec3 toDistance = followTarget - m_currentLookTarget;
+		if (glm::length(toDistance) > 0)
+		{
+			glm::vec3 toDir = glm::normalize(toDistance);
+			float speed = glm::length(toDistance) / 0.5f;
+			glm::vec3 toVector = toDir * speed * deltaTime;
+
+			if (glm::length(toVector) > glm::length(toDistance))
+				m_currentLookTarget = followTarget;
+			else
+				m_currentLookTarget += toVector;
+		}
+	}
+
+	// Find camera offset
 	glm::vec3 camOffset = glm::vec3( sin(glm::radians(m_theta - 90) ), 1, cos( glm::radians(m_theta + 90)) );
 	const float camDistance = 5.0f;
 	camOffset *= camDistance;

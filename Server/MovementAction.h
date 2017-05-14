@@ -8,6 +8,10 @@ class MovementAction : public BaseAction
 protected:
 	MapVec3 m_destination;
 
+#ifndef NETWORK_SERVER
+	float m_lerpSpeed;
+#endif
+
 	virtual void _Execute(float dTime);
 
 public:

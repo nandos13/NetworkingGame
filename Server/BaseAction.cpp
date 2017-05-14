@@ -20,6 +20,7 @@ BaseAction::BaseAction(Character * owner)
 
 	m_currentSlowestTime = 1.0f;
 	m_thisTimeScale = 1.0f;
+	m_simulationTime = 1.0f;
 }
 
 BaseAction::~BaseAction()
