@@ -139,6 +139,16 @@ unsigned int Character::RemainingActionPoints() const
 	return m_remainingPoints;
 }
 
+void Character::SetActionPoints(const unsigned int newPoints)
+{
+	if (newPoints >= 0 && newPoints <= 2)
+	{
+		m_remainingPoints = newPoints;
+	}
+	else
+		printf("Warning: Character SetActionPoints function was called with a newPoints value of %d. Only values of 0, 1 or 2 are allowed.\n", newPoints);
+}
+
 /**
  * Returns the amount of action points that will be used to move 'moveTiles' tiles
  * from the current position. 

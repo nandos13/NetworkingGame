@@ -17,15 +17,12 @@ void MovementAction::_Execute(float dTime)
 		MapVec3 ownerTilePos = m_owner->GetPosition();
 		MapVec3::GetTileWorldCoords(x, y, z, ownerTilePos, tileScale);
 		glm::vec3 ownerPos = glm::vec3(x, y, z);
-		printf("OwnerPos: %f, %f, %f\n", ownerPos.x, ownerPos.y, ownerPos.z);
 
 		MapVec3::GetTileWorldCoords(x, y, z, m_destination, tileScale);
 		glm::vec3 destinationPos = glm::vec3(x, y, z);
-		printf("DestPos: %f, %f, %f\n", destinationPos.x, destinationPos.y, destinationPos.z);
 
 		float distance = glm::distance(ownerPos, destinationPos);
 		m_lerpSpeed = distance / 0.8f;
-		printf("LerpSpeed: %f\n", m_lerpSpeed);
 	}
 
 	// Move character

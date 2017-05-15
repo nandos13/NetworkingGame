@@ -4,6 +4,7 @@
 #include "GameAction.h"
 #include "MovementAction.h"
 #include "RefreshWalkableTilesAction.h"
+#include "SetPointsAction.h"
 #include "Squad.h"
 
 #include <list>

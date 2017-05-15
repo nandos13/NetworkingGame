@@ -359,8 +359,8 @@ private:
 		}
 
 		// A* values
-		float gScore, hScore, fScore;
-		MapTile* previousNode;
+		float gScore = 0, hScore = 0, fScore = 0;
+		MapTile* previousNode = nullptr;
 		void ResetPathingData()
 		{
 			previousNode = nullptr;

@@ -75,6 +75,9 @@
     <ClCompile Include="..\Server\RefreshWalkableTilesAction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Server\SetPointsAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.h">
@@ -132,6 +135,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Server\RefreshWalkableTilesAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Server\SetPointsAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

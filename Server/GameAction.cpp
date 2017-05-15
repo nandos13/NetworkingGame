@@ -4,6 +4,7 @@
 #include "ShootAction.h"
 #include "OverwatchShotAction.h"
 #include "RefreshWalkableTilesAction.h"
+#include "SetPointsAction.h"
 
 #include <BitStream.h>
 
@@ -82,11 +83,22 @@ void GameAction::Read(RakNet::BitStream & bsIn)
 		BaseAction* a = nullptr;
 
 		// Use the correct Read function depending on the type.
-		if (id == 1)		{ a = MovementAction::Read(bsIn); }
-		else if (id == 2)	{ a = ShootAction::Read(bsIn); }
-		else if (id == 3)	{ a = OverwatchShotAction::Read(bsIn); }
-		else if (id == 4)	{ a = RefreshWalkableTilesAction::Read(bsIn); }
-		else { printf("Error: Action type did not match any expected types.\n"); }
+		switch (id)
+		{
+		case 1:		a = MovementAction::Read(bsIn);
+			break;
+		case 2:		a = ShootAction::Read(bsIn);
+			break;
+		case 3:		a = OverwatchShotAction::Read(bsIn);
+			break;
+		case 4:		a = RefreshWalkableTilesAction::Read(bsIn);
+			break;
+		case 5:		a = SetPointsAction::Read(bsIn);
+			break;
+
+		default:	printf("Error: Action type did not match any expected types.\n");
+			break;
+		}
 
 		// Add the action to the queue
 		AddToQueue(a);

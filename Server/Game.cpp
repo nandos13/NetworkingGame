@@ -470,7 +470,8 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 			}
 
 			// Check if the character can legally move this far
-			if (c->PointsToMove((short)path.size()) == 0)
+			unsigned int pointsToMove = c->PointsToMove((short)path.size());
+			if (pointsToMove == 0)
 			{
 				printf("Error: Character (id: %d) cannot legally move %d tiles.\n", characterID, (int)path.size());
 				return nullptr;
@@ -478,9 +479,15 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 
 			// Create an action
 			GameAction* g = new GameAction();
-
-			// Get some basic info
 			Squad* waitingSquad = GetWaitingSquad();
+
+			// Use up action points
+			// TODO: Run & Gun, etc abilities may allow a move to be taken without taking a point
+			unsigned int newPointValue = c->RemainingActionPoints() - pointsToMove;
+			if (newPointValue < 0)		newPointValue = 0;
+			else if (newPointValue > 2)	newPointValue = 2;
+			SetPointsAction* spA = new SetPointsAction(c, newPointValue);
+			g->AddToQueue(spA);
 
 			// Iterate through tiles in the path
 			std::list<MapVec3>::iterator pathIter;

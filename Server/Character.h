@@ -63,6 +63,7 @@ public:
 #endif
 
 	unsigned int RemainingActionPoints() const;
+	void SetActionPoints(const unsigned int newPoints);
 	unsigned int PointsToMove(short moveTiles) const;
 	void ResetActionPoints();
 
