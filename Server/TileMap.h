@@ -542,6 +542,7 @@ private:
 	TileMap::MapTile* FindTile(const MapVec3 pos) const;
 
 	std::list<MapVec3> AStarSearch(MapTile* from, MapTile* to) const;
+	void ClearPathData(std::list<MapTile*> list) const;
 
 #ifdef NETWORK_SERVER
 	bool SightBetweenTiles(MapVec3 from, MapVec3 to) const;

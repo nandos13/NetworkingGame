@@ -62,6 +62,10 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to) const
 	std::list<MapTile*> openList;
 	std::list<MapTile*> closedList;
 
+	MapTile* currentNode = nullptr;
+
+	from->gScore = 0;
+	from->fScore = 0;
 	from->previousNode = nullptr;
 	openList.push_back(from);
 
@@ -70,7 +74,7 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to) const
 		// Sort openList by fscore
 		openList.sort([](const MapTile* a, const MapTile* b) { return a->fScore < b->fScore; });
 
-		MapTile* currentNode = *(openList.begin());
+		currentNode = *(openList.begin());
 
 		if (currentNode == to)
 			break;		// Found the end node
@@ -81,36 +85,63 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to) const
 
 		// Loop through all connections
 		std::unordered_map<MAP_CONNECTION_DIR, MapTileConnection*>::iterator cIter;
-		auto& connections = currentNode->GetAllConnections();;
+		auto& connections = currentNode->GetAllConnections();
 		for (cIter = connections.begin(); cIter != connections.end(); cIter++)
 		{
 			MapTile* n = cIter->second->GetConnected(currentNode);
 
+			float newGScore = currentNode->gScore + cIter->second->GetWeight();
+			float newHScore = MapVec3::Distance(n->GetTilePos(), to->GetTilePos());
+			float newFScore = newGScore + newHScore;
+
+			if (n->fScore > newFScore || n->previousNode == nullptr)
+			{
+				n->gScore = newGScore;
+				n->hScore = newHScore;
+				n->fScore = newFScore;
+				n->previousNode = currentNode;
+			}
+
 			// Check if n is already in closedList
+			bool traversed = false;
 			auto nIter = std::find(closedList.begin(), closedList.end(), n);
 			if (nIter != closedList.end())
 			{
 				if (*nIter != nullptr)
-					openList.push_back(n);
+					traversed = true;
 			}
 
-			n->gScore = currentNode->gScore + cIter->second->GetWeight();
-			n->hScore = MapVec3::Distance(n->GetTilePos(), to->GetTilePos());
-			n->fScore = n->gScore + n->hScore;
-			n->previousNode = currentNode;
+			if (!traversed)
+				openList.push_back(n);
 		}
 	}
 
 	// Calculate path
 	std::list<MapVec3> path;
-	MapTile* currentNode = to;
+	currentNode = to;
 	while (currentNode != nullptr)
 	{
 		path.push_front(currentNode->GetTilePos());
-		currentNode = currentNode->previousNode;
+		if (currentNode->previousNode != currentNode && currentNode != from)
+			currentNode = currentNode->previousNode;
+		else
+			break;	// This is the first node
 	}
 
+	// Clear all pathing data from traversed nodes
+	ClearPathData(closedList);
+
 	return path;
+}
+
+void TileMap::ClearPathData(std::list<MapTile*> list) const
+{
+	for (auto& iter = list.cbegin(); iter != list.cend(); iter++)
+	{
+		MapTile* tile = *iter;
+		if (tile != nullptr)
+			tile->ResetPathingData();
+	}
 }
 
 #ifdef NETWORK_SERVER
