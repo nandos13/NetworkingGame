@@ -50,12 +50,12 @@ std::list<MapVec3> Character::Get2PointWalkTiles() const
 
 void Character::Set1PointWalkableTiles(std::list<MapVec3> tiles)
 {
-	m_2PointWalkableTiles = tiles;
+	m_1PointWalkableTiles = tiles;
 }
 
 void Character::Set2PointWalkableTiles(std::list<MapVec3> tiles)
 {
-	m_1PointWalkableTiles = tiles;
+	m_2PointWalkableTiles = tiles;
 }
 
 MapVec3 Character::GetMapTileCoords() const
@@ -320,6 +320,11 @@ void Character::ApplyDamage(const int amount, const bool armourShred)
 bool Character::Alive() const
 {
 	return m_remainingHealth > 0;
+}
+
+bool Character::HasRemainingPoints() const
+{
+	return m_remainingPoints > 0;
 }
 
 bool Character::IsSelectable() const

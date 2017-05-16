@@ -104,6 +104,75 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 	}
 }
 
+void ClientSideGameManager::DrawHoverTile() const
+{
+	if (!m_mouseIsOverVoidSpace)
+	{
+		float tileScale = Game::GetMapTileScale();
+
+		float x = 0, y = 0, z = 0;
+		MapVec3::GetTileWorldCoords(x, y, z, m_hoveredTile, tileScale);
+		glm::vec3 worldSpaceTilePos = glm::vec3(x, y, z);
+
+		aie::Gizmos::addAABBFilled(worldSpaceTilePos, glm::vec3(tileScale / 2, 0, tileScale / 2), glm::vec4(1, 0.5f, 1, 0.4f));
+	}
+}
+
+void ClientSideGameManager::DrawPath() const
+{
+	if (m_currentPath.size() > 0 && m_selectedCharacter != nullptr)
+	{
+		// Get the colour of the line
+		glm::vec4 colour = glm::vec4(1, 1, 1, 0.8f);
+
+		// Check if the hovered tile is within a 1-point walking range
+		auto walkTiles = m_selectedCharacter->Get1PointWalkTiles();
+		if (std::find(walkTiles.begin(), walkTiles.end(), m_hoveredTile) != walkTiles.end())
+			colour = glm::vec4(0, 0, 1, 0.8f);		// blue
+		else
+			colour = glm::vec4(0.9f, 0.55f, 0.05f, 0.8f);		// orange
+
+		MapVec3 point1 = *(m_currentPath.begin());
+		for (auto& iter = m_currentPath.begin(); iter != m_currentPath.end(); iter++)
+		{
+			// Ignore first point in list
+			if (iter == m_currentPath.begin())
+				continue;
+
+			MapVec3 point2 = *iter;
+
+			// Convert path points to world space
+			float tileScale = Game::GetMapTileScale();
+			float x = 0, y = 0, z = 0;
+			MapVec3::GetTileWorldCoords(x, y, z, point1, tileScale);
+			glm::vec3 p1World = glm::vec3(x, y, z);
+
+			MapVec3::GetTileWorldCoords(x, y, z, point2, tileScale);
+			glm::vec3 p2World = glm::vec3(x, y, z);
+
+			// Draw a gizmo between the two points
+			aie::Gizmos::addLine(p1World, p2World, colour);
+
+			// Increment the first point
+			point1 = point2;
+		}
+	}
+}
+
+void ClientSideGameManager::UpdateTilePath()
+{
+	m_currentPath.clear();
+
+	if (m_selectedCharacter != nullptr)
+	{
+		if (m_selectedCharacter->HasRemainingPoints())
+		{
+			TileMap* map = Game::GetMap();
+			m_currentPath = map->FindPath(m_selectedCharacter->GetPosition(), m_hoveredTile);
+		}
+	}
+}
+
 MapVec3 ClientSideGameManager::GetTileUnderMouse(bool& missedTiles) const
 {
 	glm::vec3 camPos = m_cam->GetPosition();
@@ -167,12 +236,11 @@ void ClientSideGameManager::DrawHUD()
 	else
 	{
 		int actionPoints = (int)m_selectedCharacter->RemainingActionPoints();
-		ImGui::InputInt("Action Points", &actionPoints);
+		ImGui::Text("Action Points:");
+		ImGui::InputInt("", &actionPoints);
 	}
 
 	ImGui::End();
-
-	ImGui::DragFloat3("", &m_camCurrentLookTarget.x);
 }
 
 ClientSideGameManager::ClientSideGameManager(Client* client, Camera* cam)
@@ -196,19 +264,12 @@ ClientSideGameManager::~ClientSideGameManager()
 void ClientSideGameManager::Update(const float dTime)
 {
 	/* Update mouse-hover-point */
+	MapVec3 previouslyHovered = m_hoveredTile;
 	m_hoveredTile = GetTileUnderMouse(m_mouseIsOverVoidSpace);
 
-	// Draw a translucent gizmo over the hovered tile
-	if (!m_mouseIsOverVoidSpace)
-	{
-		float tileScale = Game::GetMapTileScale();
-
-		float x = 0, y = 0, z = 0;
-		MapVec3::GetTileWorldCoords(x, y, z, m_hoveredTile, tileScale);
-		glm::vec3 worldSpaceTilePos = glm::vec3(x, y, z);
-
-		aie::Gizmos::addAABBFilled(worldSpaceTilePos, glm::vec3(tileScale / 2, 0, tileScale / 2), glm::vec4(1, 0.5f, 1, 0.4f));
-	}
+	// Update path
+	if (previouslyHovered != m_hoveredTile)
+		UpdateTilePath();
 
 	// Get lists of tiles the selected character is able to move to
 	std::list<MapVec3> walkTiles;
@@ -216,8 +277,14 @@ void ClientSideGameManager::Update(const float dTime)
 	if (m_selectedCharacter != nullptr)
 	{
 		walkTiles = m_selectedCharacter->Get1PointWalkTiles();
-		dashTiles= m_selectedCharacter->Get2PointWalkTiles();
+		dashTiles = m_selectedCharacter->Get2PointWalkTiles();
 	}
+
+	// Draw gizmos along path
+	DrawPath();
+
+	// Draw a translucent gizmo over the hovered tile
+	DrawHoverTile();
 
 	/* Handle input */
 	aie::Input* input = aie::Input::getInstance();

@@ -123,7 +123,14 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to) const
 	{
 		path.push_front(currentNode->GetTilePos());
 		if (currentNode->previousNode != currentNode && currentNode != from)
+		{
+			// Retain this node & set current to the previous in path
+			MapTile* lastNode = currentNode;
 			currentNode = currentNode->previousNode;
+
+			// Reset pathing data on 'lastNode'
+			lastNode->ResetPathingData();
+		}
 		else
 			break;	// This is the first node
 	}
@@ -737,6 +744,7 @@ void TileMap::Draw() const
 		for (auto& tileIter = tiles.begin(); tileIter != tiles.end(); tileIter++)
 		{
 			MapVec3 tilePos = tileIter->second->GetTilePos();
+			glm::vec4 colour = glm::vec4(1, 1, 1, 0.6f);
 
 			glm::vec3 backLeft = glm::vec3(tilePos.m_x * tileScale, tilePos.m_y * tileScale, tilePos.m_z * tileScale);
 			glm::vec3 frontLeft = backLeft + glm::vec3(tileScale, 0, 0);
@@ -745,15 +753,15 @@ void TileMap::Draw() const
 			
 			if (FindTile(tilePos + MapVec3(-1, 0, 0)) != nullptr)
 			{
-				aie::Gizmos::addLine(backLeft, frontLeft, glm::vec4(1));	// Draw left border
+				aie::Gizmos::addLine(backLeft, frontLeft, colour);	// Draw left border
 			}
 			if (FindTile(tilePos + MapVec3(0, 0, -1)) != nullptr)
 			{
-				aie::Gizmos::addLine(backLeft, backRight, glm::vec4(1));	// Draw back border
+				aie::Gizmos::addLine(backLeft, backRight, colour);	// Draw back border
 			}
 
-			aie::Gizmos::addLine(backRight, frontRight, glm::vec4(1));
-			aie::Gizmos::addLine(frontLeft, frontRight, glm::vec4(1));
+			aie::Gizmos::addLine(backRight, frontRight, colour);
+			aie::Gizmos::addLine(frontLeft, frontRight, colour);
 		}
 	}
 }

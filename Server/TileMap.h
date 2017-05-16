@@ -85,6 +85,10 @@ struct MapVec3
 			short nY = short(y / tileScale);
 			short nZ = short(z / tileScale);
 
+			if (x < 0 && (float(short(x / tileScale))) != x)	nX--;
+			if (y < 0 && (float(short(y / tileScale))) != y)	nY--;
+			if (z < 0 && (float(short(z / tileScale))) != z)	nZ--;
+
 			// TODO: FIXME
 
 			return MapVec3(nX, nY, nZ);

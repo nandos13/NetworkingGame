@@ -57,6 +57,7 @@ Camera::Camera()
 {
 	m_position = glm::vec3(0);
 	m_currentLookTarget = glm::vec3(0);
+	m_zoomDistance = 5.0f;
 	m_fov = 70;
 	m_phi = 0;
 	m_theta = 0;
@@ -183,6 +184,16 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 			m_currentLookTarget += moveVector;
 	}
 
+	// Zoom control
+	if (input->wasKeyPressed(aie::INPUT_KEY_Z))	// Zoom in
+	{
+		// TODO
+	}
+	else if (input->wasKeyPressed(aie::INPUT_KEY_X))
+	{
+		// TODO
+	}
+	
 	// Follow characters as they move
 	if (camPosFollow && !lockMovement)
 	{

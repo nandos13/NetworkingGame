@@ -15,28 +15,33 @@ class ClientSideGameManager
 {
 protected:
 
-	Client* m_thisClient;
+	Client*		m_thisClient;
 
 	// Camera variables
-	Camera* m_cam;
-	glm::vec3 m_camCurrentLookTarget;
-	bool m_camPosLerping;
-	bool m_camPosFollow;
+	Camera*		m_cam;
+	glm::vec3	m_camCurrentLookTarget;
+	bool		m_camPosLerping;
+	bool		m_camPosFollow;
 
-	float m_camRotationSpeed;
-	float m_camRotationDestination;
-	bool m_camRotLerping;
+	float		m_camRotationSpeed;
+	float		m_camRotationDestination;
+	bool		m_camRotLerping;
 
-	bool m_forceSpectator;
+	bool		m_forceSpectator;
 
 	// Character selection
 	Character* m_selectedCharacter;
 	void SelectCharacter(Character* c);
 	void SelectNextCharacter(const bool reverse = false);
 
-	// Other
-	MapVec3 m_hoveredTile;
-	bool	m_mouseIsOverVoidSpace;
+	// Tile selection
+	MapVec3				m_hoveredTile;
+	bool				m_mouseIsOverVoidSpace;
+	std::list<MapVec3>	m_currentPath;
+
+	void DrawHoverTile() const;
+	void DrawPath() const;
+	void UpdateTilePath();
 	MapVec3 GetTileUnderMouse(bool& missedTiles) const;
 
 	// HUD
