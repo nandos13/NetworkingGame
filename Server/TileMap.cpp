@@ -434,7 +434,7 @@ std::list<MapVec3> TileMap::GetWalkableTiles(const MapVec3 start, const int maxT
 }
 
 /* Cast a ray through map voxels. NOTE: dir values must be of a normalized vector to work correctly */
-std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z, const float dirX, const float dirY, const float dirZ, const float tileScale) const
+std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z, const float dirX, const float dirY, const float dirZ, const float rayLength, const float tileScale) const
 {
 	// Function was based on write-up found at: http://www.cs.yorku.ca/~amana/research/grid.pdf
 
@@ -477,7 +477,6 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 	if (dirZ > 0)	tNextBorderZ = (1 - fracStartPosZ) * tForOneZ;
 	else			tNextBorderZ = fracStartPosZ * tForOneZ;
 
-	const float rayLength = 1000.0f;
 	while (tValue <= rayLength)
 	{
 		// Find the smallest t-value until next map space
@@ -534,14 +533,15 @@ bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, const float t
 		float dirY = y2 - y1;
 		float dirZ = z2 - z1;
 
-		std::list<MapVec3> sightPath = Raycast(x1, y1, z1, dirX, dirY, dirZ, tileScale);
+		float dist = MapVec3::Distance(from, to) + 0.1f;
+
+		std::list<MapVec3> sightPath = Raycast(x1, y1, z1, dirX, dirY, dirZ, dist, tileScale);
 
 		// Iterate through each tile in the path, checking sight between each adjacent tile
 		for (auto& iter = sightPath.cbegin(); iter != sightPath.cend(); iter++)
 		{
 			// Get next tile along path
-			auto& iterNext = iter;
-			iterNext++;
+			auto& iterNext = std::next(iter, 1);
 			if (iterNext != sightPath.cend())
 			{
 				MapVec3 thisTile = *iter;

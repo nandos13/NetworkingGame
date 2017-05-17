@@ -1,6 +1,5 @@
 #include "ShootAction.h"
 #include "Character.h"
-#include "Game.h"
 
 
 
@@ -46,12 +45,13 @@ void ShootAction::_Execute(float dTime)
 }
 #endif
 
-ShootAction::ShootAction(Character * owner, MapVec3 target, short damage, unsigned int ammoUse, bool armourShred) : BaseAction(owner)
+ShootAction::ShootAction(Character * owner, MapVec3 target, short damage, SHOT_STATUS shotState, unsigned int ammoUse, bool armourShred) : BaseAction(owner)
 {
 	m_actionType = 2;
 
 	m_target = target;
 	m_damage = damage;
+	m_shotState = shotState;
 	m_shred = armourShred;
 	m_ammo = ammoUse;
 }
@@ -68,13 +68,18 @@ ShootAction* ShootAction::Read(RakNet::BitStream & bsIn)
 	MapVec3 target = MapVec3(0);
 	unsigned int ammo = 0;
 	short damage = 0;
+	int shotStateInt = 0;
+	SHOT_STATUS shotState = MISS;
 	bool shred = 0;
 
 	bsIn.Read(characterID);
 	bsIn.Read(target);
 	bsIn.Read(ammo);
 	bsIn.Read(damage);
+	bsIn.Read(shotStateInt);
 	bsIn.Read(shred);
+
+	shotState = (SHOT_STATUS)shotStateInt;
 
 	// Find character by ID
 	Character* c = Game::GetInstance()->FindCharacterByID(characterID);
@@ -87,7 +92,7 @@ ShootAction* ShootAction::Read(RakNet::BitStream & bsIn)
 	}
 
 	// Create & return action
-	ShootAction* sA = new ShootAction(c, target, damage, ammo, shred);
+	ShootAction* sA = new ShootAction(c, target, damage, shotState, ammo, shred);
 	return sA;
 }
 #endif
@@ -104,6 +109,7 @@ void ShootAction::Write(RakNet::BitStream & bs)
 	// Write damage, ammo, etc
 	bs.Write(m_ammo);
 	bs.Write(m_damage);
+	bs.Write((int)m_shotState);
 	bs.Write(m_shred);
 }
 #endif

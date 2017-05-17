@@ -4,6 +4,12 @@
 #include "SniperRifle.h"
 #include "Shotgun.h"
 
+#include "ShootAction.h"
+#include "MovementAction.h"
+#include "RefreshWalkableTilesAction.h"
+#include "SetPointsAction.h"
+#include "SetVisibleEnemiesAction.h"
+
 
 // Static variable declaration
 Game* Game::m_singleton;
@@ -61,6 +67,49 @@ GameAction * Game::CreateInitialWalkableTilesAction()
 	}
 
 	return g;
+}
+
+GameAction * Game::CreateInitialVisibleEnemiesAction()
+{
+	GameAction* g = new GameAction();
+
+	for (auto& iter = m_characters.cbegin(); iter != m_characters.cend(); iter++)
+	{
+		Character* c = iter->second;
+
+		if (c != nullptr)
+		{
+			auto visibleEnemies = GetVisibleEnemies(c);
+
+			SetVisibleEnemiesAction* sveA = new SetVisibleEnemiesAction(c, visibleEnemies);
+			g->AddToQueue(sveA);
+		}
+	}
+
+	return g;
+}
+
+std::list<Character*> Game::GetVisibleEnemies(Character * lookUnit)
+{
+	Squad* waitingSquad = GetWaitingSquad();
+	MapVec3 characterPos = lookUnit->GetPosition();
+
+	auto enemyUnits = waitingSquad->GetAllCharacters();
+	std::list<Character*> visibleEnemies;
+	float characterSightRadius = lookUnit->GetSightRadius();
+
+	// Iterate through all enemy-controlled units and add them to the list if they are visible
+	for (auto& iter = enemyUnits.begin(); iter != enemyUnits.end(); iter++)
+	{
+		MapVec3 enemyPos = (*iter)->GetPosition();
+		if (enemyPos != characterPos)
+		{
+			if (m_map->CheckTileSight(characterPos, enemyPos, m_tileScale, characterSightRadius))
+				visibleEnemies.push_back((*iter));
+		}
+	}
+
+	return visibleEnemies;
 }
 #endif
 
@@ -427,7 +476,32 @@ GameAction * Game::CreateShootAction(const short shooterID, short victimID)
 		Character* c = cIter->second;
 		if (c != nullptr)
 		{
-			// TODO: Finish implementation
+			// Get victim character
+			Character* victim = FindCharacterByID(victimID);
+			if (victim != nullptr)
+			{
+				// Get victim's position
+				MapVec3 vicPos = victim->GetPosition();
+
+				// Get shot info
+				short damage = 0;
+				SHOT_STATUS shotType = MISS;
+
+				GetShotVariables(damage, shotType, c, vicPos);
+
+				// Create an action
+				GameAction* g = new GameAction();
+
+				ShootAction* sA = new ShootAction(c, vicPos, damage, shotType/*, ammoUse, shred*/);	// TODO: Get ammo use & shred state
+				g->AddToQueue(sA);
+
+				// TODO: Some abilities may allow a show to be taken on first turn, etc.
+				// Check for this first
+				SetPointsAction* spA = new SetPointsAction(c, 0);
+				g->AddToQueue(spA);
+
+				return g;
+			}
 		}
 		else
 			printf("Error: CreateShootAction function could not find character with id %i.\n", shooterID);
@@ -525,9 +599,10 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 			// Simulate last overwatch
 			while (!g->IsCompleted())	g->Execute(0);
 
-			// Set the moving character's moveable tiles lists
+			// Set the moving character's moveable tiles lists & visible enemies list
 			if (c->Alive())
 			{
+				/* Update Walkable Tiles Lists */
 				auto list1P = m_map->GetWalkableTiles(c->GetPosition(), c->GetMoveDistance());
 				auto list2P = m_map->GetWalkableTiles(c->GetPosition(), c->GetDashDistance());
 				// TODO: FIXME: Code crashes here
@@ -551,6 +626,12 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 				// Remove any 1-point-walk tiles from the 2P list
 				RefreshWalkableTilesAction* rwtA = new RefreshWalkableTilesAction(c, list1P, list2P);
 				g->AddToQueue(rwtA);
+
+				/* Update Visible Enemies List */
+				auto visibleEnemies = GetVisibleEnemies(c);
+
+				SetVisibleEnemiesAction* sveA = new SetVisibleEnemiesAction(c, visibleEnemies);
+				g->AddToQueue(sveA);
 
 				// Simulate last overwatch
 				while (!g->IsCompleted())	g->Execute(0);
@@ -645,8 +726,15 @@ void Game::TempGameSetup()
 	}
 	// TODO: Spawn points on map
 
-	GameAction* g = CreateInitialWalkableTilesAction();
-	QueueAction(g);
+	printf("Initializing characters' walkable tiles lists.\n");
+	GameAction* gWalkTiles = CreateInitialWalkableTilesAction();
+	QueueAction(gWalkTiles);
+
+	printf("Initializing characters' visible enemies list.\n");
+	GameAction* gVisibleEnemies = CreateInitialVisibleEnemiesAction();
+	QueueAction(gVisibleEnemies);
+
+	printf("Game generation done.\n");
 }
 
 void Game::Write(RakNet::BitStream & bs)

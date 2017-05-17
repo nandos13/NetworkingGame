@@ -69,6 +69,9 @@
     <ClCompile Include="SetPointsAction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SetVisibleEnemiesAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameMessages.h">
@@ -123,6 +126,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SetPointsAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SetVisibleEnemiesAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,9 +2,6 @@
 
 #include "TileMap.h"
 #include "GameAction.h"
-#include "MovementAction.h"
-#include "RefreshWalkableTilesAction.h"
-#include "SetPointsAction.h"
 #include "Squad.h"
 
 #include <list>
@@ -13,7 +10,12 @@
 
 struct MapVec3;
 
-enum SHOT_STATUS { MISS, GRAZE, HIT, CRITICAL };
+enum SHOT_STATUS 
+{	MISS = 0, 
+	GRAZE = 1, 
+	HIT = 2, 
+	CRITICAL = 3 
+};
 enum GAME_STATE { PLAYING, PAUSED, WAITINGFORPLAYER };
 
 class Game
@@ -42,6 +44,8 @@ private:
 #ifdef NETWORK_SERVER
 	void Setup();
 	GameAction* CreateInitialWalkableTilesAction();
+	GameAction* CreateInitialVisibleEnemiesAction();
+	std::list<Character*> GetVisibleEnemies(Character* lookUnit);
 #endif
 	Squad* GetPlayingSquad();
 	Squad* GetWaitingSquad();

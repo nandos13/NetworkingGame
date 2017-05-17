@@ -5,6 +5,7 @@
 #include "OverwatchShotAction.h"
 #include "RefreshWalkableTilesAction.h"
 #include "SetPointsAction.h"
+#include "SetVisibleEnemiesAction.h"
 
 #include <BitStream.h>
 
@@ -58,13 +59,16 @@ void GameAction::Reset()
 
 void GameAction::AddToQueue(BaseAction * a)
 {
-	m_queue.push_back(a);
-	if (m_queue.size() == 1)
+	if (a != nullptr)
 	{
-		// This was the first action to be added. Set current action
-		m_iter = m_queue.begin();
+		m_queue.push_back(a);
+		if (m_queue.size() == 1)
+		{
+			// This was the first action to be added. Set current action
+			m_iter = m_queue.begin();
+		}
+		m_completed = false;
 	}
-	m_completed = false;
 }
 
 #ifndef NETWORK_SERVER
@@ -94,6 +98,8 @@ void GameAction::Read(RakNet::BitStream & bsIn)
 		case 4:		a = RefreshWalkableTilesAction::Read(bsIn);
 			break;
 		case 5:		a = SetPointsAction::Read(bsIn);
+			break;
+		case 6:		a = SetVisibleEnemiesAction::Read(bsIn);
 			break;
 
 		default:	printf("Error: Action type did not match any expected types.\n");

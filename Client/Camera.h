@@ -26,6 +26,7 @@ private:
 
 	void clampPhi();
 	void WrapThetaTo360();
+	void ZoomCamera(const float deltaTime, const bool zoomOut);
 
 public:
 	Camera();

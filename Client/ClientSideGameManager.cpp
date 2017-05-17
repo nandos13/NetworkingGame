@@ -190,7 +190,7 @@ MapVec3 ClientSideGameManager::GetTileUnderMouse(bool& missedTiles) const
 
 	// Get a list of tiles under the mouse
 	std::list<MapVec3> rayCastHits =
-		map->Raycast(camPos.x, camPos.y, camPos.z, rayDir.x, rayDir.y, rayDir.z, tileScale);
+		map->Raycast(camPos.x, camPos.y, camPos.z, rayDir.x, rayDir.y, rayDir.z, 100.0f, tileScale);
 
 	if (rayCastHits.size() == 0)
 	{
@@ -236,8 +236,16 @@ void ClientSideGameManager::DrawHUD()
 	else
 	{
 		int actionPoints = (int)m_selectedCharacter->RemainingActionPoints();
-		ImGui::Text("Action Points:");
-		ImGui::InputInt("", &actionPoints);
+		ImGui::Text("Action Points: %d", actionPoints);
+
+		// Show amount of enemies visible
+		auto visibleEnemies = m_selectedCharacter->GetVisibleEnemies();
+		ImGui::Text("Visible Enemies: %d", (int)visibleEnemies.size());
+
+		// TEMP: Get position
+		MapVec3 pos = m_selectedCharacter->GetPosition();
+
+		ImGui::Text("Position: %d, %d, %d", pos.m_x, pos.m_y, pos.m_z);
 	}
 
 	ImGui::End();

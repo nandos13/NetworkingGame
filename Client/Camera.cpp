@@ -53,6 +53,22 @@ void Camera::WrapThetaTo360()
 	}
 }
 
+void Camera::ZoomCamera(const float deltaTime, const bool zoomOut)
+{
+	const float minZoomDistance = 5.0f;
+	const float maxZoomDistance = 25.0f;
+	
+	const float zoomUnitsSecond = 2.0f;
+
+	float zoomAmount = zoomUnitsSecond * deltaTime * (zoomOut) ? 1.0f : -1.0f;
+
+	m_zoomDistance += zoomAmount;
+
+	// Clamp to min & max
+	if (m_zoomDistance < minZoomDistance)	m_zoomDistance = minZoomDistance;
+	if (m_zoomDistance > maxZoomDistance)	m_zoomDistance = maxZoomDistance;
+}
+
 Camera::Camera()
 {
 	m_position = glm::vec3(0);
@@ -185,13 +201,13 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 	}
 
 	// Zoom control
-	if (input->wasKeyPressed(aie::INPUT_KEY_Z))	// Zoom in
+	if (input->isKeyDown(aie::INPUT_KEY_Z))		// Zoom in
 	{
-		// TODO
+		ZoomCamera(deltaTime, false);
 	}
-	else if (input->wasKeyPressed(aie::INPUT_KEY_X))
+	else if (input->isKeyDown(aie::INPUT_KEY_X))	// Zoom out
 	{
-		// TODO
+		ZoomCamera(deltaTime, true);
 	}
 	
 	// Follow characters as they move
@@ -214,7 +230,7 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 
 	// Find camera offset
 	glm::vec3 camOffset = glm::vec3( sin(glm::radians(m_theta - 90) ), 1, cos( glm::radians(m_theta + 90)) );
-	const float camDistance = 5.0f;
+	const float camDistance = m_zoomDistance;
 	camOffset *= camDistance;
 	m_position = m_currentLookTarget + camOffset;
 

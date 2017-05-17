@@ -61,7 +61,6 @@ const std::vector<Server::ConnectionInfo*> Server::GetConnections() const
 
 void Server::SendNewClientID(RakNet::RakPeerInterface * pPeerInterface, RakNet::SystemAddress & address)
 {
-	// TODO: Check if a client has already connected in m_clientConnections
 	// TODO: Send bool for spectator mode if two players are already connected
 	RakNet::BitStream bs;
 	bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SET_CLIENT_ID);

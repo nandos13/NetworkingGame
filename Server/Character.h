@@ -32,6 +32,8 @@ private:
 	MapVec3 m_currentPosition;
 	std::list<MapVec3> m_1PointWalkableTiles;
 	std::list<MapVec3> m_2PointWalkableTiles;
+	std::list<Character*> m_visibleEnemies;
+
 	bool m_inOverwatch = false;
 	short m_ID;
 	short m_homeSquad;
@@ -44,6 +46,7 @@ public:
 	Character(short ID, short HomeSquad, unsigned int health = 4, unsigned int aim = 68, unsigned int mobility = 12);
 	~Character();
 
+	unsigned int GetSightRadius() const;
 	unsigned int GetMoveDistance() const;
 	unsigned int GetDashDistance() const;
 	std::list<MapVec3> Get1PointWalkTiles() const;
@@ -51,6 +54,9 @@ public:
 	void Set1PointWalkableTiles(std::list<MapVec3> tiles);
 	void Set2PointWalkableTiles(std::list<MapVec3> tiles);
 	MapVec3 GetMapTileCoords() const;
+
+	std::list<Character*> GetVisibleEnemies() const;
+	void SetVisibleEnemyList(const std::list<Character*> enemies);
 
 	void UseAmmo(const unsigned int amount);
 	std::pair<unsigned int, unsigned int> GetWeaponDamage() const;

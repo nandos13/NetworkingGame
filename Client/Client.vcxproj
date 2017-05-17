@@ -100,6 +100,7 @@
     <ClCompile Include="..\Server\OverwatchShotAction.cpp" />
     <ClCompile Include="..\Server\RefreshWalkableTilesAction.cpp" />
     <ClCompile Include="..\Server\SetPointsAction.cpp" />
+    <ClCompile Include="..\Server\SetVisibleEnemiesAction.cpp" />
     <ClCompile Include="..\Server\ShootAction.cpp" />
     <ClCompile Include="..\Server\Shotgun.cpp" />
     <ClCompile Include="..\Server\SniperRifle.cpp" />
@@ -123,6 +124,7 @@
     <ClInclude Include="..\Server\OverwatchShotAction.h" />
     <ClInclude Include="..\Server\RefreshWalkableTilesAction.h" />
     <ClInclude Include="..\Server\SetPointsAction.h" />
+    <ClInclude Include="..\Server\SetVisibleEnemiesAction.h" />
     <ClInclude Include="..\Server\ShootAction.h" />
     <ClInclude Include="..\Server\Shotgun.h" />
     <ClInclude Include="..\Server\SniperRifle.h" />

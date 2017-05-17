@@ -26,6 +26,11 @@ Character::~Character()
 	// TODO: Delete gun, etc
 }
 
+unsigned int Character::GetSightRadius() const
+{
+	return m_sightRadius;
+}
+
 /* Amount of tiles the character is able to move, using a single action point */
 unsigned int Character::GetMoveDistance() const
 {
@@ -61,6 +66,16 @@ void Character::Set2PointWalkableTiles(std::list<MapVec3> tiles)
 MapVec3 Character::GetMapTileCoords() const
 {
 	return m_currentPosition;
+}
+
+std::list<Character*> Character::GetVisibleEnemies() const
+{
+	return m_visibleEnemies;
+}
+
+void Character::SetVisibleEnemyList(const std::list<Character*> enemies)
+{
+	m_visibleEnemies = enemies;
 }
 
 std::pair<unsigned int, unsigned int> Character::GetWeaponDamage() const
@@ -125,7 +140,7 @@ void Character::QueryOverwatch(GameAction* action, Character * mover, TileMap& m
 				SHOT_STATUS shotType = MISS;
 				game->GetShotVariables(damage, shotType, this, moverPos);
 
-				ShootAction* sa = new ShootAction(this, moverPos, damage);
+				ShootAction* sa = new ShootAction(this, moverPos, damage, shotType/*, ammoUse, shred*/);	// TODO: Get armour shred & ammo use
 				OverwatchShotAction* oa = new OverwatchShotAction(this, sa);
 				action->AddToQueue(oa);
 			}

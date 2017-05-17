@@ -165,6 +165,7 @@
     <ClCompile Include="RefreshWalkableTilesAction.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="SetPointsAction.cpp" />
+    <ClCompile Include="SetVisibleEnemiesAction.cpp" />
     <ClCompile Include="ShootAction.cpp" />
     <ClCompile Include="Shotgun.cpp" />
     <ClCompile Include="SniperRifle.cpp" />
@@ -185,6 +186,7 @@
     <ClInclude Include="RefreshWalkableTilesAction.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="SetPointsAction.h" />
+    <ClInclude Include="SetVisibleEnemiesAction.h" />
     <ClInclude Include="ShootAction.h" />
     <ClInclude Include="Shotgun.h" />
     <ClInclude Include="SniperRifle.h" />
