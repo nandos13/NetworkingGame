@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include <list>
 
+using namespace JakePerry;
 class Squad
 {
 private:

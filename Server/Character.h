@@ -10,6 +10,7 @@
 #include "../Client/GameObj.h"
 #endif
 
+using namespace JakePerry;
 class Character
 {
 private:

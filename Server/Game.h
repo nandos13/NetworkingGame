@@ -18,6 +18,7 @@ enum SHOT_STATUS
 };
 enum GAME_STATE { PLAYING, PAUSED, WAITINGFORPLAYER };
 
+using namespace JakePerry;
 class Game
 {
 private:

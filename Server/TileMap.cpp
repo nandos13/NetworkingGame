@@ -1,4 +1,5 @@
 #include "TileMap.h"
+using namespace JakePerry;
 #include "GameMessages.h"
 
 #include <list>
@@ -561,6 +562,7 @@ bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, const float t
 	return false;		// Destination tile out of sight range
 }
 
+#ifdef TILEMAP_INCLUDE_RAKNET_FUNCTIONS
 /* Write & send the whole tilemap. */
 void TileMap::Write(RakNet::BitStream& bs)
 {
@@ -637,7 +639,11 @@ void TileMap::Write(RakNet::BitStream& bs)
 }
 #endif
 
+#endif
+
 #ifndef NETWORK_SERVER
+
+#ifdef TILEMAP_INCLUDE_RAKNET_FUNCTIONS
 /* Read a packet as a new tilemap. Wipes all old data if present. */
 void TileMap::Read(RakNet::BitStream& bsIn)
 {
@@ -735,6 +741,7 @@ void TileMap::Read(RakNet::BitStream& bsIn)
 	for each (ConnectionData* c in m_connectKeys)
 		delete c;
 }
+#endif
 
 /* Basic draw function, draws each tile using gizmos */
 void TileMap::Draw() const
