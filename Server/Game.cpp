@@ -44,24 +44,15 @@ GameAction * Game::CreateInitialWalkableTilesAction()
 			auto list1P = m_map->GetWalkableTiles(c->GetPosition(), c->GetMoveDistance());
 			auto list2P = m_map->GetWalkableTiles(c->GetPosition(), c->GetDashDistance());
 
-			// TODO: FIXME: Code crashes here
 			// Remove any 1-point-walk tiles from the 2P list
-			//for (auto& iter1P = list1P.begin(); iter1P != list1P.end(); iter1P++)
-			//{
-			//	// Removing elements while iterating with for loop does not work. Use a while loop instead
-			//	auto& iter2P = list2P.begin();
-			//	while (iter2P != list2P.end())
-			//	{
-			//		auto& previousIter2P = iter2P;
-			//
-			//		// Increment iterator
-			//		iter2P++;
-			//
-			//		// Check previous iter
-			//		if ((*iter1P) == (*previousIter2P))
-			//			list2P.remove(*previousIter2P);
-			//	}
-			//}
+			for (auto& iter1P = list1P.begin(); iter1P != list1P.end(); iter1P++)
+			{
+				for (auto& iter2P = list2P.begin(); iter2P != list2P.end(); iter2P++)
+				{
+					if ((*iter1P) == (*iter2P))
+						iter2P = list2P.erase(iter2P);
+				}
+			}
 			RefreshWalkableTilesAction* rwtA = new RefreshWalkableTilesAction(c, list1P, list2P);
 			g->AddToQueue(rwtA);
 		}
@@ -697,24 +688,17 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 				/* Update Walkable Tiles Lists */
 				auto list1P = m_map->GetWalkableTiles(c->GetPosition(), c->GetMoveDistance());
 				auto list2P = m_map->GetWalkableTiles(c->GetPosition(), c->GetDashDistance());
-				// TODO: FIXME: Code crashes here
+
 				// Remove any 1-point-walk tiles from the 2P list
-				//for (auto& iter1P = list1P.begin(); iter1P != list1P.end(); iter1P++)
-				//{
-				//	// Removing elements while iterating with for loop does not work. Use a while loop instead
-				//	auto& iter2P = list2P.begin();
-				//	while (iter2P != list2P.end())
-				//	{
-				//		auto& previousIter2P = iter2P;
-				//
-				//		// Increment iterator
-				//		iter2P++;
-				//
-				//		// Check previous iter
-				//		if ((*iter1P) == (*previousIter2P))
-				//			list2P.remove(*previousIter2P);
-				//	}
-				//}
+				for (auto& iter1P = list1P.begin(); iter1P != list1P.end(); iter1P++)
+				{
+					for (auto& iter2P = list2P.begin(); iter2P != list2P.end(); iter2P++)
+					{
+						if ((*iter1P) == (*iter2P))
+							iter2P = list2P.erase(iter2P);
+					}
+				}
+
 				// Remove any 1-point-walk tiles from the 2P list
 				RefreshWalkableTilesAction* rwtA = new RefreshWalkableTilesAction(c, list1P, list2P);
 				g->AddToQueue(rwtA);
