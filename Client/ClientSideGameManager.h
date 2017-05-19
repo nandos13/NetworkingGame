@@ -34,6 +34,11 @@ protected:
 	void SelectCharacter(Character* c);
 	void SelectNextCharacter(const bool reverse = false);
 
+	// Enemy selection
+	Character* m_currentEnemy;
+	void DrawEnemyTile();
+	void AttackEnemy();
+
 	// Tile selection
 	MapVec3				m_hoveredTile;
 	bool				m_mouseIsOverVoidSpace;

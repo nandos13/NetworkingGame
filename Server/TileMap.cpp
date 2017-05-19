@@ -441,6 +441,9 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 	// Initially found via: http://www.saltgames.com/article/lineOfSight/,
 	// and their source-code at: http://www.saltgames.com/articles/lineOfSight/lineOfSightDemo.js
 
+	if (dirX == 0 && dirY == 0 && dirZ == 0)
+		return std::list<MapVec3>();
+	
 	std::list<MapVec3> resultList;
 
 	// These values vary from step to step

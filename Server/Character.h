@@ -63,6 +63,7 @@ public:
 	unsigned int GetCurrentAimStat() const;
 	unsigned int GetCurrentDefense() const;
 	int GetAimBonus(float distance) const;
+	unsigned int GetRemainingAmmo() const;
 
 #ifdef NETWORK_SERVER
 	void QueryOverwatch(GameAction* action, Character* mover, TileMap& map);

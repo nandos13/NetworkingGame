@@ -35,6 +35,8 @@ void ClientSideGameManager::SelectCharacter(Character * c)
 				glm::vec3 characterPos = glm::vec3(x, y, z);
 				m_camCurrentLookTarget = characterPos;
 
+				m_currentEnemy = nullptr;
+
 				break;
 			}
 		}
@@ -101,6 +103,36 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 		MapVec3::GetTileWorldCoords(x, y, z, m_selectedCharacter->GetPosition(), Game::GetMapTileScale());
 		glm::vec3 characterPos = glm::vec3(x, y, z);
 		m_camCurrentLookTarget = characterPos;
+
+		m_currentEnemy = nullptr;
+	}
+}
+
+void ClientSideGameManager::DrawEnemyTile()
+{
+	if (m_selectedCharacter == nullptr)
+	{
+		m_currentEnemy = nullptr;
+		return;
+	}
+
+	if (m_currentEnemy != nullptr)
+	{
+		float tileScale = Game::GetMapTileScale();
+
+		float x = 0, y = 0, z = 0;
+		MapVec3::GetTileWorldCoords(x, y, z, m_currentEnemy->GetPosition(), tileScale);
+		glm::vec3 worldSpaceTilePos = glm::vec3(x, y, z);
+
+		aie::Gizmos::addAABBFilled(worldSpaceTilePos, glm::vec3(tileScale / 2, 0, tileScale / 2), glm::vec4(1, 0, 0, 0.4f));
+	}
+}
+
+void ClientSideGameManager::AttackEnemy()
+{
+	if (m_currentEnemy != nullptr && m_selectedCharacter != nullptr)
+	{
+		m_thisClient->sendCharacterShoot(m_selectedCharacter->GetID(), m_currentEnemy->GetPosition());
 	}
 }
 
@@ -226,29 +258,93 @@ MapVec3 ClientSideGameManager::GetTileUnderMouse(bool& missedTiles) const
 
 void ClientSideGameManager::DrawHUD()
 {
+	int ImGuiID = 0;
+	aie::Input* input = aie::Input::getInstance();
+
 	// Draw character info
-	ImGui::Begin("Current Character", (bool*)0, ImGuiWindowFlags_NoCollapse);
-
-	if (m_selectedCharacter == nullptr)
 	{
-		ImGui::Text("No character selected.");
+		ImGui::Begin("Current Character", (bool*)0, ImGuiWindowFlags_NoCollapse);
+
+		if (m_selectedCharacter == nullptr)
+		{
+			ImGui::Text("No character selected.");
+		}
+		else
+		{
+			int actionPoints = (int)m_selectedCharacter->RemainingActionPoints();
+			ImGui::Text("Action Points: %d", actionPoints);
+
+			// Show amount of enemies visible
+			auto visibleEnemies = m_selectedCharacter->GetVisibleEnemies();
+			ImGui::Text("Visible Enemies: %d", (int)visibleEnemies.size());
+
+			// TEMP: Get position
+			MapVec3 pos = m_selectedCharacter->GetPosition();
+
+			ImGui::Text("Position: %d, %d, %d", pos.m_x, pos.m_y, pos.m_z);
+
+			ImGui::Text("Ammo: %d", m_selectedCharacter->GetRemainingAmmo());
+		}
+
+		ImGui::End();
 	}
-	else
+
+	// Draw visible enemies selection
+	if (m_selectedCharacter != nullptr)
 	{
-		int actionPoints = (int)m_selectedCharacter->RemainingActionPoints();
-		ImGui::Text("Action Points: %d", actionPoints);
+		ImGui::Begin("Enemies", (bool*)0, ImGuiWindowFlags_NoCollapse);
 
-		// Show amount of enemies visible
-		auto visibleEnemies = m_selectedCharacter->GetVisibleEnemies();
-		ImGui::Text("Visible Enemies: %d", (int)visibleEnemies.size());
+		std::list<Character*> visibleEnemies = m_selectedCharacter->GetVisibleEnemies();
 
-		// TEMP: Get position
-		MapVec3 pos = m_selectedCharacter->GetPosition();
+		for (auto& iter = visibleEnemies.begin(); iter != visibleEnemies.end(); iter++)
+		{
+			Character* current = (*iter);
+			bool thisEnemyIsSelected = (m_currentEnemy == current);
 
-		ImGui::Text("Position: %d, %d, %d", pos.m_x, pos.m_y, pos.m_z);
+			// If selected, hilight the button
+			ImGuiStyle& style = ImGui::GetStyle();
+			ImVec4 defaultBtnColour = style.Colors[ImGuiCol_Button];
+
+			if (thisEnemyIsSelected)
+			{
+				ImVec4 selectedColour = ImVec4(1,0,0,1);
+				style.Colors[ImGuiCol_Button] = selectedColour;
+			}
+
+			ImGui::PushID(ImGuiID++);
+
+			if (ImGui::Button("Enemy", ImVec2(40, 40)))
+			{
+				if (thisEnemyIsSelected)
+				{
+					// Target is confirmed
+					AttackEnemy();
+				}
+				else
+					m_currentEnemy = current;
+			}
+
+			ImGui::PopID();
+
+			// Revert button colour
+			style.Colors[ImGuiCol_Button] = defaultBtnColour;
+		}
+
+		ImGui::End();
 	}
 
-	ImGui::End();
+	// Draw enemy attack confirmation
+	if (m_currentEnemy != nullptr)
+	{
+		ImGui::Begin("Attack Confirmation");
+
+		if (ImGui::Button("Fire", ImVec2(120, 40)) || input->wasKeyPressed(aie::INPUT_KEY_SPACE))
+		{
+			AttackEnemy();
+		}
+
+		ImGui::End();
+	}
 }
 
 ClientSideGameManager::ClientSideGameManager(Client* client, Camera* cam)
@@ -259,7 +355,9 @@ ClientSideGameManager::ClientSideGameManager(Client* client, Camera* cam)
 	m_camRotLerping = false;
 	m_camRotationSpeed = 1.0f;
 	m_camRotationDestination = 0.0f;
+
 	m_selectedCharacter = nullptr;
+	m_currentEnemy = nullptr;
 
 	m_hoveredTile = MapVec3(0);
 	m_mouseIsOverVoidSpace = true;
@@ -293,6 +391,9 @@ void ClientSideGameManager::Update(const float dTime)
 
 	// Draw a translucent gizmo over the hovered tile
 	DrawHoverTile();
+
+	// Draw a translucent gizmo over the currently selected enemiy's tile
+	DrawEnemyTile();
 
 	/* Handle input */
 	aie::Input* input = aie::Input::getInstance();

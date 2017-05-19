@@ -19,6 +19,8 @@ Character::Character(short ID, short HomeSquad, unsigned int health, unsigned in
 	m_remainingHealth = m_baseHealth;
 	m_baseAim = aim;
 	m_baseMobility = mobility;
+
+	m_gun = nullptr;
 }
 
 Character::~Character()
@@ -114,6 +116,13 @@ int Character::GetAimBonus(float distance) const
 {
 	if (m_gun)
 		return m_gun->GetRangeBonus(distance);
+	return 0;
+}
+
+unsigned int Character::GetRemainingAmmo() const
+{
+	if (m_gun != nullptr)
+		return m_gun->RemainingAmmo();
 	return 0;
 }
 
@@ -287,6 +296,8 @@ void Character::Write(RakNet::BitStream & bs)
 
 	// Write position
 	m_currentPosition.Write(bs);
+
+	// TODO: PRIORITY:: Write gun info
 
 	// TODO: Finish implementation with gun, gear, abilities, etc
 }

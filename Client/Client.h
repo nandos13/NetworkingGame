@@ -26,6 +26,7 @@ public:
 
 	int GetID() const;
 
+	void sendCharacterShoot(short characterID, MapVec3 target);
 	void sendCharacterMove(short characterID, MapVec3 destination);
 
 protected:
@@ -50,8 +51,6 @@ protected:
 	void ReceiveClientID(RakNet::Packet* packet);
 	void ReceiveGameInfo(RakNet::Packet* packet);
 	void ReceiveAction(RakNet::Packet* packet);
-
-	void sendCharacterShoot(short characterID, MapVec3 target);
 
 	/* Networking varibles */
 	RakNet::RakPeerInterface* m_pPeerInterface;

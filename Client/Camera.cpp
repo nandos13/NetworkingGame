@@ -127,8 +127,6 @@ void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, 
 			{
 				if ((turnAngle < 0 && turnAngle > -180) || turnAngle > 180)
 					camLerpAmount *= -1.0f;
-				//if ((turnAngle < 0 && fabs(turnAngle) <= 180) || fabs(turnAngle) > 180)
-				//	camLerpAmount *= -1.0f;
 
 				m_theta += camLerpAmount;
 			}

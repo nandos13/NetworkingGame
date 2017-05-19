@@ -87,6 +87,30 @@ int Client::GetID() const
 	return m_myID;
 }
 
+void Client::sendCharacterShoot(short characterID, MapVec3 target)
+{
+	printf("Sending shoot action request.\n");
+	RakNet::BitStream bs;
+	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_SHOOT);
+	bs.Write(characterID);
+	target.Write(bs);
+
+	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
+		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+}
+
+void Client::sendCharacterMove(short characterID, MapVec3 destination)
+{
+	printf("Sending character move action request.\n");
+	RakNet::BitStream bs;
+	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_MOVE);
+	bs.Write(characterID);
+	destination.Write(bs);
+
+	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
+		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+}
+
 glm::mat4 Client::GetCameraTransform() const
 {
 	return ( m_cam.GetMVP(getWindowWidth(), getWindowHeight()) );
@@ -228,29 +252,6 @@ void Client::ReceiveAction(RakNet::Packet * packet)
 		gA->Read(bsIn);
 		m_game->QueueAction(gA);
 	}
-}
-
-void Client::sendCharacterShoot(short characterID, MapVec3 target)
-{
-	RakNet::BitStream bs;
-	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_SHOOT);
-	bs.Write(characterID);
-	target.Write(bs);
-
-	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
-		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
-}
-
-void Client::sendCharacterMove(short characterID, MapVec3 destination)
-{
-	printf("Sending character move action request.\n");
-	RakNet::BitStream bs;
-	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_MOVE);
-	bs.Write(characterID);
-	destination.Write(bs);
-
-	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, 
-		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
 }
 
 
