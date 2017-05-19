@@ -81,6 +81,7 @@ public:
 	void GetGameObjPosition(float& x, float& y, float& z);
 
 	static Character* Read(RakNet::BitStream& bsIn);
+	void SetGameobjectColour(const float r, const float g, const float b, const float a);
 	void Draw();
 
 #endif

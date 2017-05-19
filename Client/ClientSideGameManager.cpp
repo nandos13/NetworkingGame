@@ -3,6 +3,7 @@
 #ifndef NETWORK_SERVER
 
 #include "Client.h"
+#include "Game.h"
 
 #include <glm/ext.hpp>
 #include <Input.h>
@@ -260,6 +261,17 @@ void ClientSideGameManager::DrawHUD()
 {
 	int ImGuiID = 0;
 	aie::Input* input = aie::Input::getInstance();
+	Game* game = Game::GetInstance();
+
+	// If not player's turn, only draw notification
+	if (!game->IsMyTurn())
+	{
+		ImGui::SetNextWindowContentSize(ImVec2(150, 40));
+		ImGui::Begin("", (bool*)0, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		ImGui::Text("Enemy Activity");
+		ImGui::End();
+		return;		// No other HUD elements need to be drawn
+	}
 
 	// Draw character info
 	{
@@ -334,9 +346,12 @@ void ClientSideGameManager::DrawHUD()
 	}
 
 	// Draw enemy attack confirmation
-	if (m_currentEnemy != nullptr)
+	if (m_currentEnemy != nullptr && m_selectedCharacter != nullptr)
 	{
 		ImGui::Begin("Attack Confirmation");
+
+		int shotChance = game->GetShotChance(m_selectedCharacter, m_currentEnemy->GetPosition());
+		ImGui::Text("Chance to hit: %d", shotChance);
 
 		if (ImGui::Button("Fire", ImVec2(120, 40)) || input->wasKeyPressed(aie::INPUT_KEY_SPACE))
 		{
@@ -397,7 +412,10 @@ void ClientSideGameManager::Update(const float dTime)
 
 	/* Handle input */
 	aie::Input* input = aie::Input::getInstance();
+	Game* game = Game::GetInstance();
 
+	// TODO: Need to find a way to detect if any ImGui elements have been clicked first. 
+	// Ideally, the HUD elements should not be click-through.
 	if (input->wasMouseButtonPressed(0))	// Left click: Select friendly character at clicked tile
 	{
 		if (!m_mouseIsOverVoidSpace)
@@ -413,19 +431,24 @@ void ClientSideGameManager::Update(const float dTime)
 	}
 	else if (input->wasMouseButtonPressed(1))	// Right click: Move selected character to clicked target
 	{
-		if (!m_mouseIsOverVoidSpace && Game::GetInstance()->IsPlayersTurn(m_thisClient->GetID()))
+		if (!m_mouseIsOverVoidSpace && game->IsPlayersTurn(m_thisClient->GetID()))
 		{
 			if (m_selectedCharacter != nullptr)
 			{
 				bool moveable = false;
 
-				// Check the walk list for the clicked tile
-				for (auto& iter = walkTiles.cbegin(); iter != walkTiles.cend(); iter++)
+				// Check if there is currently another character on this tile
+				if (game->FindCharacterAtCoords(m_hoveredTile) == nullptr)
 				{
-					if ((*iter) == m_hoveredTile)
+
+					// Check the walk list for the clicked tile
+					for (auto& iter = walkTiles.cbegin(); iter != walkTiles.cend(); iter++)
 					{
-						moveable = true;
-						break;
+						if ((*iter) == m_hoveredTile)
+						{
+							moveable = true;
+							break;
+						}
 					}
 				}
 
@@ -508,7 +531,12 @@ void ClientSideGameManager::SetSpectatorMode(const bool forceSpectator)
 
 void ClientSideGameManager::SetSelectedCharacter(Character * c)
 {
-	m_selectedCharacter = c;
+	SelectCharacter(c);
+}
+
+bool ClientSideGameManager::GetSpectatorMode() const
+{
+	return m_forceSpectator;
 }
 
 

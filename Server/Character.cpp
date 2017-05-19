@@ -248,6 +248,11 @@ Character* Character::Read(RakNet::BitStream & bsIn)
 	return c;
 }
 
+void Character::SetGameobjectColour(const float r, const float g, const float b, const float a)
+{
+	m_gameObject.SetColour(r, g, b, a);
+}
+
 void Character::Draw()
 {
 	m_gameObject.Draw();

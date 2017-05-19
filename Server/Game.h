@@ -49,9 +49,9 @@ private:
 #endif
 	Squad* GetPlayingSquad();
 	Squad* GetWaitingSquad();
-
-	int GetShotChance(const Character* shooter, MapVec3 target);
-	int GetCritChance(const Character* shooter, MapVec3 target);
+	void QueryTurnEnd(GameAction* g);
+	void CreateTurnEndAction(GameAction* g);
+	
 	int GetDamage(const Character* shooter, const bool critical);
 
 	void ClearGame();
@@ -73,7 +73,11 @@ public:
 	Character* FindCharacterByID(const short id) const;
 	std::list<Character*> GetCharactersByHomeSquad(const unsigned int squad) const;
 
+	int GetShotChance(const Character* shooter, MapVec3 target);
+	int GetCritChance(const Character* shooter, MapVec3 target);
+
 	void SetSpectatorMode(const bool state);
+	void SetTurn(const bool playerOne);
 	bool IsSpectator() const;
 	bool IsPlayersTurn(const unsigned int playerID) const;
 
@@ -85,6 +89,9 @@ public:
 	void Read(RakNet::Packet* packet);
 	void TakeControlOfSquad(const int squad);
 	std::list<Character*> GetSelectableCharacters() const;
+
+	bool IsMyTurn() const;
+	Squad* GetMySquad();
 
 #endif
 

@@ -9,6 +9,7 @@ class GameObj
 private:
 
 	glm::vec3 m_position;
+	glm::vec4 m_colour;
 
 public:
 	GameObj();
@@ -20,6 +21,8 @@ public:
 	void GetWorldPosition(float& x, float& y, float& z) const;
 	void SetPosition(const glm::vec3 position);
 	void SetPosition(const float x, const float y, const float z);
+	void SetColour(const glm::vec4 colour);
+	void SetColour(const float r, const float g, const float b, const float a);
 
 	void Draw() const;
 };

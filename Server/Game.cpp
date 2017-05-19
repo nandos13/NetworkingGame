@@ -9,13 +9,14 @@
 #include "RefreshWalkableTilesAction.h"
 #include "SetPointsAction.h"
 #include "SetVisibleEnemiesAction.h"
+#include "StartNewTurnAction.h"
 
 
 // Static variable declaration
 Game* Game::m_singleton;
 
 #ifdef NETWORK_SERVER
-/** 
+/**
  * Set up the Game instance. This handles initialization of squads,
  * tile map, etc.
  */
@@ -96,7 +97,7 @@ std::list<Character*> Game::GetVisibleEnemies(Character * lookUnit)
 
 	auto enemyUnits = waitingSquad->GetAllCharacters();
 	std::list<Character*> visibleEnemies;
-	float characterSightRadius = lookUnit->GetSightRadius();
+	unsigned int characterSightRadius = lookUnit->GetSightRadius();
 
 	// Iterate through all enemy-controlled units and add them to the list if they are visible
 	for (auto& iter = enemyUnits.begin(); iter != enemyUnits.end(); iter++)
@@ -124,63 +125,34 @@ Squad * Game::GetWaitingSquad()
 	return &m_squads[currentWaiting];
 }
 
-int Game::GetShotChance(const Character * shooter, MapVec3 target)
+/* Checks if the current player has no remaining points on any characters. If so, ends the turn */
+void Game::QueryTurnEnd(GameAction * g)
 {
-	if (shooter)
+	Squad* currentlyPlaying = GetPlayingSquad();
+	if (currentlyPlaying)
 	{
-		// Get the direction from the target square to shooter
-		MAP_CONNECTION_DIR dir = target.GetDirectionTo(shooter->GetPosition());
+		auto characters = currentlyPlaying->GetAllCharacters();
 
-		// Is the target covered from this direction?
-		COVER_VALUE targetCover = m_map->GetCoverInDirection(target, dir);
-		unsigned int targetCoverVal = 0;
-		if (targetCover == COVER_HIGH) targetCoverVal = 40;
-		else if (targetCover == COVER_LOW) targetCoverVal = 20;
-
-		Character* targetCharacter = FindCharacterAtCoords(target);
-
-		if (targetCharacter == nullptr)
+		// Iterate through each character in the squad & check if they have any remaining action points
+		for (auto& iter = characters.begin(); iter != characters.end(); iter++)
 		{
-			printf("No character found at tile for GetShotChance method\n");
-			return 0;	// TODO: Change implementation for explosions, etc
+			if ((*iter)->RemainingActionPoints() > 0)
+				return;
 		}
-		else
-		{
-			/* Uses xcom chance-calculation formula as seen on the wiki here: 
-			 * http://www.ufopaedia.org/index.php/Chance_to_Hit_(EU2012) 
-			 */
 
-			// Calculate base chance based on shooter's aim and target's defense
-			unsigned int aim = shooter->GetCurrentAimStat();
-			unsigned int def = targetCharacter->GetCurrentDefense() + targetCoverVal;
-			int chance = (int)aim - (int)def;
-			// Clamp if negative
-			if (chance < 1) chance = 1;
-
-			// Calculate range bonus
-			float shotDistance = MapVec3::Distance(shooter->GetPosition(), target);
-			int rangeBonus = shooter->GetAimBonus(shotDistance);
-
-			chance += rangeBonus;
-
-			// Cap chance
-			if (chance > 100) chance = 100;
-			if (chance < 1) chance = 1;
-
-			return chance;
-		}
+		// The function did not return, therefore all points are spent. End the turn
+		CreateTurnEndAction(g);
 	}
-
-	printf("Null reference exception. No shooter specified in GetShotChance method\n");
-	return 0;
 }
 
-int Game::GetCritChance(const Character * shooter, MapVec3 target)
+void Game::CreateTurnEndAction(GameAction * g)
 {
-	// TODO:
-	// Get crit chance of the shooter.
-	// Find if enemy is flanked.
-	return 0;
+	if (g != nullptr)
+	{
+		bool playerOneTurn = (m_currentTurn == 0) ? false : true;
+		StartNewTurnAction* sntA = new StartNewTurnAction(nullptr, playerOneTurn);
+		g->AddToQueue(sntA);
+	}
 }
 
 int Game::GetDamage(const Character * shooter, const bool critical)
@@ -338,9 +310,93 @@ std::list<Character*> Game::GetCharactersByHomeSquad(const unsigned int squad) c
 	return returnList;
 }
 
+int Game::GetShotChance(const Character * shooter, MapVec3 target)
+{
+	if (shooter)
+	{
+		// Get the direction from the target square to shooter
+		MAP_CONNECTION_DIR dir = target.GetDirectionTo(shooter->GetPosition());
+
+		// Is the target covered from this direction?
+		COVER_VALUE targetCover = m_map->GetCoverInDirection(target, dir);
+		unsigned int targetCoverVal = 0;
+		if (targetCover == COVER_HIGH) targetCoverVal = 40;
+		else if (targetCover == COVER_LOW) targetCoverVal = 20;
+
+		Character* targetCharacter = FindCharacterAtCoords(target);
+
+		if (targetCharacter == nullptr)
+		{
+			printf("No character found at tile for GetShotChance method\n");
+			return 0;	// TODO: Change implementation for explosions, etc
+		}
+		else
+		{
+			/* Uses xcom chance-calculation formula as seen on the wiki here:
+			* http://www.ufopaedia.org/index.php/Chance_to_Hit_(EU2012)
+			*/
+
+			// Calculate base chance based on shooter's aim and target's defense
+			unsigned int aim = shooter->GetCurrentAimStat();
+			unsigned int def = targetCharacter->GetCurrentDefense() + targetCoverVal;
+			int chance = (int)aim - (int)def;
+			// Clamp if negative
+			if (chance < 1) chance = 1;
+
+			// Calculate range bonus
+			float shotDistance = MapVec3::Distance(shooter->GetPosition(), target);
+			int rangeBonus = shooter->GetAimBonus(shotDistance);
+
+			chance += rangeBonus;
+
+			// Cap chance
+			if (chance > 100) chance = 100;
+			if (chance < 1) chance = 1;
+
+			return chance;
+		}
+	}
+
+	printf("Null reference exception. No shooter specified in GetShotChance method\n");
+	return 0;
+}
+
+int Game::GetCritChance(const Character * shooter, MapVec3 target)
+{
+	// TODO:
+	// Get crit chance of the shooter.
+	// Find if enemy is flanked.
+	return 0;
+}
+
 void Game::SetSpectatorMode(const bool state)
 {
 	m_forcedSpectator = state;
+}
+
+/** 
+ * Ends the turn for the current player and passes control to another. 
+ * If playerOne == true, player one's turn starts. Else, control is given to player two.
+ */
+void Game::SetTurn(const bool playerOne)
+{
+	// Get the squad that is not currently playing
+	Squad* currentlyWaiting = GetWaitingSquad();
+	if (currentlyWaiting != nullptr)
+	{
+		// Reset action points, etc for this squad before we pass control
+		currentlyWaiting->StartTurn();
+	}
+
+	m_currentTurn = (playerOne) ? 0 : 1 ;
+
+	// Client-Side: Notify the player that their turn has started or ended
+#ifndef NETWORK_SERVER
+	if (m_currentTurn == m_mySquad)
+		printf("Your turn has started!\n");
+	else
+		printf("Your turn has ended!\n");
+#endif
 }
 
 bool Game::IsSpectator() const
@@ -396,6 +452,18 @@ void Game::Read(RakNet::Packet * packet)
 			m_squads[squad].AddMember(c);
 	}
 
+	// Change colour of all controlled units to green
+	Squad* mySquad = GetMySquad();
+	if (mySquad != nullptr)
+	{
+		auto characters = mySquad->GetAllCharacters();
+
+		for (auto& iter = characters.begin(); iter != characters.end(); iter++)
+		{
+			(*iter)->SetGameobjectColour(0.1f, 1.0f, 0.15f, 0.5f);
+		}
+	}
+
 	// Read the action queue
 	unsigned int queueSize = 0;
 	bsIn.Read(queueSize);
@@ -412,6 +480,7 @@ void Game::Read(RakNet::Packet * packet)
 /* Allows a client to take control of a squad. Use 1 or 2 as input parameter */
 void Game::TakeControlOfSquad(const int squad)
 {
+	// TODO: This is inconsistent. Some functions take 0-1, this takes 1-2
 	if (squad == 1)
 		m_mySquad = 0;
 	else if (squad == 2)
@@ -427,6 +496,18 @@ std::list<Character*> Game::GetSelectableCharacters() const
 		return std::list<Character*>();
 
 	return m_squads[m_mySquad].GetSelectableCharacters();
+}
+
+bool Game::IsMyTurn() const
+{
+	return (m_currentTurn == m_mySquad) ? true : false;
+}
+
+Squad * Game::GetMySquad()
+{
+	if (m_mySquad == 0 || m_mySquad == 1)
+		return &m_squads[m_mySquad];
+	return nullptr;
 }
 #endif
 
@@ -500,6 +581,8 @@ GameAction * Game::CreateShootAction(const short shooterID, short victimID)
 				SetPointsAction* spA = new SetPointsAction(c, 0);
 				g->AddToQueue(spA);
 
+				QueryTurnEnd(g);
+
 				return g;
 			}
 		}
@@ -528,6 +611,15 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 		{
 			// Find the tile the character is standing on
 			MapVec3 characterPos = c->GetMapTileCoords();
+
+			// Check if there is already a character at the destination tile
+			Character* destCharacter = FindCharacterAtCoords(coords);
+			if (destCharacter != nullptr)
+			{
+				printf("Warning: Tried to move to an already occupied space.\n");
+				return nullptr;
+			}
+
 			if (c->RemainingActionPoints() == 0)
 			{
 				printf("Warning: Tried to move character (id: %d) with no action points.\n", characterID);
@@ -637,8 +729,12 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 				while (!g->IsCompleted())	g->Execute(0);
 			}
 
+			QueryTurnEnd(g);
+
 			// Reset the game action. 
 			// (Reverses the effects of simulating it on the server, so it is again ready to use on a client)
+			// TODO: Does this actually need to be done here? Write function does not necessarily care if the action is already run.
+			// I may be able to get rid of this.
 			g->Reset();
 
 			return g;

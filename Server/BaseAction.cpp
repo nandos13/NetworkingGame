@@ -17,6 +17,7 @@ BaseAction::BaseAction(Character * owner)
 {
 	m_completed = false;
 	m_owner = owner;
+	m_requiresOwner = true;
 
 	m_currentSlowestTime = 1.0f;
 	m_thisTimeScale = 1.0f;
@@ -34,7 +35,7 @@ int BaseAction::GetActionTypeID() const
 
 void BaseAction::Execute(float dTime)
 {
-	if (m_owner != nullptr)
+	if (m_owner != nullptr || !m_requiresOwner)
 		_Execute(dTime * m_currentSlowestTime * m_simulationTime);
 	else
 		NoOwnerError();

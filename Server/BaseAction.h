@@ -16,6 +16,7 @@ protected:
 	bool m_completed;
 	Character* m_owner;
 	int m_actionType = 0;
+	bool m_requiresOwner;
 
 	/**
 	* A list of actions currently affecting playback time.

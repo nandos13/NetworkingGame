@@ -106,6 +106,7 @@
     <ClCompile Include="..\Server\SniperRifle.cpp" />
     <ClCompile Include="..\Server\Squad.cpp" />
     <ClCompile Include="..\Server\StandardGun.cpp" />
+    <ClCompile Include="..\Server\StartNewTurnAction.cpp" />
     <ClCompile Include="..\Server\TileMap.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Client.cpp" />
@@ -130,6 +131,7 @@
     <ClInclude Include="..\Server\SniperRifle.h" />
     <ClInclude Include="..\Server\Squad.h" />
     <ClInclude Include="..\Server\StandardGun.h" />
+    <ClInclude Include="..\Server\StartNewTurnAction.h" />
     <ClInclude Include="..\Server\TileMap.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Client.h" />

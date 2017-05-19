@@ -81,6 +81,9 @@
     <ClCompile Include="..\Server\SetVisibleEnemiesAction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Server\StartNewTurnAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Client.h">
@@ -144,6 +147,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\Server\SetVisibleEnemiesAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Server\StartNewTurnAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

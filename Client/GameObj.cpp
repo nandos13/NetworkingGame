@@ -7,6 +7,8 @@
 
 GameObj::GameObj()
 {
+	m_position = glm::vec3(0);
+	m_colour = glm::vec4(1, 0, 0, 0.5f);
 }
 
 GameObj::~GameObj()
@@ -55,8 +57,18 @@ void GameObj::SetPosition(const float x, const float y, const float z)
 	SetPosition(pos);
 }
 
+void GameObj::SetColour(const glm::vec4 colour)
+{
+	m_colour = colour;
+}
+
+void GameObj::SetColour(const float r, const float g, const float b, const float a)
+{
+	SetColour(glm::vec4(r, g, b, a));
+}
+
 void GameObj::Draw() const
 {
 	// TODO: Probably needs to take in camera matrix, etc
-	aie::Gizmos::addSphere(m_position, 0.4f, 8, 10, glm::vec4(1, 0, 0, 0.5f));
+	aie::Gizmos::addSphere(m_position, 0.4f, 8, 10, m_colour);
 }

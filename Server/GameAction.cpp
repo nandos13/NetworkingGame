@@ -6,6 +6,7 @@
 #include "RefreshWalkableTilesAction.h"
 #include "SetPointsAction.h"
 #include "SetVisibleEnemiesAction.h"
+#include "StartNewTurnAction.h"
 
 #include <BitStream.h>
 
@@ -100,6 +101,8 @@ void GameAction::Read(RakNet::BitStream & bsIn)
 		case 5:		a = SetPointsAction::Read(bsIn);
 			break;
 		case 6:		a = SetVisibleEnemiesAction::Read(bsIn);
+			break;
+		case 7:		a = StartNewTurnAction::Read(bsIn);
 			break;
 
 		default:	printf("Error: Action type did not match any expected types.\n");

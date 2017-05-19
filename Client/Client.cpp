@@ -236,6 +236,18 @@ void Client::ReceiveGameInfo(RakNet::Packet * packet)
 	{
 		std::cout << "Receiving new game info.\n";
 		m_game->Read(packet);
+
+		// Select a character
+		if (m_gm != nullptr)
+		{
+			Squad* mySquad = Game::GetInstance()->GetMySquad();
+			if (mySquad != nullptr && !m_gm->GetSpectatorMode())
+			{
+				auto characters = mySquad->GetAllCharacters();
+				if (characters.size() > 0)
+					m_gm->SetSelectedCharacter( (*characters.begin()) );
+			}
+		}
 	}
 }
 

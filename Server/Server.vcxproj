@@ -171,6 +171,7 @@
     <ClCompile Include="SniperRifle.cpp" />
     <ClCompile Include="Squad.cpp" />
     <ClCompile Include="StandardGun.cpp" />
+    <ClCompile Include="StartNewTurnAction.cpp" />
     <ClCompile Include="TileMap.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -192,6 +193,7 @@
     <ClInclude Include="SniperRifle.h" />
     <ClInclude Include="Squad.h" />
     <ClInclude Include="StandardGun.h" />
+    <ClInclude Include="StartNewTurnAction.h" />
     <ClInclude Include="TileMap.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

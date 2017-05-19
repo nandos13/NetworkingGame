@@ -62,6 +62,8 @@ public:
 	void SetSpectatorMode(const bool forceSpectator);
 
 	void SetSelectedCharacter(Character* c);
+
+	bool GetSpectatorMode() const;
 };
 
 
