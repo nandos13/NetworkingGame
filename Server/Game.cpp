@@ -10,6 +10,7 @@
 #include "SetPointsAction.h"
 #include "SetVisibleEnemiesAction.h"
 #include "StartNewTurnAction.h"
+#include "HunkerAction.h"
 
 
 // Static variable declaration
@@ -574,6 +575,9 @@ GameAction * Game::CreateShootAction(const short shooterID, short victimID)
 
 				QueryTurnEnd(g);
 
+				// Simulate on server
+				while (!g->IsCompleted())	g->Execute(0);
+
 				return g;
 			}
 		}
@@ -725,6 +729,41 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 		}
 		else
 			printf("Error: CreateMoveAction function could not find character with id %i.\n", characterID);
+	}
+	else
+		printf("Error: Could not find character.\n");
+
+	return nullptr;
+}
+
+GameAction * Game::CreateHunkerAction(const short characterID)
+{
+	// Find the referenced character
+	auto& cIter = m_characters.find(characterID);
+	if (cIter != m_characters.end())
+	{
+		Character* c = cIter->second;
+		if (c != nullptr)
+		{
+			// TODO: Hunker should only be useable in cover. Check for cover here
+
+			GameAction* g = new GameAction();
+
+			HunkerAction* hA = new HunkerAction(c);
+			g->AddToQueue(hA);
+
+			SetPointsAction* spA = new SetPointsAction(c, 0);
+			g->AddToQueue(spA);
+
+			QueryTurnEnd(g);
+
+			// Simulate on server
+			while (!g->IsCompleted())	g->Execute(0);
+
+			return g;
+		}
+		else
+			printf("Error: CreateHunkerAction function could not find character with id %i.\n", characterID);
 	}
 	else
 		printf("Error: Could not find character.\n");

@@ -33,6 +33,7 @@ void Squad::StartTurn()
 	for (iter = m_squaddies.begin(); iter != m_squaddies.end(); iter++)
 	{
 		(*iter).second->ResetActionPoints();
+		(*iter).second->SetHunkerState(false);
 	}
 	// TODO: take one turn from current debuffs, etc
 	// TODO: Re-evaluate moveable tiles for each character (this should be a method in character class)

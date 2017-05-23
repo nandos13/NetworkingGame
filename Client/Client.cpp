@@ -87,7 +87,7 @@ int Client::GetID() const
 	return m_myID;
 }
 
-void Client::sendCharacterShoot(short characterID, MapVec3 target)
+void Client::sendCharacterShoot(short characterID, MapVec3 target) const
 {
 	printf("Sending shoot action request.\n");
 	RakNet::BitStream bs;
@@ -99,13 +99,24 @@ void Client::sendCharacterShoot(short characterID, MapVec3 target)
 		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
 }
 
-void Client::sendCharacterMove(short characterID, MapVec3 destination)
+void Client::sendCharacterMove(short characterID, MapVec3 destination) const
 {
 	printf("Sending character move action request.\n");
 	RakNet::BitStream bs;
 	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_MOVE);
 	bs.Write(characterID);
 	destination.Write(bs);
+
+	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
+		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+}
+
+void Client::sendCharacterHunker(short characterID) const
+{
+	printf("Sending character hunker down request.\n");
+	RakNet::BitStream bs;
+	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_HUNKER);
+	bs.Write(characterID);
 
 	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
 		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);

@@ -33,6 +33,7 @@ protected:
 	Character* m_selectedCharacter;
 	void SelectCharacter(Character* c);
 	void SelectNextCharacter(const bool reverse = false);
+	void HunkerDown() const;
 
 	// Enemy selection
 	Character* m_currentEnemy;

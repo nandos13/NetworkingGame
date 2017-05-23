@@ -75,6 +75,9 @@
     <ClCompile Include="StartNewTurnAction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="HunkerAction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameMessages.h">
@@ -135,6 +138,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="StartNewTurnAction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HunkerAction.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

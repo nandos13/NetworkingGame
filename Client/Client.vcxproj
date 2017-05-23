@@ -97,6 +97,7 @@
     <ClCompile Include="..\Server\GameAction.cpp" />
     <ClCompile Include="..\Server\GearPieceBase.cpp" />
     <ClCompile Include="..\Server\GunBase.cpp" />
+    <ClCompile Include="..\Server\HunkerAction.cpp" />
     <ClCompile Include="..\Server\MovementAction.cpp" />
     <ClCompile Include="..\Server\OverwatchShotAction.cpp" />
     <ClCompile Include="..\Server\RefreshWalkableTilesAction.cpp" />
@@ -122,6 +123,7 @@
     <ClInclude Include="..\Server\GameAction.h" />
     <ClInclude Include="..\Server\GearPieceBase.h" />
     <ClInclude Include="..\Server\GunBase.h" />
+    <ClInclude Include="..\Server\HunkerAction.h" />
     <ClInclude Include="..\Server\MovementAction.h" />
     <ClInclude Include="..\Server\OverwatchShotAction.h" />
     <ClInclude Include="..\Server\RefreshWalkableTilesAction.h" />

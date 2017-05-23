@@ -203,6 +203,46 @@ void Server::HandleClientMove(RakNet::RakPeerInterface * pPeerInterface, RakNet:
 	}
 }
 
+void Server::HandleClientHunker(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet * packet)
+{
+	printf("Receiving request to hunker a character.\n");
+	// Find sender connection
+	std::string senderAddress = packet->systemAddress.ToString();
+	auto connectionVec = GetConnections();
+	ConnectionInfo* sender = ConnectionInfo::FindClient(connectionVec, senderAddress);
+
+	if (sender != nullptr && m_game != nullptr)
+	{
+		// Verify the sender is currently playing
+		unsigned int senderID = sender->GetID();
+
+		if (m_game->IsPlayersTurn(senderID))
+		{
+			// Get move command data
+			RakNet::BitStream bsIn(packet->data, packet->length, false);
+			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+			short characterID;
+			bsIn.Read(characterID);
+
+			// Process move command on the server-side game
+			GameAction* action;
+			action = m_game->CreateHunkerAction(characterID);
+
+			// Send action back to all clients
+			if (action == nullptr) { return; };
+
+			RakNet::BitStream bs;
+			bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
+			action->Write(bs);
+
+			// Send bitstream
+			pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+		}
+		else
+			printf("Not player's turn.\n");
+	}
+}
+
 Server::Server()
 {
 	Setup();
@@ -264,6 +304,9 @@ void Server::HandleConnections(RakNet::RakPeerInterface* pPeerInterface, RakNet:
 				break;
 			case ID_CLIENT_MOVE:
 				HandleClientMove(pPeerInterface, packet);
+				break;
+			case ID_CLIENT_HUNKER:
+				HandleClientHunker(pPeerInterface, packet);
 				break;
 
 			default:

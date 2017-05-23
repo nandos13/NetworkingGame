@@ -102,6 +102,7 @@ public:
 	void GetShotVariables(short& damage, SHOT_STATUS& shotType, const Character* shooter, const MapVec3 target);
 	GameAction* CreateShootAction(const short shooterID, short victimID);
 	GameAction* CreateMoveAction(const short characterID, MapVec3 coords);
+	GameAction* CreateHunkerAction(const short characterID);
 
 	void TempGameSetup();
 

@@ -36,6 +36,7 @@ private:
 	std::list<Character*> m_visibleEnemies;
 
 	bool m_inOverwatch = false;
+	bool m_hunkered = false;
 	short m_ID;
 	short m_homeSquad;
 
@@ -109,6 +110,8 @@ public:
 	bool Alive() const;
 	bool HasRemainingPoints() const;
 	bool IsSelectable() const;
+	bool IsHunkeredDown() const;
+	void SetHunkerState(const bool state);
 	void EndOverwatch();
 
 };

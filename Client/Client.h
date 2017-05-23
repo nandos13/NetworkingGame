@@ -26,8 +26,9 @@ public:
 
 	int GetID() const;
 
-	void sendCharacterShoot(short characterID, MapVec3 target);
-	void sendCharacterMove(short characterID, MapVec3 destination);
+	void sendCharacterShoot(short characterID, MapVec3 target) const;
+	void sendCharacterMove(short characterID, MapVec3 destination) const;
+	void sendCharacterHunker(short characterID) const;
 
 protected:
 	

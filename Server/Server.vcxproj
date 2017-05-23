@@ -159,6 +159,7 @@
     <ClCompile Include="GameAction.cpp" />
     <ClCompile Include="GearPieceBase.cpp" />
     <ClCompile Include="GunBase.cpp" />
+    <ClCompile Include="HunkerAction.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MovementAction.cpp" />
     <ClCompile Include="OverwatchShotAction.cpp" />
@@ -182,6 +183,7 @@
     <ClInclude Include="GameMessages.h" />
     <ClInclude Include="GearPieceBase.h" />
     <ClInclude Include="GunBase.h" />
+    <ClInclude Include="HunkerAction.h" />
     <ClInclude Include="MovementAction.h" />
     <ClInclude Include="OverwatchShotAction.h" />
     <ClInclude Include="RefreshWalkableTilesAction.h" />

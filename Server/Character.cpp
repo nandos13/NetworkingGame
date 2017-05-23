@@ -366,3 +366,13 @@ bool Character::IsSelectable() const
 
 	return true;
 }
+
+bool Character::IsHunkeredDown() const
+{
+	return m_hunkered;
+}
+
+void Character::SetHunkerState(const bool state)
+{
+	m_hunkered = state;
+}

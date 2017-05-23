@@ -109,6 +109,15 @@ void ClientSideGameManager::SelectNextCharacter(const bool reverse)
 	}
 }
 
+void ClientSideGameManager::HunkerDown() const
+{
+	if (m_selectedCharacter != nullptr)
+	{
+		short charID = m_selectedCharacter->GetID();
+		m_thisClient->sendCharacterHunker(charID);
+	}
+}
+
 void ClientSideGameManager::DrawEnemyTile()
 {
 	if (m_selectedCharacter == nullptr)
@@ -286,6 +295,10 @@ void ClientSideGameManager::DrawHUD()
 			int actionPoints = (int)m_selectedCharacter->RemainingActionPoints();
 			ImGui::Text("Action Points: %d", actionPoints);
 
+			bool hunkered = m_selectedCharacter->IsHunkeredDown();
+			if (hunkered)	ImGui::Text("Hunkered Down: true");
+			else			ImGui::Text("Hunkered Down: false");
+
 			// Show amount of enemies visible
 			auto visibleEnemies = m_selectedCharacter->GetVisibleEnemies();
 			ImGui::Text("Visible Enemies: %d", (int)visibleEnemies.size());
@@ -297,6 +310,18 @@ void ClientSideGameManager::DrawHUD()
 
 			ImGui::Text("Ammo: %d", m_selectedCharacter->GetRemainingAmmo());
 		}
+
+		ImGui::End();
+	}
+
+	// Draw abilities bar
+	if (m_selectedCharacter != nullptr)
+	{
+		ImGui::Begin("Abilities", (bool*)0, ImGuiWindowFlags_NoCollapse);
+
+		// TODO: Hunker should only be useable in cover
+		if (ImGui::Button("Hunker Down", ImVec2(40, 40)))
+			HunkerDown();
 
 		ImGui::End();
 	}
@@ -440,27 +465,32 @@ void ClientSideGameManager::Update(const float dTime)
 				// Check if there is currently another character on this tile
 				if (game->FindCharacterAtCoords(m_hoveredTile) == nullptr)
 				{
+					// Get remaining points
+					unsigned int points = m_selectedCharacter->RemainingActionPoints();
 
-					// Check the walk list for the clicked tile
-					for (auto& iter = walkTiles.cbegin(); iter != walkTiles.cend(); iter++)
+					if (points >= 1)
 					{
-						if ((*iter) == m_hoveredTile)
+						// Check the walk list for the clicked tile
+						for (auto& iter = walkTiles.cbegin(); iter != walkTiles.cend(); iter++)
 						{
-							moveable = true;
-							break;
+							if ((*iter) == m_hoveredTile)
+							{
+								moveable = true;
+								break;
+							}
 						}
 					}
-				}
 
-				// Check the dash list for the clicked tile
-				if (!moveable)
-				{
-					for (auto& iter = dashTiles.cbegin(); iter != dashTiles.cend(); iter++)
+					// Check the dash list for the clicked tile
+					if (!moveable && points >= 2)
 					{
-						if ((*iter) == m_hoveredTile)
+						for (auto& iter = dashTiles.cbegin(); iter != dashTiles.cend(); iter++)
 						{
-							moveable = true;
-							break;
+							if ((*iter) == m_hoveredTile)
+							{
+								moveable = true;
+								break;
+							}
 						}
 					}
 				}
