@@ -1,7 +1,6 @@
 #pragma once
 #include "BaseAction.h"
-class SetPointsAction :
-	public BaseAction
+class SetPointsAction : public BaseAction
 {
 protected:
 	unsigned int m_newPoints;

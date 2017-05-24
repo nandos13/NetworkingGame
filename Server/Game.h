@@ -52,6 +52,7 @@ private:
 	Squad* GetWaitingSquad();
 	void QueryTurnEnd(GameAction* g);
 	void CreateTurnEndAction(GameAction* g);
+	std::list<MapVec3> GetAllCharacterPositions(const bool ignoreDeadCharacters = true) const;
 	
 	int GetDamage(const Character* shooter, const bool critical);
 

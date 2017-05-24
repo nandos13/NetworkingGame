@@ -147,6 +147,23 @@ void Game::CreateTurnEndAction(GameAction * g)
 	}
 }
 
+std::list<MapVec3> Game::GetAllCharacterPositions(const bool ignoreDeadCharacters) const
+{
+	std::list<MapVec3> returnList;
+	for (auto& iter = m_characters.cbegin(); iter != m_characters.cend(); iter++)
+	{
+		Character* c = (*iter).second;
+
+		if (c == nullptr)	continue;
+
+		if (ignoreDeadCharacters == true && c->Alive() == false)	continue;
+
+		MapVec3 position = c->GetPosition();
+		returnList.push_back(position);
+	}
+	return returnList;
+}
+
 int Game::GetDamage(const Character * shooter, const bool critical)
 {
 	// TODO: If supporting secondary weapons, etc, this needs to take in which weapon is being used
@@ -568,10 +585,13 @@ GameAction * Game::CreateShootAction(const short shooterID, short victimID)
 				ShootAction* sA = new ShootAction(c, vicPos, damage, shotType/*, ammoUse, shred*/);	// TODO: Get ammo use & shred state
 				g->AddToQueue(sA);
 
-				// TODO: Some abilities may allow a show to be taken on first turn, etc.
+				// TODO: Some abilities may allow a shot to be taken on first turn, etc.
 				// Check for this first
 				SetPointsAction* spA = new SetPointsAction(c, 0);
 				g->AddToQueue(spA);
+
+				// Simulate on server
+				while (!g->IsCompleted())	g->Execute(0);
 
 				QueryTurnEnd(g);
 
@@ -621,8 +641,10 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 				return nullptr;
 			}
 
+			// Get a list of obstacle tiles (all tiles which have characters in them)
+			auto obstacleList = GetAllCharacterPositions();
 			// Find a path
-			std::list<MapVec3> path = m_map->FindPath(characterPos, coords);
+			std::list<MapVec3> path = m_map->FindPath(characterPos, coords, obstacleList);
 			if (path.size() == 0)
 			{
 				printf("Error: Found no path between tile (%d, %d, %d) and tile (%d, %d, %d).\n",
@@ -719,12 +741,6 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 
 			QueryTurnEnd(g);
 
-			// Reset the game action. 
-			// (Reverses the effects of simulating it on the server, so it is again ready to use on a client)
-			// TODO: Does this actually need to be done here? Write function does not necessarily care if the action is already run.
-			// I may be able to get rid of this.
-			g->Reset();
-
 			return g;
 		}
 		else
@@ -749,7 +765,7 @@ GameAction * Game::CreateHunkerAction(const short characterID)
 		Character* c = cIter->second;
 		if (c != nullptr)
 		{
-			// TODO: Hunker should only be useable in cover. Check for cover here
+			// Hunker is only useable in cover. Cancel the hunker action if the tile is not in cover
 			if (!m_map->TileIsInCover(c->GetPosition()))
 				return nullptr;
 

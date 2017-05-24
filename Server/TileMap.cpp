@@ -58,7 +58,7 @@ JakePerry::TileMap::MapTile * TileMap::FindTile(const MapVec3 pos) const
 	return nullptr;
 }
 
-std::list<MapVec3> JakePerry::TileMap::AStarSearch(MapTile * from, MapTile * to) const
+std::list<MapVec3> JakePerry::TileMap::AStarSearch(MapTile * from, MapTile * to, const std::list<MapVec3> obstacles) const
 {
 	std::list<MapTile*> openList;
 	std::list<MapTile*> closedList;
@@ -90,6 +90,10 @@ std::list<MapVec3> JakePerry::TileMap::AStarSearch(MapTile * from, MapTile * to)
 		for (cIter = connections.begin(); cIter != connections.end(); cIter++)
 		{
 			MapTile* n = cIter->second->GetConnected(currentNode);
+
+			// Check if the connected tile is contained in the obstacle list
+			if (std::find(obstacles.begin(), obstacles.end(), n->GetTilePos()) != obstacles.end())
+				continue;
 
 			float newGScore = currentNode->gScore + cIter->second->GetWeight();
 			float newHScore = MapVec3::Distance(n->GetTilePos(), to->GetTilePos());
@@ -378,7 +382,7 @@ bool JakePerry::TileMap::TileIsInCover(const MapVec3 position) const
 	return false;
 }
 
-std::list<MapVec3> JakePerry::TileMap::FindPath(const MapVec3 from, const MapVec3 to) const
+std::list<MapVec3> JakePerry::TileMap::FindPath(const MapVec3 from, const MapVec3 to, const std::list<MapVec3> obstacles) const
 {
 	MapTile* origin = FindTile(from);
 	if (origin)
@@ -386,7 +390,7 @@ std::list<MapVec3> JakePerry::TileMap::FindPath(const MapVec3 from, const MapVec
 		MapTile* destination = FindTile(to);
 		if (destination)
 		{
-			return AStarSearch(origin, destination);
+			return AStarSearch(origin, destination, obstacles);
 		}
 		printf("Error: Specified destination could not be found in FindPath method.\n");
 	}

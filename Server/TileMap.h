@@ -554,7 +554,7 @@ namespace JakePerry
 
 		TileMap::MapTile* FindTile(const MapVec3 pos) const;
 
-		std::list<MapVec3> AStarSearch(MapTile* from, MapTile* to) const;
+		std::list<MapVec3> AStarSearch(MapTile* from, MapTile* to, const std::list<MapVec3> obstacles = std::list<MapVec3>()) const;
 		void ClearPathData(std::list<MapTile*> list) const;
 
 #ifdef NETWORK_SERVER
@@ -578,7 +578,7 @@ namespace JakePerry
 		bool TileAt(const MapVec3 position) const;
 		bool TileIsInCover(const MapVec3 position) const;
 
-		std::list<MapVec3> FindPath(const MapVec3 from, const MapVec3 to) const;
+		std::list<MapVec3> FindPath(const MapVec3 from, const MapVec3 to, const std::list<MapVec3> obstacles = std::list<MapVec3>()) const;
 		std::list<MapVec3> GetWalkableTiles(const MapVec3 start, const int maxTravelDist) const;
 		std::list<MapVec3> Raycast(const float x, const float y, const float z, const float dirX, const float dirY, const float dirZ, const float rayLength, const float tileScale) const;
 
