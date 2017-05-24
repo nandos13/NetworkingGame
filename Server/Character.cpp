@@ -158,6 +158,11 @@ void Character::QueryOverwatch(GameAction* action, Character * mover, TileMap& m
 }
 #endif
 
+unsigned int Character::RemainingHealth() const
+{
+	return m_remainingHealth;
+}
+
 unsigned int Character::RemainingActionPoints() const
 {
 	return m_remainingPoints;

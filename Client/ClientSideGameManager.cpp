@@ -210,7 +210,8 @@ void ClientSideGameManager::UpdateTilePath()
 		if (m_selectedCharacter->HasRemainingPoints())
 		{
 			TileMap* map = Game::GetMap();
-			m_currentPath = map->FindPath(m_selectedCharacter->GetPosition(), m_hoveredTile);
+			auto obstacles = Game::GetInstance()->GetAllCharacterPositions(true);
+			m_currentPath = map->FindPath(m_selectedCharacter->GetPosition(), m_hoveredTile, obstacles);
 		}
 	}
 }
@@ -310,6 +311,8 @@ void ClientSideGameManager::DrawHUD()
 			ImGui::Text("Position: %d, %d, %d", pos.m_x, pos.m_y, pos.m_z);
 
 			ImGui::Text("Ammo: %d", m_selectedCharacter->GetRemainingAmmo());
+
+			ImGui::Text("Health: %d", m_selectedCharacter->RemainingHealth());
 		}
 
 		ImGui::End();
@@ -508,6 +511,7 @@ void ClientSideGameManager::Update(const float dTime)
 				{
 					// This seems to be a legal move. Send a message to the server
 					m_thisClient->sendCharacterMove(m_selectedCharacter->GetID(), m_hoveredTile);
+					m_currentPath.clear();
 				}
 			}
 		}

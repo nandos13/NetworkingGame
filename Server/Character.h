@@ -71,6 +71,7 @@ public:
 	void QueryOverwatch(GameAction* action, Character* mover, TileMap& map);
 #endif
 
+	unsigned int RemainingHealth() const;
 	unsigned int RemainingActionPoints() const;
 	void SetActionPoints(const unsigned int newPoints);
 	unsigned int PointsToMove(short moveTiles) const;
