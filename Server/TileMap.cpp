@@ -13,7 +13,7 @@ using namespace JakePerry;
 
 
 /* Deletes all nodes & planes from memory. */
-void TileMap::ClearAllData()
+void JakePerry::TileMap::ClearAllData()
 {
 	std::unordered_map<short, MapPlane>::iterator iter;
 	for (iter = m_planes.begin(); iter != m_planes.end(); iter++)
@@ -25,7 +25,7 @@ void TileMap::ClearAllData()
 	m_spawnPoints.clear();
 }
 
-void TileMap::ResetPathingData()
+void JakePerry::TileMap::ResetPathingData()
 {
 	// Loop through all planes
 	for (auto& planeIter = m_planes.begin(); planeIter != m_planes.end(); planeIter++)
@@ -38,7 +38,7 @@ void TileMap::ResetPathingData()
 	}
 }
 
-TileMap::MapTile * TileMap::FindTile(const MapVec3 pos) const
+JakePerry::TileMap::MapTile * TileMap::FindTile(const MapVec3 pos) const
 {
 	// Find plane
 	std::unordered_map<short, MapPlane>::const_iterator it = m_planes.find(pos.m_y);
@@ -58,7 +58,7 @@ TileMap::MapTile * TileMap::FindTile(const MapVec3 pos) const
 	return nullptr;
 }
 
-std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to) const
+std::list<MapVec3> JakePerry::TileMap::AStarSearch(MapTile * from, MapTile * to) const
 {
 	std::list<MapTile*> openList;
 	std::list<MapTile*> closedList;
@@ -142,7 +142,7 @@ std::list<MapVec3> TileMap::AStarSearch(MapTile * from, MapTile * to) const
 	return path;
 }
 
-void TileMap::ClearPathData(std::list<MapTile*> list) const
+void JakePerry::TileMap::ClearPathData(std::list<MapTile*> list) const
 {
 	for (auto& iter = list.cbegin(); iter != list.cend(); iter++)
 	{
@@ -156,7 +156,7 @@ void TileMap::ClearPathData(std::list<MapTile*> list) const
 /**
  * Internal use for checking sight between two tiles.
  */
-bool TileMap::SightBetweenTiles(const MapVec3 from, const MapVec3 to) const
+bool JakePerry::TileMap::SightBetweenTiles(const MapVec3 from, const MapVec3 to) const
 {
 	if (from == to)
 		return true;	// Error?
@@ -261,16 +261,16 @@ bool TileMap::SightBetweenTiles(const MapVec3 from, const MapVec3 to) const
 }
 #endif
 
-TileMap::TileMap()
+JakePerry::TileMap::TileMap()
 {
 }
 
-TileMap::~TileMap()
+JakePerry::TileMap::~TileMap()
 {
 	ClearAllData();
 }
 
-void TileMap::AddTile(MapVec3 pos, unsigned char coverData, bool autoConnect)
+void JakePerry::TileMap::AddTile(MapVec3 pos, unsigned char coverData, bool autoConnect)
 {
 	// Insert a plane at specified y-level if it does not exist
 	MapPlane plane;
@@ -322,22 +322,22 @@ void TileMap::AddTile(MapVec3 pos, unsigned char coverData, bool autoConnect)
 	}
 }
 
-void TileMap::AddTile(short x, short y, short z, bool autoConnect)
+void JakePerry::TileMap::AddTile(short x, short y, short z, bool autoConnect)
 {
 	AddTile(MapVec3(x,y,z), autoConnect);
 }
 
-void TileMap::ClearSpawnPoints()
+void JakePerry::TileMap::ClearSpawnPoints()
 {
 	m_spawnPoints.clear();
 }
 
-void TileMap::AddSpawnPoint(const MapVec3 pos)
+void JakePerry::TileMap::AddSpawnPoint(const MapVec3 pos)
 {
 	m_spawnPoints.push_back(pos);
 }
 
-void TileMap::RemoveSpawnPoint(const MapVec3 pos)
+void JakePerry::TileMap::RemoveSpawnPoint(const MapVec3 pos)
 {
 	for (auto& iter = m_spawnPoints.begin(); iter != m_spawnPoints.end(); iter++)
 	{
@@ -346,7 +346,7 @@ void TileMap::RemoveSpawnPoint(const MapVec3 pos)
 	}
 }
 
-COVER_VALUE TileMap::GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir)
+COVER_VALUE JakePerry::TileMap::GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir)
 {
 	// Find tile at this position
 	MapTile* tile = FindTile(position);
@@ -359,12 +359,26 @@ COVER_VALUE TileMap::GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_
 		return COVER_NONE;
 }
 
-bool TileMap::TileAt(const MapVec3 position) const
+bool JakePerry::TileMap::TileAt(const MapVec3 position) const
 {
 	return ( FindTile(position) != nullptr );
 }
 
-std::list<MapVec3> TileMap::FindPath(const MapVec3 from, const MapVec3 to) const
+bool JakePerry::TileMap::TileIsInCover(const MapVec3 position) const
+{
+	MapTile* tile = FindTile(position);
+	if (tile != nullptr)
+	{
+		return
+			(tile->GetCoverBack() != COVER_NONE
+				&&	tile->GetCoverFront() != COVER_NONE
+				&&	tile->GetCoverLeft() != COVER_NONE
+				&&	tile->GetCoverRight() != COVER_NONE);
+	}
+	return false;
+}
+
+std::list<MapVec3> JakePerry::TileMap::FindPath(const MapVec3 from, const MapVec3 to) const
 {
 	MapTile* origin = FindTile(from);
 	if (origin)
@@ -380,7 +394,7 @@ std::list<MapVec3> TileMap::FindPath(const MapVec3 from, const MapVec3 to) const
 	return std::list<MapVec3>();
 }
 
-std::list<MapVec3> TileMap::GetWalkableTiles(const MapVec3 start, const int maxTravelDist) const
+std::list<MapVec3> JakePerry::TileMap::GetWalkableTiles(const MapVec3 start, const int maxTravelDist) const
 {
 	std::list<MapVec3> firstList;
 	std::list<MapVec3> secondList;
@@ -435,7 +449,7 @@ std::list<MapVec3> TileMap::GetWalkableTiles(const MapVec3 start, const int maxT
 }
 
 /* Cast a ray through map voxels. NOTE: dir values must be of a normalized vector to work correctly */
-std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z, const float dirX, const float dirY, const float dirZ, const float rayLength, const float tileScale) const
+std::list<MapVec3> JakePerry::TileMap::Raycast(const float x, const float y, const float z, const float dirX, const float dirY, const float dirZ, const float rayLength, const float tileScale) const
 {
 	// Function was based on write-up found at: http://www.cs.yorku.ca/~amana/research/grid.pdf
 
@@ -520,7 +534,7 @@ std::list<MapVec3> TileMap::Raycast(const float x, const float y, const float z,
 
 #ifdef NETWORK_SERVER
 /* Checks tiles over a sight-line to check whether or not sight is blocked. */
-bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, const float tileScale, int maxSightRange) const
+bool JakePerry::TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, const float tileScale, int maxSightRange) const
 {
 	if (MapVec3::Distance(from, to) <= maxSightRange)
 	{
@@ -564,7 +578,7 @@ bool TileMap::CheckTileSight(const MapVec3 from, const MapVec3 to, const float t
 
 #ifdef TILEMAP_INCLUDE_RAKNET_FUNCTIONS
 /* Write & send the whole tilemap. */
-void TileMap::Write(RakNet::BitStream& bs)
+void JakePerry::TileMap::Write(RakNet::BitStream& bs)
 {
 	// List of sent connections. Keeps track of which connections have been sent
 	// to avoid sending twice
@@ -645,7 +659,7 @@ void TileMap::Write(RakNet::BitStream& bs)
 
 #ifdef TILEMAP_INCLUDE_RAKNET_FUNCTIONS
 /* Read a packet as a new tilemap. Wipes all old data if present. */
-void TileMap::Read(RakNet::BitStream& bsIn)
+void JakePerry::TileMap::Read(RakNet::BitStream& bsIn)
 {
 	ClearAllData();
 
@@ -744,7 +758,7 @@ void TileMap::Read(RakNet::BitStream& bsIn)
 #endif
 
 /* Basic draw function, draws each tile using gizmos */
-void TileMap::Draw() const
+void JakePerry::TileMap::Draw() const
 {
 	float tileScale = Game::GetMapTileScale();
 

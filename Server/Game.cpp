@@ -736,6 +736,10 @@ GameAction * Game::CreateMoveAction(short characterID, MapVec3 coords)
 	return nullptr;
 }
 
+/**
+ * Handle a character hunkering down for extra cover.
+ * Returns null if the character is not in cover.
+ */
 GameAction * Game::CreateHunkerAction(const short characterID)
 {
 	// Find the referenced character
@@ -746,6 +750,8 @@ GameAction * Game::CreateHunkerAction(const short characterID)
 		if (c != nullptr)
 		{
 			// TODO: Hunker should only be useable in cover. Check for cover here
+			if (!m_map->TileIsInCover(c->GetPosition()))
+				return nullptr;
 
 			GameAction* g = new GameAction();
 

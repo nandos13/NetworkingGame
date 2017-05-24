@@ -576,6 +576,7 @@ namespace JakePerry
 		COVER_VALUE GetCoverInDirection(const MapVec3 position, MAP_CONNECTION_DIR dir);
 
 		bool TileAt(const MapVec3 position) const;
+		bool TileIsInCover(const MapVec3 position) const;
 
 		std::list<MapVec3> FindPath(const MapVec3 from, const MapVec3 to) const;
 		std::list<MapVec3> GetWalkableTiles(const MapVec3 start, const int maxTravelDist) const;

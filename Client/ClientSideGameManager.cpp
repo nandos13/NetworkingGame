@@ -271,6 +271,7 @@ void ClientSideGameManager::DrawHUD()
 	int ImGuiID = 0;
 	aie::Input* input = aie::Input::getInstance();
 	Game* game = Game::GetInstance();
+	TileMap* map = Game::GetMap();
 
 	// If not player's turn, only draw notification
 	if (!game->IsMyTurn())
@@ -319,9 +320,17 @@ void ClientSideGameManager::DrawHUD()
 	{
 		ImGui::Begin("Abilities", (bool*)0, ImGuiWindowFlags_NoCollapse);
 
-		// TODO: Hunker should only be useable in cover
-		if (ImGui::Button("Hunker Down", ImVec2(40, 40)))
-			HunkerDown();
+		/* TODO: GetPosition only retrieves a character's current position.
+		 * In case of a currently moving character, this may return a tile which is in cover
+		 * even when their destination tile is not. Need to implement a new variable
+		 * which is set when a character is affected by a move action.
+		 */
+		// Hunker is only useable in cover
+		if (map->TileIsInCover(m_selectedCharacter->GetPosition()))
+		{
+			if (ImGui::Button("Hunker Down", ImVec2(40, 40)))
+				HunkerDown();
+		}
 
 		ImGui::End();
 	}

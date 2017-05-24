@@ -229,7 +229,11 @@ void Server::HandleClientHunker(RakNet::RakPeerInterface * pPeerInterface, RakNe
 			action = m_game->CreateHunkerAction(characterID);
 
 			// Send action back to all clients
-			if (action == nullptr) { return; };
+			if (action == nullptr) 
+			{
+				printf("Warning: Client requested a hunker-down action on a character which is not in cover.\n");
+				return; 
+			}
 
 			RakNet::BitStream bs;
 			bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
