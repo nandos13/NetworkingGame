@@ -14,6 +14,7 @@ Character::Character(short ID, short HomeSquad, unsigned int health, unsigned in
 {
 	m_ID = ID;
 	m_homeSquad = HomeSquad;
+	m_currentSquad = HomeSquad;
 
 	m_baseHealth = health;
 	m_remainingHealth = m_baseHealth;
@@ -331,6 +332,11 @@ short Character::GetID() const
 short Character::GetHomeSquad() const
 {
 	return m_homeSquad;
+}
+
+short Character::GetCurrentSquad() const
+{
+	return m_currentSquad;
 }
 
 MapVec3 Character::GetPosition() const

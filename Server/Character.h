@@ -38,6 +38,7 @@ private:
 	bool m_inOverwatch = false;
 	bool m_hunkered = false;
 	short m_ID;
+	short m_currentSquad;
 	short m_homeSquad;
 
 #ifndef NETWORK_SERVER
@@ -105,6 +106,7 @@ public:
 
 	short GetID() const;
 	short GetHomeSquad() const;
+	short GetCurrentSquad() const;
 	MapVec3 GetPosition() const;
 	void SetPosition(const MapVec3 pos);
 	void ApplyDamage(const int amount, const bool armourShred = false);

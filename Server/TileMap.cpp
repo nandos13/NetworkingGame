@@ -60,6 +60,10 @@ JakePerry::TileMap::MapTile * TileMap::FindTile(const MapVec3 pos) const
 
 std::list<MapVec3> JakePerry::TileMap::AStarSearch(MapTile * from, MapTile * to, const std::list<MapVec3> obstacles) const
 {
+	// Check if the destination tile is in the obstacle list
+	if (std::find(obstacles.begin(), obstacles.end(), to->GetTilePos()) != obstacles.end())
+		return std::list<MapVec3>();
+
 	std::list<MapTile*> openList;
 	std::list<MapTile*> closedList;
 

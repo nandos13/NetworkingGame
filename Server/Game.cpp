@@ -84,10 +84,14 @@ GameAction * Game::CreateInitialVisibleEnemiesAction()
 
 std::list<Character*> Game::GetVisibleEnemies(Character * lookUnit)
 {
-	Squad* waitingSquad = GetWaitingSquad();
-	MapVec3 characterPos = lookUnit->GetPosition();
+	if (lookUnit == nullptr)
+		return std::list<Character*>();
 
-	auto enemyUnits = waitingSquad->GetAllCharacters();
+	MapVec3 characterPos = lookUnit->GetPosition();
+	short squad = lookUnit->GetCurrentSquad();
+	Squad* enemySquad = (squad == 0) ? &m_squads[1] : &m_squads[0];
+
+	auto enemyUnits = enemySquad->GetAllCharacters();
 	std::list<Character*> visibleEnemies;
 	unsigned int characterSightRadius = lookUnit->GetSightRadius();
 
