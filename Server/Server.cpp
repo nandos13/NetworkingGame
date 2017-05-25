@@ -120,6 +120,7 @@ void Server::SendGameData(RakNet::RakPeerInterface * pPeerInterface, RakNet::Sys
 
 void Server::HandleClientShoot(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet * packet)
 {
+	printf("Receiving request to shoot.\n");
 	// Find sender connection
 	std::string senderAddress = packet->systemAddress.ToString();
 	auto connectionVec = GetConnections();

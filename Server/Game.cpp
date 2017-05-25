@@ -163,7 +163,7 @@ void Game::QueryTurnEnd(GameAction * g)
 		// Iterate through each character in the squad & check if they have any remaining action points
 		for (auto& iter = characters.begin(); iter != characters.end(); iter++)
 		{
-			if ((*iter)->RemainingActionPoints() > 0)
+			if ((*iter)->RemainingActionPoints() > 0 && (*iter)->Alive())
 				return;
 		}
 
@@ -424,15 +424,18 @@ void Game::SetSpectatorMode(const bool state)
  */
 void Game::SetTurn(const bool playerOne)
 {
-	// Get the squad that is not currently playing
-	Squad* currentlyWaiting = GetWaitingSquad();
-	if (currentlyWaiting != nullptr)
+	m_currentTurn = (playerOne) ? 0 : 1;
+
+	Squad* squadStartingTurn = &m_squads[m_currentTurn];
+	if (squadStartingTurn != nullptr)
 	{
-		// Reset action points, etc for this squad before we pass control
-		currentlyWaiting->StartTurn();
+		// Reset action points, etc for this squad
+		squadStartingTurn->StartTurn();
 	}
 
-	m_currentTurn = (playerOne) ? 0 : 1 ;
+#ifdef NETWORK_SERVER
+	printf("Passing control to player: %d\n", m_currentTurn);
+#endif
 
 	// Client-Side: Notify the player that their turn has started or ended
 #ifndef NETWORK_SERVER

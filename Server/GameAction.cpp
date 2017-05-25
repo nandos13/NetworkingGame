@@ -69,6 +69,10 @@ void GameAction::AddToQueue(BaseAction * a)
 			// This was the first action to be added. Set current action
 			m_iter = m_queue.begin();
 		}
+		else if (m_iter == m_queue.end())
+		{
+			m_iter = std::prev(m_queue.end());
+		}
 		m_completed = false;
 	}
 }
