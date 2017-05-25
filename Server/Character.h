@@ -117,5 +117,7 @@ public:
 	void SetHunkerState(const bool state);
 	void EndOverwatch();
 
+	void Kill();
+
 };
 

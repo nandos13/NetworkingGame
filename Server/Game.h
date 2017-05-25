@@ -46,6 +46,7 @@ private:
 	void Setup();
 	GameAction* CreateInitialWalkableTilesAction();
 	GameAction* CreateInitialVisibleEnemiesAction();
+	void AppendVisibleEnemiesAction(GameAction* g);
 	std::list<Character*> GetVisibleEnemies(Character* lookUnit);
 #endif
 	Squad* GetPlayingSquad();

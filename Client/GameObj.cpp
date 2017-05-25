@@ -9,6 +9,7 @@ GameObj::GameObj()
 {
 	m_position = glm::vec3(0);
 	m_colour = glm::vec4(1, 0, 0, 0.5f);
+	m_radius = 0.4f;
 }
 
 GameObj::~GameObj()
@@ -67,8 +68,13 @@ void GameObj::SetColour(const float r, const float g, const float b, const float
 	SetColour(glm::vec4(r, g, b, a));
 }
 
+void GameObj::SetRadius(const float r)
+{
+	m_radius = r;
+}
+
 void GameObj::Draw() const
 {
 	// TODO: Probably needs to take in camera matrix, etc
-	aie::Gizmos::addSphere(m_position, 0.4f, 8, 10, m_colour);
+	aie::Gizmos::addSphere(m_position, m_radius, 8, 10, m_colour);
 }

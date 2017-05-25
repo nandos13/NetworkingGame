@@ -23,6 +23,10 @@ void ShootAction::_Execute(float dTime)
 	if (c != nullptr)
 		c->ApplyDamage(m_damage);
 
+	// Check for death
+	if (!c->Alive())
+		OnKill(c);
+
 	// End action
 	CompleteSelf();
 }
@@ -44,6 +48,11 @@ void ShootAction::_Execute(float dTime)
 	CompleteSelf();
 }
 #endif
+
+void ShootAction::OnKill(Character * victim)
+{
+	victim->Kill();
+}
 
 ShootAction::ShootAction(Character * owner, MapVec3 target, short damage, SHOT_STATUS shotState, unsigned int ammoUse, bool armourShred) : BaseAction(owner)
 {

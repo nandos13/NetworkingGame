@@ -62,6 +62,7 @@ GameAction * Game::CreateInitialWalkableTilesAction()
 	return g;
 }
 
+/* Creates & returns a new action which updates visible enemy list for each character */
 GameAction * Game::CreateInitialVisibleEnemiesAction()
 {
 	GameAction* g = new GameAction();
@@ -72,7 +73,10 @@ GameAction * Game::CreateInitialVisibleEnemiesAction()
 
 		if (c != nullptr)
 		{
-			auto visibleEnemies = GetVisibleEnemies(c);
+			// Clear list for dead characters, and update for alive characters.
+			auto visibleEnemies = std::list<Character*>();
+			if (c->Alive())
+				visibleEnemies = GetVisibleEnemies(c);
 
 			SetVisibleEnemiesAction* sveA = new SetVisibleEnemiesAction(c, visibleEnemies);
 			g->AddToQueue(sveA);
@@ -80,6 +84,29 @@ GameAction * Game::CreateInitialVisibleEnemiesAction()
 	}
 
 	return g;
+}
+
+/* Creates actions to update each character's visible enemy list, and appends them to the specified GameAction */
+void Game::AppendVisibleEnemiesAction(GameAction * g)
+{
+	if (g != nullptr)
+	{
+		for (auto& iter = m_characters.cbegin(); iter != m_characters.cend(); iter++)
+		{
+			Character* c = iter->second;
+
+			if (c != nullptr)
+			{
+				// Clear list for dead characters, and update for alive characters.
+				auto visibleEnemies = std::list<Character*>();
+				if (c->Alive())
+					visibleEnemies = GetVisibleEnemies(c);
+
+				SetVisibleEnemiesAction* sveA = new SetVisibleEnemiesAction(c, visibleEnemies);
+				g->AddToQueue(sveA);
+			}
+		}
+	}
 }
 
 std::list<Character*> Game::GetVisibleEnemies(Character * lookUnit)
@@ -618,6 +645,13 @@ GameAction * Game::CreateShootAction(const short shooterID, short victimID)
 				// Check for this first
 				SetPointsAction* spA = new SetPointsAction(c, 0);
 				g->AddToQueue(spA);
+
+				// Simulate on server
+				while (!g->IsCompleted())	g->Execute(0);
+
+				// If the victim died after the shot, update visible enemy lists to remove the victim.
+				if (!victim->Alive())
+					AppendVisibleEnemiesAction(g);
 
 				// Simulate on server
 				while (!g->IsCompleted())	g->Execute(0);

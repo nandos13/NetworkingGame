@@ -334,6 +334,20 @@ void Character::EndOverwatch()
 	m_inOverwatch = false;
 }
 
+void Character::Kill()
+{
+	// Client-Side: Set visual game object to show the character is dead.
+#ifndef NETWORK_SERVER
+	m_gameObject.SetRadius(0.2f);
+	m_gameObject.SetColour(0.3f, 0.3f, 0.3f, 0.5f);
+#endif
+
+	// Clear data lists
+	m_1PointWalkableTiles.clear();
+	m_2PointWalkableTiles.clear();
+	m_visibleEnemies.clear();
+}
+
 /* Returns the character's unique ID, which corresponds to the map key it belongs to in the Game class. */
 short Character::GetID() const
 {

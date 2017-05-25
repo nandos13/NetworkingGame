@@ -15,6 +15,7 @@ protected:
 	bool m_shred;
 
 	virtual void _Execute(float dTime);
+	void OnKill(Character* victim);
 
 public:
 	ShootAction(Character* owner, MapVec3 target, short damage, SHOT_STATUS shotState, unsigned int ammoUse = 1, bool armourShred = false);
