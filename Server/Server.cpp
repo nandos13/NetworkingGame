@@ -277,7 +277,7 @@ void Server::Run()
 	RakNet::Packet* packet = nullptr;
 
 	// Start a new thread for client pings
-	std::thread pingThread(SendClientPing, pPeerInterface);
+	//std::thread pingThread(SendClientPing, pPeerInterface);
 
 	// Handle connection info here
 	HandleConnections(pPeerInterface, packet);

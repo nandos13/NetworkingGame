@@ -249,6 +249,16 @@ Character* Character::Read(RakNet::BitStream & bsIn)
 	MapVec3::GetTileWorldCoords(x, y, z, pos, Game::GetMapTileScale());
 	c->m_gameObject.SetPosition(x, y, z);
 
+	// Read gun info
+	bool hasGun = false;
+	bsIn.Read(hasGun);
+
+	if (hasGun)
+	{
+		GunBase* gun = GunBase::Read(bsIn);
+		c->m_gun = gun;
+	}
+
 	// TODO: Implement rest of function along with Write function
 
 	return c;
@@ -308,9 +318,14 @@ void Character::Write(RakNet::BitStream & bs)
 	// Write position
 	m_currentPosition.Write(bs);
 
-	// TODO: PRIORITY:: Write gun info
+	// Write gun info
+	bool hasGun = (m_gun != nullptr);
+	bs.Write(hasGun);
 
-	// TODO: Finish implementation with gun, gear, abilities, etc
+	if (hasGun)
+		m_gun->Write(bs);
+
+	// TODO: Finish implementation with gear, abilities, etc
 }
 #endif
 

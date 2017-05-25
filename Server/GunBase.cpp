@@ -1,5 +1,10 @@
 #include "GunBase.h"
 
+#include "Shotgun.h"
+#include "SniperRifle.h"
+#include "StandardGun.h"
+
+#include <BitStream.h>
 #include <cstdio>
 
 
@@ -56,3 +61,49 @@ unsigned int GunBase::RemainingAmmo() const
 {
 	return m_remainingAmmo;
 }
+
+#ifndef NETWORK_SERVER
+GunBase * GunBase::Read(RakNet::BitStream & bsIn)
+{
+	// Read gun type
+	int id = 0;
+	bsIn.Read(id);
+
+	unsigned int clipSize = 0;
+	unsigned int damageMin = 0;
+	unsigned int damageMax = 0;
+	int aimModifier = 0;
+	int critModifier = 0;
+
+	bsIn.Read(clipSize);
+	bsIn.Read(damageMin);
+	bsIn.Read(damageMax);
+	bsIn.Read(aimModifier);
+	bsIn.Read(critModifier);
+
+	switch (id)
+	{
+	case 1:		return new Shotgun(clipSize, damageMin, damageMax, aimModifier, critModifier);
+	case 2:		return new SniperRifle(clipSize, damageMin, damageMax, aimModifier, critModifier);
+	case 3:		return new StandardGun(clipSize, damageMin, damageMax, aimModifier, critModifier);
+
+	default:	return nullptr;
+	}
+
+}
+#endif
+
+#ifdef NETWORK_SERVER
+void GunBase::Write(RakNet::BitStream & bs)
+{
+	// Write gun type
+	bs.Write(m_gunType);
+
+	// Write gun stats
+	bs.Write(m_clipSize);
+	bs.Write(m_damageMin);
+	bs.Write(m_damageMax);
+	bs.Write(m_aimModifier);
+	bs.Write(m_critModifier);
+}
+#endif

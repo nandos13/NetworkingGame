@@ -1,7 +1,12 @@
 #pragma once
+
+#include <RakPeerInterface.h>
+
 class GunBase
 {
 protected:
+
+	int m_gunType = 0;
 
 	unsigned int m_clipSize;
 	unsigned int m_remainingAmmo;
@@ -27,6 +32,14 @@ public:
 
 	void UseAmmo(const unsigned int amount = 1);
 	unsigned int RemainingAmmo() const;
+
+#ifndef NETWORK_SERVER
+	static GunBase* Read(RakNet::BitStream& bsIn);
+#endif
+
+#ifdef NETWORK_SERVER
+	virtual void Write(RakNet::BitStream& bs);
+#endif
 
 };
 

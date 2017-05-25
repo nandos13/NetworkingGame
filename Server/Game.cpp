@@ -98,6 +98,10 @@ std::list<Character*> Game::GetVisibleEnemies(Character * lookUnit)
 	// Iterate through all enemy-controlled units and add them to the list if they are visible
 	for (auto& iter = enemyUnits.begin(); iter != enemyUnits.end(); iter++)
 	{
+		// Is the enemy alive?
+		if (!(*iter)->Alive())
+			continue;
+
 		MapVec3 enemyPos = (*iter)->GetPosition();
 		if (enemyPos != characterPos)
 		{
@@ -570,10 +574,31 @@ GameAction * Game::CreateShootAction(const short shooterID, short victimID)
 		Character* c = cIter->second;
 		if (c != nullptr)
 		{
+			// Check shooter has ammo
+			if (c->GetRemainingAmmo() <= 0)
+			{
+				printf("Warning: Shooter with ID %d has no ammo.\n", shooterID);
+				return nullptr;
+			}
+
+			// Check the shooter is alive
+			if (!c->Alive())
+			{
+				printf("Error: Shooter with ID %d is dead.\n", shooterID);
+				return nullptr;
+			}
+
 			// Get victim character
 			Character* victim = FindCharacterByID(victimID);
 			if (victim != nullptr)
 			{
+				// Check the victim is not already dead
+				if (!victim->Alive())
+				{
+					printf("Error: Shoot victim with ID %d is already dead.\n", victimID);
+					return nullptr;
+				}
+
 				// Get victim's position
 				MapVec3 vicPos = victim->GetPosition();
 

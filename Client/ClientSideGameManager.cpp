@@ -142,7 +142,8 @@ void ClientSideGameManager::AttackEnemy()
 {
 	if (m_currentEnemy != nullptr && m_selectedCharacter != nullptr)
 	{
-		m_thisClient->sendCharacterShoot(m_selectedCharacter->GetID(), m_currentEnemy->GetPosition());
+		if (m_currentEnemy->Alive() && m_selectedCharacter->Alive())
+			m_thisClient->sendCharacterShoot(m_selectedCharacter->GetID(), m_currentEnemy->GetPosition());
 	}
 }
 
@@ -207,7 +208,7 @@ void ClientSideGameManager::UpdateTilePath()
 
 	if (m_selectedCharacter != nullptr)
 	{
-		if (m_selectedCharacter->HasRemainingPoints())
+		if (m_selectedCharacter->HasRemainingPoints() && m_selectedCharacter->Alive())
 		{
 			TileMap* map = Game::GetMap();
 			auto obstacles = Game::GetInstance()->GetAllCharacterPositions(true);
@@ -294,25 +295,32 @@ void ClientSideGameManager::DrawHUD()
 		}
 		else
 		{
-			int actionPoints = (int)m_selectedCharacter->RemainingActionPoints();
-			ImGui::Text("Action Points: %d", actionPoints);
+			if (!m_selectedCharacter->Alive())
+			{
+				ImGui::Text("Selected character is dead.");
+			}
+			else
+			{
+				int actionPoints = (int)m_selectedCharacter->RemainingActionPoints();
+				ImGui::Text("Action Points: %d", actionPoints);
 
-			bool hunkered = m_selectedCharacter->IsHunkeredDown();
-			if (hunkered)	ImGui::Text("Hunkered Down: true");
-			else			ImGui::Text("Hunkered Down: false");
+				bool hunkered = m_selectedCharacter->IsHunkeredDown();
+				if (hunkered)	ImGui::Text("Hunkered Down: true");
+				else			ImGui::Text("Hunkered Down: false");
 
-			// Show amount of enemies visible
-			auto visibleEnemies = m_selectedCharacter->GetVisibleEnemies();
-			ImGui::Text("Visible Enemies: %d", (int)visibleEnemies.size());
+				// Show amount of enemies visible
+				auto visibleEnemies = m_selectedCharacter->GetVisibleEnemies();
+				ImGui::Text("Visible Enemies: %d", (int)visibleEnemies.size());
 
-			// TEMP: Get position
-			MapVec3 pos = m_selectedCharacter->GetPosition();
+				// TEMP: Get position
+				MapVec3 pos = m_selectedCharacter->GetPosition();
 
-			ImGui::Text("Position: %d, %d, %d", pos.m_x, pos.m_y, pos.m_z);
+				ImGui::Text("Position: %d, %d, %d", pos.m_x, pos.m_y, pos.m_z);
 
-			ImGui::Text("Ammo: %d", m_selectedCharacter->GetRemainingAmmo());
+				ImGui::Text("Ammo: %d", m_selectedCharacter->GetRemainingAmmo());
 
-			ImGui::Text("Health: %d", m_selectedCharacter->RemainingHealth());
+				ImGui::Text("Health: %d", m_selectedCharacter->RemainingHealth());
+			}
 		}
 
 		ImGui::End();
@@ -472,46 +480,49 @@ void ClientSideGameManager::Update(const float dTime)
 		{
 			if (m_selectedCharacter != nullptr)
 			{
-				bool moveable = false;
-
-				// Check if there is currently another character on this tile
-				if (game->FindCharacterAtCoords(m_hoveredTile) == nullptr)
+				if (m_selectedCharacter->Alive())
 				{
-					// Get remaining points
-					unsigned int points = m_selectedCharacter->RemainingActionPoints();
+					bool moveable = false;
 
-					if (points >= 1)
+					// Check if there is currently another character on this tile
+					if (game->FindCharacterAtCoords(m_hoveredTile) == nullptr)
 					{
-						// Check the walk list for the clicked tile
-						for (auto& iter = walkTiles.cbegin(); iter != walkTiles.cend(); iter++)
+						// Get remaining points
+						unsigned int points = m_selectedCharacter->RemainingActionPoints();
+
+						if (points >= 1)
 						{
-							if ((*iter) == m_hoveredTile)
+							// Check the walk list for the clicked tile
+							for (auto& iter = walkTiles.cbegin(); iter != walkTiles.cend(); iter++)
 							{
-								moveable = true;
-								break;
+								if ((*iter) == m_hoveredTile)
+								{
+									moveable = true;
+									break;
+								}
+							}
+						}
+
+						// Check the dash list for the clicked tile
+						if (!moveable && points >= 2)
+						{
+							for (auto& iter = dashTiles.cbegin(); iter != dashTiles.cend(); iter++)
+							{
+								if ((*iter) == m_hoveredTile)
+								{
+									moveable = true;
+									break;
+								}
 							}
 						}
 					}
 
-					// Check the dash list for the clicked tile
-					if (!moveable && points >= 2)
+					if (moveable)
 					{
-						for (auto& iter = dashTiles.cbegin(); iter != dashTiles.cend(); iter++)
-						{
-							if ((*iter) == m_hoveredTile)
-							{
-								moveable = true;
-								break;
-							}
-						}
+						// This seems to be a legal move. Send a message to the server
+						m_thisClient->sendCharacterMove(m_selectedCharacter->GetID(), m_hoveredTile);
+						m_currentPath.clear();
 					}
-				}
-
-				if (moveable)
-				{
-					// This seems to be a legal move. Send a message to the server
-					m_thisClient->sendCharacterMove(m_selectedCharacter->GetID(), m_hoveredTile);
-					m_currentPath.clear();
 				}
 			}
 		}
