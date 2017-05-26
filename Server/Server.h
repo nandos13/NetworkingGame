@@ -71,6 +71,7 @@ protected:
 	void HandleClientShoot	(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet* packet);
 	void HandleClientMove	(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet* packet);
 	void HandleClientHunker	(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet* packet);
+	void HandleClientReload	(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet* packet);
 
 	// Game instance
 	Game* m_game;

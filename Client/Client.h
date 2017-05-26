@@ -29,6 +29,7 @@ public:
 	void sendCharacterShoot(short characterID, MapVec3 target) const;
 	void sendCharacterMove(short characterID, MapVec3 destination) const;
 	void sendCharacterHunker(short characterID) const;
+	void sendCharacterReload(short characterID) const;
 
 protected:
 	

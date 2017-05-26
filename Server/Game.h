@@ -105,6 +105,7 @@ public:
 	GameAction* CreateShootAction(const short shooterID, short victimID);
 	GameAction* CreateMoveAction(const short characterID, MapVec3 coords);
 	GameAction* CreateHunkerAction(const short characterID);
+	GameAction* CreateReloadAction(const short characterID);
 
 	void TempGameSetup();
 

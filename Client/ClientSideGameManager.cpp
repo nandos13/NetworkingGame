@@ -118,6 +118,15 @@ void ClientSideGameManager::HunkerDown() const
 	}
 }
 
+void ClientSideGameManager::Reload() const
+{
+	if (m_selectedCharacter != nullptr)
+	{
+		short charID = m_selectedCharacter->GetID();
+		m_thisClient->sendCharacterReload(charID);
+	}
+}
+
 void ClientSideGameManager::DrawEnemyTile()
 {
 	if (m_selectedCharacter == nullptr)
@@ -341,6 +350,13 @@ void ClientSideGameManager::DrawHUD()
 		{
 			if (ImGui::Button("Hunker Down", ImVec2(40, 40)))
 				HunkerDown();
+		}
+
+		// Reload is only useable when not at full ammo
+		if (m_selectedCharacter->GetRemainingAmmo() != m_selectedCharacter->GetMaxAmmo())
+		{
+			if (ImGui::Button("Reload", ImVec2(40, 40)))
+				Reload();
 		}
 
 		ImGui::End();

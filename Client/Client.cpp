@@ -122,6 +122,17 @@ void Client::sendCharacterHunker(short characterID) const
 		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
 }
 
+void Client::sendCharacterReload(short characterID) const
+{
+	printf("Sending character reload down request.\n");
+	RakNet::BitStream bs;
+	bs.Write((RakNet::MessageID)GameMessages::ID_CLIENT_RELOAD);
+	bs.Write(characterID);
+
+	m_pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0,
+		RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+}
+
 glm::mat4 Client::GetCameraTransform() const
 {
 	return ( m_cam.GetMVP(getWindowWidth(), getWindowHeight()) );

@@ -32,6 +32,9 @@ public:
 
 	void UseAmmo(const unsigned int amount = 1);
 	unsigned int RemainingAmmo() const;
+	unsigned int MaxAmmo() const;
+
+	void Reload();
 
 #ifndef NETWORK_SERVER
 	static GunBase* Read(RakNet::BitStream& bsIn);

@@ -11,6 +11,7 @@
 #include "SetVisibleEnemiesAction.h"
 #include "StartNewTurnAction.h"
 #include "HunkerAction.h"
+#include "ReloadAction.h"
 
 
 // Static variable declaration
@@ -843,6 +844,9 @@ GameAction * Game::CreateHunkerAction(const short characterID)
 			SetPointsAction* spA = new SetPointsAction(c, 0);
 			g->AddToQueue(spA);
 
+			// Simulate on server
+			while (!g->IsCompleted())	g->Execute(0);
+
 			QueryTurnEnd(g);
 
 			// Simulate on server
@@ -858,6 +862,52 @@ GameAction * Game::CreateHunkerAction(const short characterID)
 
 	return nullptr;
 }
+
+/* Handle a reload. Returns null if the character already has full ammo. */
+ GameAction * Game::CreateReloadAction(const short characterID)
+ {
+	 // Find the referenced character
+	 auto& cIter = m_characters.find(characterID);
+	 if (cIter != m_characters.end())
+	 {
+		 Character* c = cIter->second;
+		 if (c != nullptr)
+		 {
+			 // Reload is only useable in when not at full ammo already
+			 if (c->GetRemainingAmmo() >= c->GetMaxAmmo())
+				 return nullptr;
+
+			 GameAction* g = new GameAction();
+
+			 ReloadAction* rA = new ReloadAction(c);
+			 g->AddToQueue(rA);
+
+			 // Use up action points
+			 // TODO: Check for free reloads.
+			 unsigned int newPointValue = c->RemainingActionPoints() - 1;
+			 if (newPointValue < 0)		newPointValue = 0;
+			 else if (newPointValue > 2)	newPointValue = 2;
+			 SetPointsAction* spA = new SetPointsAction(c, newPointValue);
+			 g->AddToQueue(spA);
+
+			 // Simulate on server
+			 while (!g->IsCompleted())	g->Execute(0);
+
+			 QueryTurnEnd(g);
+
+			 // Simulate on server
+			 while (!g->IsCompleted())	g->Execute(0);
+
+			 return g;
+		 }
+		 else
+			 printf("Error: CreateReloadAction function could not find character with id %i.\n", characterID);
+	 }
+	 else
+		 printf("Error: Could not find character.\n");
+
+	 return nullptr;
+ }
 
 /**
  * Temporary way to set up a game. Will implement a better method later,

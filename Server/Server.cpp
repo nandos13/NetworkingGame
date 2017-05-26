@@ -219,13 +219,13 @@ void Server::HandleClientHunker(RakNet::RakPeerInterface * pPeerInterface, RakNe
 
 		if (m_game->IsPlayersTurn(senderID))
 		{
-			// Get move command data
+			// Get hunker command data
 			RakNet::BitStream bsIn(packet->data, packet->length, false);
 			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
 			short characterID;
 			bsIn.Read(characterID);
 
-			// Process move command on the server-side game
+			// Process hunker command on the server-side game
 			GameAction* action;
 			action = m_game->CreateHunkerAction(characterID);
 
@@ -234,6 +234,50 @@ void Server::HandleClientHunker(RakNet::RakPeerInterface * pPeerInterface, RakNe
 			{
 				printf("Warning: Client requested a hunker-down action on a character which is not in cover.\n");
 				return; 
+			}
+
+			RakNet::BitStream bs;
+			bs.Write((RakNet::MessageID)GameMessages::ID_SERVER_SEND_ACTION);
+			action->Write(bs);
+
+			// Send bitstream
+			pPeerInterface->Send(&bs, HIGH_PRIORITY, RELIABLE_ORDERED, 0, RakNet::UNASSIGNED_SYSTEM_ADDRESS, true);
+		}
+		else
+			printf("Not player's turn.\n");
+	}
+}
+
+void Server::HandleClientReload(RakNet::RakPeerInterface * pPeerInterface, RakNet::Packet * packet)
+{
+	printf("Receiving request to reload a character's gun.\n");
+	// Find sender connection
+	std::string senderAddress = packet->systemAddress.ToString();
+	auto connectionVec = GetConnections();
+	ConnectionInfo* sender = ConnectionInfo::FindClient(connectionVec, senderAddress);
+
+	if (sender != nullptr && m_game != nullptr)
+	{
+		// Verify the sender is currently playing
+		unsigned int senderID = sender->GetID();
+
+		if (m_game->IsPlayersTurn(senderID))
+		{
+			// Get reload command data
+			RakNet::BitStream bsIn(packet->data, packet->length, false);
+			bsIn.IgnoreBytes(sizeof(RakNet::MessageID));
+			short characterID;
+			bsIn.Read(characterID);
+
+			// Process reload command on the server-side game
+			GameAction* action;
+			action = m_game->CreateReloadAction(characterID);
+
+			// Send action back to all clients
+			if (action == nullptr)
+			{
+				printf("Warning: Client requested a reload action on a character with full ammo.\n");
+				return;
 			}
 
 			RakNet::BitStream bs;
@@ -312,6 +356,9 @@ void Server::HandleConnections(RakNet::RakPeerInterface* pPeerInterface, RakNet:
 				break;
 			case ID_CLIENT_HUNKER:
 				HandleClientHunker(pPeerInterface, packet);
+				break;
+			case ID_CLIENT_RELOAD:
+				HandleClientReload(pPeerInterface, packet);
 				break;
 
 			default:

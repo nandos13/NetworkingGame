@@ -127,6 +127,13 @@ unsigned int Character::GetRemainingAmmo() const
 	return 0;
 }
 
+unsigned int Character::GetMaxAmmo() const
+{
+	if (m_gun != nullptr)
+		return m_gun->MaxAmmo();
+	return 0;
+}
+
 #ifdef NETWORK_SERVER
 void Character::QueryOverwatch(GameAction* action, Character * mover, TileMap& map)
 {
@@ -346,6 +353,12 @@ void Character::Kill()
 	m_1PointWalkableTiles.clear();
 	m_2PointWalkableTiles.clear();
 	m_visibleEnemies.clear();
+}
+
+void Character::Reload()
+{
+	if (m_gun)
+		m_gun->Reload();
 }
 
 /* Returns the character's unique ID, which corresponds to the map key it belongs to in the Game class. */

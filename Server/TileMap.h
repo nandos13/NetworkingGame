@@ -17,6 +17,7 @@ enum MAP_CONNECTION_DIR { LEFT = 0, RIGHT, FRONT, BACK,
 							FRONTLEFT, FRONTRIGHT, BACKRIGHT, BACKLEFT };
 enum MAP_CONNECTION_LEVEL { LEVEL = MAP_CONNECTION_DIR::BACKLEFT + 1, UP, DOWN };
 
+// TODO: MapVec3 should also be a part of the JakePerry namespace
 struct MapVec3
 {
 	short m_x, m_y, m_z;

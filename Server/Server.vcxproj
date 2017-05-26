@@ -164,6 +164,7 @@
     <ClCompile Include="MovementAction.cpp" />
     <ClCompile Include="OverwatchShotAction.cpp" />
     <ClCompile Include="RefreshWalkableTilesAction.cpp" />
+    <ClCompile Include="ReloadAction.cpp" />
     <ClCompile Include="Server.cpp" />
     <ClCompile Include="SetPointsAction.cpp" />
     <ClCompile Include="SetVisibleEnemiesAction.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="MovementAction.h" />
     <ClInclude Include="OverwatchShotAction.h" />
     <ClInclude Include="RefreshWalkableTilesAction.h" />
+    <ClInclude Include="ReloadAction.h" />
     <ClInclude Include="Server.h" />
     <ClInclude Include="SetPointsAction.h" />
     <ClInclude Include="SetVisibleEnemiesAction.h" />

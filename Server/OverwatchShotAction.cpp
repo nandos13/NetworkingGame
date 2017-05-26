@@ -37,6 +37,8 @@ OverwatchShotAction::OverwatchShotAction(Character* owner, ShootAction* shootAct
 
 OverwatchShotAction::~OverwatchShotAction()
 {
+	if (m_shoot != nullptr)
+		delete m_shoot;
 }
 
 #ifndef NETWORK_SERVER

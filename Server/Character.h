@@ -67,6 +67,7 @@ public:
 	unsigned int GetCurrentDefense() const;
 	int GetAimBonus(float distance) const;
 	unsigned int GetRemainingAmmo() const;
+	unsigned int GetMaxAmmo() const;
 
 #ifdef NETWORK_SERVER
 	void QueryOverwatch(GameAction* action, Character* mover, TileMap& map);
@@ -118,6 +119,7 @@ public:
 	void EndOverwatch();
 
 	void Kill();
+	void Reload();
 
 };
 

@@ -62,6 +62,16 @@ unsigned int GunBase::RemainingAmmo() const
 	return m_remainingAmmo;
 }
 
+unsigned int GunBase::MaxAmmo() const
+{
+	return m_clipSize;
+}
+
+void GunBase::Reload()
+{
+	m_remainingAmmo = m_clipSize;
+}
+
 #ifndef NETWORK_SERVER
 GunBase * GunBase::Read(RakNet::BitStream & bsIn)
 {
