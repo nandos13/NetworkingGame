@@ -80,6 +80,14 @@ struct MapVec3
 		}
 	}
 
+	const bool IsWithinBounds(const MapVec3 minBounds, const MapVec3 maxBounds)
+	{
+		if (	m_x > minBounds.m_x && m_y > minBounds.m_y && m_z > minBounds.m_z
+			&&	m_x < maxBounds.m_x && m_y < maxBounds.m_y && m_z < maxBounds.m_z)
+			return true;
+		return false;
+	}
+
 	static MapVec3 FindTileAtWorldCoords(const float x, const float y, const float z, const float tileScale)
 	{
 		if (tileScale > 0)
@@ -582,6 +590,8 @@ namespace JakePerry
 		std::list<MapVec3> FindPath(const MapVec3 from, const MapVec3 to, const std::list<MapVec3> obstacles = std::list<MapVec3>()) const;
 		std::list<MapVec3> GetWalkableTiles(const MapVec3 start, const int maxTravelDist) const;
 		std::list<MapVec3> Raycast(const float x, const float y, const float z, const float dirX, const float dirY, const float dirZ, const float rayLength, const float tileScale) const;
+
+		void GetMapBounds(MapVec3& minBounds, MapVec3& maxBounds) const;
 
 #ifdef NETWORK_SERVER
 

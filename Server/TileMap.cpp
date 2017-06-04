@@ -466,6 +466,17 @@ std::list<MapVec3> JakePerry::TileMap::Raycast(const float x, const float y, con
 
 	if (dirX == 0 && dirY == 0 && dirZ == 0)
 		return std::list<MapVec3>();
+
+	// Get bounds of map. Raycast will stop when the ray exits the map bounds
+	MapVec3 mapExtentsMin = MapVec3(0);
+	MapVec3 mapExtentsMax = MapVec3(0);
+	GetMapBounds(mapExtentsMin, mapExtentsMax);
+
+	// Check if the ray is starting inside the map bounds
+	bool isInBounds = false;
+	MapVec3 startPos = MapVec3::FindTileAtWorldCoords(x, y, z, (tileScale > 0) ? tileScale : -tileScale);
+	if (startPos.IsWithinBounds(mapExtentsMin, mapExtentsMax))
+		isInBounds = true;
 	
 	std::list<MapVec3> resultList;
 
@@ -534,10 +545,93 @@ std::list<MapVec3> JakePerry::TileMap::Raycast(const float x, const float y, con
 		currentPos = MapVec3::FindTileAtWorldCoords(xGrid, yGrid, zGrid, tileScalePositive);
 		resultList.push_back(currentPos);
 
-		// TODO: Exit if we escape the bounds of the tilemap
+		// Has the ray been in the map bounds previously?
+		if (isInBounds)
+		{
+			// Check if the ray is still within these bounds
+			bool stillInsideBounds = currentPos.IsWithinBounds(mapExtentsMin, mapExtentsMax);
+
+			if (!stillInsideBounds)		// The ray has exited the map bounds. Return
+				return resultList;
+		}
+		else isInBounds = currentPos.IsWithinBounds(mapExtentsMin, mapExtentsMax);
 	}
 
 	return resultList;
+}
+
+void JakePerry::TileMap::GetMapBounds(MapVec3 & minBounds, MapVec3 & maxBounds) const
+{
+	if (m_planes.size() > 0)
+	{
+		short minX = (std::numeric_limits<short>::max)();
+		short minY = (std::numeric_limits<short>::max)();
+		short minZ = (std::numeric_limits<short>::max)();
+		
+		short maxX = (std::numeric_limits<short>::min)();
+		short maxY = (std::numeric_limits<short>::min)();
+		short maxZ = (std::numeric_limits<short>::min)();
+
+		const MapPlane* minPlane = nullptr;
+		const MapPlane* maxPlane = nullptr;
+
+		// Find min & max planes
+		for (auto& iter = m_planes.cbegin(); iter != m_planes.cend(); iter++)
+		{
+			short y = iter->first;
+			if (y < minY)
+			{
+				minPlane = &(iter->second);
+				minY = y;
+			}
+			if (y > maxY)
+			{
+				maxPlane = &(iter->second);
+				maxY = y;
+			}
+		}
+
+		// Get min coordinates
+		if (minPlane != nullptr)
+		{
+			auto minPlaneTiles = minPlane->m_tiles;
+			for (auto& iter = minPlaneTiles.cbegin(); iter != minPlaneTiles.cend(); iter++)
+			{
+				short x = iter->first.first;
+				short z = iter->first.second;
+
+				if (x < minX)	minX = x;
+				if (z < minZ)	minZ = z;
+			}
+
+			minBounds = MapVec3(minX, minY, minZ);
+		}
+		else
+			minBounds = MapVec3(0);
+
+		// Get max coordinates
+		if (maxPlane != nullptr)
+		{
+			auto maxPlaneTiles = maxPlane->m_tiles;
+			for (auto& iter = maxPlaneTiles.cbegin(); iter != maxPlaneTiles.cend(); iter++)
+			{
+				short x = iter->first.first;
+				short z = iter->first.second;
+
+				if (x < maxX)	maxX = x;
+				if (z < maxZ)	maxZ = z;
+			}
+
+			maxBounds = MapVec3(maxX, maxY, maxZ);
+		}
+		else
+			maxBounds = MapVec3(0);
+	}
+	else
+	{
+		minBounds = MapVec3(0);
+		maxBounds = MapVec3(0);
+	}
 }
 
 #ifdef NETWORK_SERVER

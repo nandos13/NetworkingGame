@@ -103,7 +103,6 @@ Camera::~Camera()
 void Camera::Update(float deltaTime, glm::vec3& lookTarget, bool& lockMovement, const glm::vec3 followTarget, bool& camPosFollow, const float rotateTo, bool& lockRotation, const float rotateSpeed, const int windowWidth, const int windowHeight)
 {
 	// Lerp rotation
-	// TODO: FIXME: Still getting jittery rotation when wrapping around from 0 to 360 or vice versa
 	{
 		WrapThetaTo360();
 
