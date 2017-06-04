@@ -42,14 +42,17 @@ void Camera::clampPhi()
 
 void Camera::WrapThetaTo360()
 {
-	float thetaDecimal = m_theta - floorf(m_theta);
-	int thetaInt = (int)m_theta;
-	thetaInt = thetaInt % 360;
-	m_theta = (float)thetaInt + thetaDecimal;
-	if (m_theta < 0)
+	if (m_theta < 0 || m_theta > 360)
 	{
-		m_theta -= 1;
-		m_theta += 360;
+		int thetaInt = (int)m_theta;
+		float thetaDecimal = m_theta - thetaInt;
+		if (m_theta < 0)	thetaInt--;
+		thetaInt = thetaInt % 360;
+		m_theta = (float)thetaInt + thetaDecimal;
+		if (m_theta < 0)
+		{
+			m_theta += 360;
+		}
 	}
 }
 
