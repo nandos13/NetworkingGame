@@ -445,13 +445,19 @@ ClientSideGameManager::~ClientSideGameManager()
 
 void ClientSideGameManager::Update(const float dTime)
 {
-	/* Update mouse-hover-point */
-	MapVec3 previouslyHovered = m_hoveredTile;
-	m_hoveredTile = GetTileUnderMouse(m_mouseIsOverVoidSpace);
+	/* Check if mouse pointer is over ImGui elements */
+	bool mouseIsOverHUD = ImGui::IsMouseHoveringAnyWindow();
 
-	// Update path
-	if (previouslyHovered != m_hoveredTile)
-		UpdateTilePath();
+	if (!mouseIsOverHUD)
+	{
+		/* Update mouse-hover-point */
+		MapVec3 previouslyHovered = m_hoveredTile;
+		m_hoveredTile = GetTileUnderMouse(m_mouseIsOverVoidSpace);
+
+		// Update path
+		if (previouslyHovered != m_hoveredTile)
+			UpdateTilePath();
+	}
 
 	// Get lists of tiles the selected character is able to move to
 	std::list<MapVec3> walkTiles;
@@ -462,11 +468,14 @@ void ClientSideGameManager::Update(const float dTime)
 		dashTiles = m_selectedCharacter->Get2PointWalkTiles();
 	}
 
-	// Draw gizmos along path
-	DrawPath();
+	if (!mouseIsOverHUD)
+	{
+		// Draw gizmos along path
+		DrawPath();
 
-	// Draw a translucent gizmo over the hovered tile
-	DrawHoverTile();
+		// Draw a translucent gizmo over the hovered tile
+		DrawHoverTile();
+	}
 
 	// Draw a translucent gizmo over the currently selected enemiy's tile
 	DrawEnemyTile();
@@ -475,9 +484,7 @@ void ClientSideGameManager::Update(const float dTime)
 	aie::Input* input = aie::Input::getInstance();
 	Game* game = Game::GetInstance();
 
-	// TODO: Need to find a way to detect if any ImGui elements have been clicked first. 
-	// Ideally, the HUD elements should not be click-through.
-	if (input->wasMouseButtonPressed(0))	// Left click: Select friendly character at clicked tile
+	if (input->wasMouseButtonPressed(0) && !mouseIsOverHUD)	// Left click: Select friendly character at clicked tile
 	{
 		if (!m_mouseIsOverVoidSpace)
 		{
@@ -490,7 +497,7 @@ void ClientSideGameManager::Update(const float dTime)
 				SelectCharacter(charAtHoverTile);
 		}
 	}
-	else if (input->wasMouseButtonPressed(1))	// Right click: Move selected character to clicked target
+	else if (input->wasMouseButtonPressed(1) && !mouseIsOverHUD)	// Right click: Move selected character to clicked target
 	{
 		if (!m_mouseIsOverVoidSpace && game->IsPlayersTurn(m_thisClient->GetID()))
 		{
